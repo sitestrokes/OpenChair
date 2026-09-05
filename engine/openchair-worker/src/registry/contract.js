@@ -36,24 +36,37 @@
  */
 export const CAPABILITY = {
   /** Per-staff slot grid — the richest signal. Booksy, Vagaro, Fresha. */
-  SLOT_GRID: 'C1',
+  SLOT_GRID: 'C1_SLOT_GRID',
   /** Class capacity: "4 of 12 spots left". Momence, Mindbody. */
-  CLASS_CAPACITY: 'C2',
+  CLASS_CAPACITY: 'C2_CLASS_CAPACITY',
   /** Arrival windows. Housecall Pro, Jobber. Weak; see PRD Q9. */
-  ARRIVAL_WINDOW: 'C3',
+  ARRIVAL_WINDOW: 'C3_ARRIVAL_WINDOW',
   /** Reservation slots at fixed seatings. OpenTable, Resy — NOT shipped in v1. */
-  RESERVATION: 'C4',
+  RESERVATION: 'C4_RESERVATION',
   /** Next-available date only. The floor of what is usable. */
-  NEXT_AVAILABLE: 'C5',
+  NEXT_AVAILABLE: 'C5_NEXT_AVAILABLE',
 };
 
-/** Confidence ceiling per class (35-scoring-model.md §1.3). */
+/**
+ * Confidence ceiling per class, as PERCENTAGES of the model's fractions.
+ *
+ * These are a mirror of CAPABILITY_CEILING in the Meter's model, kept here so
+ * an adapter author can see the ceiling their class implies without importing
+ * the scoring core across a process boundary. The Meter's copy is authoritative;
+ * test/contract.test.js asserts the two agree, because a worker that believes a
+ * class is worth more confidence than the Meter grants it would be reporting one
+ * story while the product tells another.
+ *
+ * Note C1 is 95, not 100: even a perfect slot grid cannot see owner-placed
+ * blocks, walk-ins or phone bookings. Only an owner-verified envelope reaches
+ * 100, which is the post-sale consented path, not the prospecting one.
+ */
 export const CAPABILITY_CEILING = {
-  C1: 100,
-  C2: 85,
-  C3: 55,
-  C4: 70,
-  C5: 45,
+  C1_SLOT_GRID: 95,
+  C2_CLASS_CAPACITY: 90,
+  C3_ARRIVAL_WINDOW: 75,
+  C4_RESERVATION: 65,
+  C5_NEXT_AVAILABLE: 40,
 };
 
 /** Outcomes an adapter may report. Anything else is a bug, not a status. */

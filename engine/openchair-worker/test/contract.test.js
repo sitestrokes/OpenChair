@@ -113,8 +113,8 @@ describe('validator — C5 next-available only', () => {
   });
   test('C5 carries a hard confidence ceiling', () => {
     // A next-available date can never justify the certainty a full grid does.
-    assert.ok(CAPABILITY_CEILING.C5 < CAPABILITY_CEILING.C1);
-    assert.equal(CAPABILITY_CEILING.C5, 45);
+    assert.ok(CAPABILITY_CEILING.C5_NEXT_AVAILABLE < CAPABILITY_CEILING.C1_SLOT_GRID);
+    assert.equal(CAPABILITY_CEILING.C5_NEXT_AVAILABLE, 40);
   });
 });
 

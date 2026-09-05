@@ -34,27 +34,74 @@ if (!function_exists('oc_money')) {
 
 if (!function_exists('oc_revenue_range')) {
     /**
-     * Empty-Chair Revenue, as a RANGE (rule 4).
+     * Unsold Value, as a RANGE (rule 4).
      *
-     * The stored figure is the LOW anchor (15% sell-through). The high end is the
-     * upper sell-through bound. A single number here would be the product's worst
-     * failure mode: an owner who hears one figure treats it as a promise.
+     * BOTH ends come from the Meter (oc_008 added the high column). They are not
+     * derived here, and must not be: the model's band is
+     * openMinutes × (1 ± rho) crossed with the price band's p25..p75, where
+     * rho = 0.05 + 0.45 × (1 − confidence). The range therefore WIDENS as
+     * confidence falls, which is the entire point of showing a range at all. No
+     * fixed ratio applied to the low end can reproduce that — it would draw a
+     * shaky business and a well-understood one with identically tight bands.
      *
-     * @param int   $low_cents  stored empty_chair_cents (the 15% anchor)
-     * @param float $lo         low sell-through, default from app_config
-     * @param float $hi         high sell-through
+     * This is the HEADLINE figure: minutes on their page × prices on their page.
+     * It is not a forecast, and it is not Recoverable Revenue — see
+     * oc_recoverable_range(), which sizes the offer and is never the headline.
+     *
+     * @param int      $low_cents   empty_chair_cents
+     * @param int|null $high_cents  empty_chair_hi_cents
      * @return string e.g. "$1,860 – $4,340"
      */
-    function oc_revenue_range($low_cents, $lo = null, $hi = null)
+    function oc_revenue_range($low_cents, $high_cents = null)
+    {
+        $low_cents = (int) $low_cents;
+
+        if ($high_cents === null || (int) $high_cents <= $low_cents) {
+            // Pre-oc_008 rows, or a business scored before the high end was
+            // stored. Fall back to the old assumed ratio rather than printing a
+            // zero-width range that would read as a point estimate — the one
+            // thing rule 4 forbids.
+            $CI = get_instance();
+            $lo = (float) $CI->config->item('oc_sellthrough_low');
+            $hi = (float) $CI->config->item('oc_sellthrough_high');
+            if ($lo <= 0) { $lo = 0.15; }
+            if ($hi <= $lo) { $hi = $lo * 2.33; }
+            $high_cents = (int) round($low_cents * ($hi / $lo));
+        }
+
+        return oc_money($low_cents) . ' – ' . oc_money($high_cents);
+    }
+}
+
+if (!function_exists('oc_recoverable_range')) {
+    /**
+     * Recoverable Revenue — what could realistically be sold of that unsold time.
+     *
+     * Derived from the LOW end of Unsold Value only. 35-scoring-model.md §3.4 is
+     * explicit about why: multiplying the top of a price band by the top of a
+     * sell-through band is how a forecast becomes fiction.
+     *
+     * Sizes the offer. Never the headline — a single "vacancy × price" figure
+     * silently asserts 100% sell-through, which nobody achieves and any owner
+     * will call out in the first thirty seconds.
+     *
+     * @param int $low_cents empty_chair_cents (the Unsold Value low end)
+     * @return string
+     */
+    function oc_recoverable_range($low_cents)
     {
         $CI = get_instance();
-        $lo = $lo !== null ? $lo : (float) $CI->config->item('oc_sellthrough_low');
-        $hi = $hi !== null ? $hi : (float) $CI->config->item('oc_sellthrough_high');
+        $lo = (float) $CI->config->item('oc_sellthrough_low');
+        $hi = (float) $CI->config->item('oc_sellthrough_high');
         if ($lo <= 0) { $lo = 0.15; }
-        if ($hi <= $lo) { $hi = $lo * 2.33; }
+        if ($hi <= $lo) { $hi = 0.35; }
 
-        $high_cents = (int) round($low_cents * ($hi / $lo));
-        return oc_money($low_cents) . ' – ' . oc_money($high_cents);
+        // Round down at both ends, matching the model: we never overstate.
+        $r50 = function ($cents) { return (int) (floor($cents / 5000) * 5000); };
+        $a = $r50($low_cents * $lo);
+        $b = max($r50($low_cents * $hi), $a + 5000);
+
+        return oc_money($a) . ' – ' . oc_money($b);
     }
 }
 

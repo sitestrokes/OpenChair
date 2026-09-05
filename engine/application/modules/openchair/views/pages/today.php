@@ -33,7 +33,7 @@ $stale = oc_is_stale($totals['last_scan']);
   <div class="cards" style="padding:0 0 18px">
     <div class="mini">
       <h4>Unsold time this week</h4>
-      <div class="big"><?= html_escape(oc_revenue_range($totals['ecr_cents'])) ?></div>
+      <div class="big"><?= html_escape(oc_revenue_range($totals['ecr_cents'], $totals['ecr_hi_cents'])) ?></div>
       <div class="stat-note">Across <?= (int) $totals['businesses'] ?> businesses with public online booking.
         A range, never a single figure &mdash; priced from their own published menus.</div>
     </div>

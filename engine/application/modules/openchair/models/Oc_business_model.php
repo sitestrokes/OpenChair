@@ -131,6 +131,7 @@ class Oc_business_model extends CI_Model
 
         $row = $this->db->select('COUNT(*) AS businesses', false)
                         ->select('SUM(CASE WHEN latest_confidence >= ' . $floor . ' THEN latest_empty_chair_cents ELSE 0 END) AS ecr_cents', false)
+                        ->select('SUM(CASE WHEN latest_confidence >= ' . $floor . ' THEN latest_empty_chair_hi_cents ELSE 0 END) AS ecr_hi_cents', false)
                         ->select('SUM(CASE WHEN latest_confidence >= ' . $floor . ' THEN latest_open_slots ELSE 0 END) AS open_slots', false)
                         ->select('SUM(CASE WHEN latest_confidence <  ' . $floor . ' THEN 1 ELSE 0 END) AS below_floor', false)
                         ->select('MAX(last_good_scan_at) AS last_scan', false)
@@ -143,7 +144,8 @@ class Oc_business_model extends CI_Model
 
         return [
             'businesses'  => (int) ($row->businesses ?? 0),
-            'ecr_cents'   => (int) ($row->ecr_cents ?? 0),
+            'ecr_cents'    => (int) ($row->ecr_cents ?? 0),
+            'ecr_hi_cents' => (int) ($row->ecr_hi_cents ?? 0),
             'open_slots'  => (int) ($row->open_slots ?? 0),
             'below_floor' => (int) ($row->below_floor ?? 0),
             'last_scan'   => $row->last_scan ?? null,

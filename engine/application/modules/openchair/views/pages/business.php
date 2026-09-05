@@ -77,7 +77,7 @@ $vac   = ((int) $b->latest_vacancy_bp) / 10000;
               Showing you the gap is more useful than showing you a guess you would have to defend
               in their shop.</div>
           <?php else: ?>
-            <div class="money"><?= html_escape(oc_revenue_range($b->latest_empty_chair_cents)) ?></div>
+            <div class="money"><?= html_escape(oc_revenue_range($b->latest_empty_chair_cents, $b->latest_empty_chair_hi_cents)) ?></div>
             <div class="rangebar"><span style="left:12%;right:26%"></span></div>
             <div class="stat-note">Range, not a point estimate. Priced from <b>their own published menu</b>
               (average <?= html_escape(oc_money($b->avg_price_cents)) ?> per booking), assuming 15&ndash;35% of open

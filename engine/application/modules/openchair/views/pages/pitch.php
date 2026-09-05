@@ -15,7 +15,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  */
 $hungry = ($variant === 'hungry');
 $low    = oc_below_floor($b->latest_confidence);
-$money  = $low ? null : oc_revenue_range($b->latest_empty_chair_cents);
+$money  = $low ? null : oc_revenue_range($b->latest_empty_chair_cents, $b->latest_empty_chair_hi_cents);
 $other  = $hungry ? 'slammed' : 'hungry';
 ?>
 <div class="page">

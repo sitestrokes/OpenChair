@@ -64,6 +64,16 @@ export const config = {
   confidenceFloor: int('OC_CONFIDENCE_FLOOR', 45),
 
   /**
+   * Empty-Chair Revenue is always a RANGE (rule 4). These are the sell-through
+   * bounds applied to open chair-minutes. Must match the CI3 side's
+   * oc_sellthrough_low/high — the two halves quoting different money for the
+   * same business is the single worst bug this product could ship.
+   */
+  sellThroughLow: Number(str('OC_SELLTHROUGH_LOW', '0.15')),
+  sellThroughHigh: Number(str('OC_SELLTHROUGH_HIGH', '0.35')),
+
+
+  /**
    * Budget, not a measurement — the circuit trips on observed cost_micros.
    * $0.02/scan is a defensible steady state; an un-engineered day-one build runs
    * 4-12x that (20-architecture §7.4), which is why this is monitored rather
