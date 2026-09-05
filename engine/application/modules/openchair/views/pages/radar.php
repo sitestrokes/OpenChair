@@ -103,6 +103,7 @@ $qs = function ($over) use ($f_bucket, $f_sort) {
           $score = oc_score_or_gap($b->latest_vacancy_bp, $b->latest_confidence);
           $low   = oc_below_floor($b->latest_confidence);
         ?>
+          <div class="rowwrap">
           <a class="row" href="<?= site_url('openchair/business/' . (int) $b->id) ?>">
             <span class="score <?= $cls ?>"><?= html_escape($score) ?></span>
             <span>
@@ -124,6 +125,17 @@ $qs = function ($over) use ($f_bucket, $f_sort) {
               <?php endif; ?>
             </span>
           </a>
+          <?php $is_watched = !empty($watched_map[(int) $b->id]); ?>
+          <form method="post" class="rowact"
+                action="<?= site_url('openchair/' . ($is_watched ? 'unwatch' : 'watch')) ?>">
+            <?= oc_csrf() ?><input type="hidden" name="business_id" value="<?= (int) $b->id ?>">
+            <input type="hidden" name="back" value="<?= html_escape(uri_string() . ($_SERVER['QUERY_STRING'] ? '?' . $_SERVER['QUERY_STRING'] : '')) ?>">
+            <button class="btn btn-sm<?= $is_watched ? '' : ' btn-primary' ?>" type="submit"
+                    title="<?= $is_watched ? 'Stop watching' : 'Watch this business' ?>">
+              <?= $is_watched ? '&#10003; Watching' : '+ Watch' ?>
+            </button>
+          </form>
+          </div>
         <?php endforeach; ?>
       </div>
     </div>

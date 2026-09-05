@@ -316,3 +316,24 @@ if (!function_exists('oc_next_available')) {
         return $days . ' days';
     }
 }
+
+if (!function_exists('oc_csrf')) {
+    /**
+     * The hidden CSRF field every POST form in this module needs.
+     *
+     * CI3 has csrf_protection ON, and the OpenChair shell is dependency-free —
+     * it does not load the host engine's jQuery prefilter that injected this
+     * token automatically on legacy pages. So forms here emit it themselves,
+     * server-side, which also means every action keeps working with JavaScript
+     * off. That matters for FR-5.4: the phone view a consultant uses standing
+     * outside a shop, on bad signal, where a JS bundle may simply not arrive.
+     *
+     * @return string
+     */
+    function oc_csrf()
+    {
+        $CI = get_instance();
+        return '<input type="hidden" name="' . $CI->security->get_csrf_token_name()
+             . '" value="' . $CI->security->get_csrf_hash() . '">';
+    }
+}

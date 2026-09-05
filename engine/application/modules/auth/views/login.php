@@ -99,7 +99,7 @@ a{color:inherit;text-decoration:none}
   border:1.7px solid #fff;border-top:0;border-left:0;transform:rotate(45deg)}
 .rem label{font-size:13px;color:var(--ink2);cursor:pointer;font-weight:500}
 .forgot{font-size:13px;color:var(--coral-deep);font-weight:600;border-bottom:1px solid transparent;transition:.15s}
-.forgot:hover{border-color:var(--coral-deep)}
+.forgot:hover{color:var(--coral);border-color:transparent}
 
 .btn{width:100%;margin-top:24px;padding:16px 22px;border:0;border-radius:var(--r-btn);cursor:pointer;
   background:linear-gradient(135deg,var(--coral),var(--coral-deep));color:#fff;

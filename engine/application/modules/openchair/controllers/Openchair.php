@@ -26,6 +26,8 @@ class Openchair extends App_Controller
     {
         parent::__construct();
         $this->load->model('openchair/oc_business_model');
+        $this->load->model('openchair/oc_prospect_model');
+        $this->load->model('openchair/oc_market_model');
         $this->load->helper('openchair/oc_format');
         $this->load->library('oc_render_lib');
     }
@@ -64,6 +66,11 @@ class Openchair extends App_Controller
         $this->data['totals']     = $this->oc_business_model->market_totals($city, $niche);
         $this->data['f_bucket']   = $bucket;
         $this->data['f_sort']     = $opts['sort'];
+        // One query for the whole list rather than one per row.
+        $this->data['watched_map'] = $this->oc_prospect_model->watched_map(
+            $this->user_id,
+            array_map(function ($b) { return (int) $b->id; }, $this->data['businesses'])
+        );
 
         $this->_render('pages/radar', 'radar', 'Radar');
     }
@@ -80,6 +87,7 @@ class Openchair extends App_Controller
         if (!$b) { show_404(); return; }
 
         $this->data['b'] = $b;
+        $this->data['prospect'] = $this->oc_prospect_model->find($this->user_id, $b->id);
         $this->_render('pages/business', 'business', $b->name);
     }
 
@@ -108,11 +116,83 @@ class Openchair extends App_Controller
         $this->_render('pages/pitch', 'pitch', 'Pitch — ' . $b->name);
     }
 
-    /** S7 — Prospects / watchlist. Real pipeline lands in Phase 5. */
+    /** S7 — Prospects / watchlist and the pipeline. */
     public function prospects()
     {
-        $this->data['watched'] = [];
+        $stage = $this->input->get('stage', true);
+        $opts  = [];
+        if ($stage && $stage !== 'all') { $opts['stage'] = $stage; }
+
+        $this->data['watched'] = $this->oc_prospect_model->watchlist($this->user_id, $opts);
+        $this->data['counts']  = $this->oc_prospect_model->stage_counts($this->user_id);
+        $this->data['f_stage'] = $stage ?: 'all';
+
         $this->_render('pages/prospects', 'prospects', 'Prospects');
+    }
+
+    // ── Watchlist actions ────────────────────────────────────────────────────
+
+    /**
+     * Add a business to this tenant's watchlist.
+     *
+     * Watching does not queue another crawl. It increments watcher_count on the
+     * ONE shared oc_scan_queue row, raising that business's priority — see
+     * Oc_prospect_model::_sync_watchers(). Fifty consultants watching the same
+     * barbershop is still one read a night.
+     */
+    public function watch()
+    {
+        $id = (int) $this->input->post('business_id', true);
+        if (!$id) { show_error('No business.', 400); return; }
+
+        $added = $this->oc_prospect_model->watch($this->user_id, $id);
+        $this->_after_action(['ok' => true, 'watching' => true, 'added' => $added]);
+    }
+
+    /** Remove from the watchlist. */
+    public function unwatch()
+    {
+        $id = (int) $this->input->post('business_id', true);
+        if (!$id) { show_error('No business.', 400); return; }
+
+        $this->oc_prospect_model->unwatch($this->user_id, $id);
+        $this->_after_action(['ok' => true, 'watching' => false]);
+    }
+
+    /** Move a prospect along the pipeline. */
+    public function stage()
+    {
+        $id = (int) $this->input->post('business_id', true);
+        $to = (string) $this->input->post('stage', true);
+
+        $ok = $this->oc_prospect_model->set_stage($this->user_id, $id, $to);
+        $this->_after_action(['ok' => $ok, 'stage' => $to]);
+    }
+
+    /** Save per-prospect notes. */
+    public function notes()
+    {
+        $id = (int) $this->input->post('business_id', true);
+        $this->oc_prospect_model->set_notes($this->user_id, $id, (string) $this->input->post('notes'));
+        $this->_after_action(['ok' => true]);
+    }
+
+    /**
+     * Answer an action: JSON to fetch, a redirect back to a normal form post.
+     * Keeps every action usable without JavaScript, which matters on the phone
+     * view a consultant uses standing outside a shop (FR-5.4).
+     *
+     * @param array $payload
+     * @return void
+     */
+    private function _after_action(array $payload)
+    {
+        if ($this->input->is_ajax_request()) {
+            $this->output->set_content_type('application/json')
+                         ->set_output(json_encode($payload));
+            return;
+        }
+        redirect($this->input->post('back', true) ?: 'openchair/radar');
     }
 
     /** S8 — Ledger. The 8-week trend; real rollups land in Phase 7. */

@@ -57,6 +57,11 @@ $route['openchair/business/(:num)']  = 'openchair/openchair/business/$1';
 $route['openchair/pitch']            = 'openchair/openchair/pitch';
 $route['openchair/pitch/(:num)']     = 'openchair/openchair/pitch/$1';
 $route['openchair/onepager/(:num)']  = 'openchair/openchair/onepager/$1';
+// Watchlist + pipeline actions (POST). Before the catch-all.
+$route['openchair/watch']      = 'openchair/openchair/watch';
+$route['openchair/unwatch']    = 'openchair/openchair/unwatch';
+$route['openchair/stage']      = 'openchair/openchair/stage';
+$route['openchair/notes']      = 'openchair/openchair/notes';
 $route['openchair/(:any)']           = 'openchair/openchair/$1';
 
 // Public URL alias: /app/* mirrors /openchair/*, the same rebrand trick the host

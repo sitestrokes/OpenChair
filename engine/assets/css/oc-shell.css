@@ -391,8 +391,13 @@ th{color:var(--tx3)}
 td,th{border-color:var(--line-soft)}
 
 /* Links inside ported content. */
+/* Links tint and brighten on hover; they never underline. An underline under a
+   nav item or a sentence reads as a correction mark in a dense dark UI, and the
+   coral is already a strong enough affordance. */
+a{text-decoration:none}
+a:hover,a:focus{text-decoration:none}
 .page a:not(.btn):not(.navbtn):not(.chip):not(.row){color:var(--accent-tx)}
-.page a:not(.btn):not(.navbtn):not(.chip):not(.row):hover{text-decoration:underline}
+.page a:not(.btn):not(.navbtn):not(.chip):not(.row):hover{color:var(--accent);text-decoration:none}
 
 /* Accessibility: the skip link the shell renders. */
 .oc-skip-link{position:absolute;left:-9999px;top:0;z-index:100;
@@ -406,3 +411,34 @@ td,th{border-color:var(--line-soft)}
 /* The rail's theme toggle sits in the foot and should read as secondary. */
 .rail-foot .navbtn{font-size:12.5px;color:var(--tx3)}
 .rail-foot .navbtn:hover{color:var(--tx)}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   NO UNDERLINES
+   The ported modules and the auth pages each brought their own underline rules
+   — on links, on nav items, on help text. Removed globally rather than chased
+   one by one, since every one of them is decoration the palette already does.
+   `u` and `ins` keep theirs: those mean something.
+   ══════════════════════════════════════════════════════════════════════════ */
+a, a:hover, a:focus, a:active,
+.navbtn, .navbtn:hover, .tn-pill, .tn-mitem, .chip, .btn, .row,
+.tabs a, .tabs a:hover, .backlink:hover, .forgot, .forgot:hover,
+label, h1, h2, h3, h4, h5, p, li, td, th, dt, dd, span, small, b, strong{
+  text-decoration:none}
+
+/* ── Radar row + its watch action ────────────────────────────────────────────
+   The row is an <a>, so the watch form has to sit beside it rather than inside
+   (a form nested in a link is invalid, and the button would be unclickable).
+   They are wrapped and the action is pinned to the right edge. */
+.rowwrap{position:relative;border-bottom:1px solid var(--line-soft)}
+.rowwrap .row{border-bottom:0;padding-right:104px}
+.rowwrap .rowact{position:absolute;right:14px;top:50%;transform:translateY(-50%);margin:0}
+.rowwrap:hover{background:var(--sunken)}
+.rowwrap:hover .row{background:transparent}
+@media(max-width:680px){
+  .rowwrap .row{padding-right:16px;padding-bottom:44px}
+  .rowwrap .rowact{top:auto;bottom:10px;right:14px;transform:none}
+}
+
+/* Prospect rows carry a stage <select> and three buttons; give the select room
+   without letting it stretch like a full-width form field. */
+.list select.input{width:auto;min-width:104px}

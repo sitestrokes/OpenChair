@@ -107,7 +107,7 @@ a{color:inherit;text-decoration:none}
 .ic-form button[type=submit]:hover{transform:translateY(-2px);box-shadow:0 18px 38px -12px rgba(255,106,77,.7)}
 .backlink{display:inline-flex;align-items:center;gap:6px;margin-top:20px;font-size:12px;
   font-family:var(--mono);letter-spacing:.5px;color:var(--coral)}
-.backlink:hover{text-decoration:underline}
+.backlink:hover{color:var(--coral)}
 .copy{margin-top:22px;text-align:center;font-size:10.5px;color:var(--faint);font-family:var(--mono);letter-spacing:.4px}
 .copy strong{color:var(--txt2);font-weight:600}
 
