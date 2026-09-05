@@ -63,6 +63,64 @@ $stale = oc_is_stale($totals['last_scan']);
     </div>
   <?php endif; ?>
 
+  <!-- The 8am list, as sent. Every figure here comes from the alert item row,
+       not from a live re-read: a digest is a claim made at a moment, and a
+       consultant clicking through three hours later must not find different
+       numbers from the ones they read over breakfast. -->
+  <div class="panel" style="margin-bottom:18px">
+    <div class="panel-head">
+      <h2>Your 8am list</h2>
+      <?php if ($digest): ?>
+        <span class="sub"><?= html_escape(date('j M', strtotime($digest->run_date))) ?>
+          &middot; <?= (int) $digest->total_count ?> businesses
+          &middot; <?= (int) $digest->hungry_count ?> hungry, <?= (int) $digest->slammed_count ?> slammed</span>
+      <?php endif; ?>
+      <span class="spacer"></span>
+      <form method="post" action="<?= site_url('openchair/build-digest') ?>" style="margin:0">
+        <?= oc_csrf() ?><button class="btn btn-sm" type="submit"><?= $digest ? 'Rebuild' : 'Build the list' ?></button>
+      </form>
+    </div>
+
+    <?php if (!$digest || empty($digest_items)): ?>
+      <div class="empty" style="padding:30px 20px;text-align:center;color:var(--tx3)">
+        <?php if (!$digest): ?>
+          No digest yet. It is built each morning from the businesses you watch &mdash;
+          <a href="<?= site_url('openchair/radar') ?>">watch a few</a> and build one.
+        <?php else: ?>
+          Nothing met the bar today. Businesses below the confidence floor are left out rather than
+          padded in: a list that leads with figures we would not stand behind one click later is worse
+          than a short list.
+        <?php endif; ?>
+      </div>
+    <?php else: ?>
+      <div class="list">
+        <?php foreach ($digest_items as $it):
+          $cls = $it->bucket === 'hungry' ? 'hot' : 'cool';
+        ?>
+          <a class="row" href="<?= site_url('openchair/business/' . (int) $it->business_id) ?>">
+            <span class="score <?= $cls ?>"><?= (int) round($it->vacancy_bp / 100) ?></span>
+            <span>
+              <span class="row-name">
+                <?= html_escape($it->name) ?>
+                <span class="bucket <?= $cls ?>"><?= oc_bucket_glyph($it->bucket) ?> <?= html_escape(oc_bucket_label($it->bucket)) ?></span>
+                <?php if ($it->is_new): ?><span class="chip coral" style="font-size:9.5px">new</span><?php endif; ?>
+              </span>
+              <span class="row-meta">
+                <span class="plat"><?= html_escape($it->platform_name ?: '—') ?></span>
+                <?php if ($it->bucket === 'slammed'): ?>
+                  next available: <?= html_escape(oc_next_available($it->days_to_next)) ?>
+                <?php else: ?>
+                  <?= html_escape(oc_slots_phrase($it->open_slots)) ?>
+                <?php endif; ?>
+              </span>
+            </span>
+            <span class="row-money"><?= html_escape(oc_money($it->empty_chair_cents)) ?><small>unsold, low end</small></span>
+          </a>
+        <?php endforeach; ?>
+      </div>
+    <?php endif; ?>
+  </div>
+
   <div class="split">
     <?php
     $cols = [

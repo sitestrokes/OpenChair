@@ -62,6 +62,8 @@ $route['openchair/watch']      = 'openchair/openchair/watch';
 $route['openchair/unwatch']    = 'openchair/openchair/unwatch';
 $route['openchair/stage']      = 'openchair/openchair/stage';
 $route['openchair/notes']      = 'openchair/openchair/notes';
+$route['openchair/make-pitch'] = 'openchair/openchair/make_pitch';
+$route['openchair/build-digest'] = 'openchair/openchair/build_digest';
 $route['openchair/(:any)']           = 'openchair/openchair/$1';
 
 // Public URL alias: /app/* mirrors /openchair/*, the same rebrand trick the host

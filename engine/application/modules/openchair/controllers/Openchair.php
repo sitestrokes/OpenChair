@@ -28,6 +28,9 @@ class Openchair extends App_Controller
         $this->load->model('openchair/oc_business_model');
         $this->load->model('openchair/oc_prospect_model');
         $this->load->model('openchair/oc_market_model');
+        $this->load->model('openchair/oc_pitch_model');
+        $this->load->model('openchair/oc_alert_model');
+        $this->load->library('openchair/oc_pitch_lib');
         $this->load->helper('openchair/oc_format');
         $this->load->library('oc_render_lib');
     }
@@ -44,6 +47,11 @@ class Openchair extends App_Controller
         $this->data['counts']  = $this->oc_business_model->bucket_counts($city, $niche);
         $this->data['hungry']  = $this->oc_business_model->market($city, $niche, ['bucket' => 'hungry',  'limit' => 8]);
         $this->data['slammed'] = $this->oc_business_model->market($city, $niche, ['bucket' => 'slammed', 'sort' => 'next', 'limit' => 8]);
+
+        // The 8am list, as sent. Null until a digest has been built.
+        $digest = $this->oc_alert_model->latest($this->user_id);
+        $this->data['digest'] = $digest['run'];
+        $this->data['digest_items'] = $digest['items'];
 
         $this->_render('pages/today', 'today', 'Today');
     }
@@ -111,8 +119,10 @@ class Openchair extends App_Controller
             $variant = ($b->latest_bucket === 'slammed') ? 'slammed' : 'hungry';
         }
 
-        $this->data['b']       = $b;
-        $this->data['variant'] = $variant;
+        $this->data['b']        = $b;
+        $this->data['variant']  = $variant;
+        $this->data['copy']     = $this->oc_pitch_lib->build($b, $variant);
+        $this->data['previous'] = $this->oc_pitch_model->for_business($this->user_id, $b->id);
         $this->_render('pages/pitch', 'pitch', 'Pitch — ' . $b->name);
     }
 
@@ -193,6 +203,93 @@ class Openchair extends App_Controller
             return;
         }
         redirect($this->input->post('back', true) ?: 'openchair/radar');
+    }
+
+    /**
+     * Generate and store a pitch, freezing its evidence.
+     *
+     * This is a SAVE, not a send. It writes an artifact the consultant carries;
+     * nothing leaves the building. See Oc_pitch_model's class note.
+     */
+    public function make_pitch()
+    {
+        $id      = (int) $this->input->post('business_id', true);
+        $variant = (string) $this->input->post('variant', true);
+        if (!in_array($variant, ['hungry', 'slammed'], true)) { $variant = 'hungry'; }
+
+        $b = $this->oc_business_model->find($id);
+        if (!$b) { show_404(); return; }
+
+        $copy = $this->oc_pitch_lib->build($b, $variant);
+        $grid = $this->_grid_for($b);
+
+        $pitch_id = $this->oc_pitch_model->create($this->user_id, $b, $variant, 'onepager', $copy, $grid);
+        redirect('openchair/onepager/' . $pitch_id);
+    }
+
+    /**
+     * S6b — the one-pager. The handable artifact.
+     *
+     * Renders from the FROZEN copy on the pitch row, never from live data: the
+     * paper a consultant is holding must not disagree with what they printed.
+     */
+    public function onepager($id = null)
+    {
+        $pitch = $this->oc_pitch_model->find($this->user_id, (int) $id);
+        if (!$pitch) { show_404(); return; }
+
+        $this->data['pitch'] = $pitch;
+        // Own chrome: this is print output, not an app screen. It mounts no rail
+        // and no topbar, so it prints as a page rather than as a screenshot of
+        // a dashboard.
+        $this->load->view('pages/onepager', $this->data);
+    }
+
+    /**
+     * Build today's 8am digest for this tenant on demand.
+     *
+     * In production a scheduled job calls this per tenant at their local 08:00.
+     * Exposed here so Today can build one when none exists yet, and so the
+     * behaviour is inspectable without waiting for a cron.
+     */
+    public function build_digest()
+    {
+        $market = $this->oc_market_model->current($this->user_id);
+        if (!$market) {
+            $res = $this->oc_market_model->save($this->user_id, [
+                'city_key' => $this->_city(), 'niche_key' => $this->_niche(),
+                'city' => 'Tampa', 'region_code' => 'FL', 'country_code' => 'US',
+                'buckets' => 'hungry,slammed',
+            ]);
+            $market = $res['ok'] ? $this->oc_market_model->find($this->user_id, $res['id']) : null;
+        }
+        if ($market) {
+            $this->oc_alert_model->build($this->user_id, $market, date('Y-m-d'), 'in_app');
+        }
+        redirect('openchair');
+    }
+
+    /**
+     * The availability grid to freeze into a pitch.
+     *
+     * Derived until Radar runs (Phase 3 produces the real snapshot). Marked
+     * `derived` in the payload so a stored artifact can never be mistaken later
+     * for an observed one.
+     *
+     * @param object $b
+     * @return array
+     */
+    private function _grid_for($b)
+    {
+        return [
+            'source'       => 'derived',
+            'observed_on'  => $b->latest_observed_on,
+            'vacancy_bp'   => (int) $b->latest_vacancy_bp,
+            'open_slots'   => (int) $b->latest_open_slots,
+            'bookable'     => (int) $b->latest_bookable_slots,
+            'staff_count'  => (int) $b->staff_count,
+            'slot_minutes' => (int) ($b->slot_minutes ?: 30),
+        ];
     }
 
     /** S8 — Ledger. The 8-week trend; real rollups land in Phase 7. */

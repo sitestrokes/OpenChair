@@ -72,10 +72,30 @@ $banned_symbols = [
     'sequence_queue', 'twilio_sms_logs', 'twilio_call_logs', 'Twilio\\',
     'twilio_lib', 'sequence_lib', 'voice_bridge', 'send_sms', 'send_email',
 ];
+/**
+ * Source with comments stripped.
+ *
+ * These checks are about CODE PATHS. The files deliberately EXPLAIN the rules
+ * they follow — "there is no path from here into sequence_queue" is the rule
+ * being documented, not broken — so scanning raw text would fail a file for
+ * being well commented, and the fix would be to delete the explanation. That is
+ * the wrong incentive to build into a test.
+ *
+ * @param string $path
+ * @return string
+ */
+function code_of($path)
+{
+    $src = file_get_contents($path);
+    $src = preg_replace('!/\*.*?\*/!s', '', $src);   // block comments
+    $src = preg_replace('!^\s*//.*$!m', '', $src);    // line comments
+    return $src;
+}
+
 foreach ($banned_symbols as $sym) {
     $hits = [];
     foreach ($module_files as $f) {
-        if (stripos(file_get_contents($f), $sym) !== false) { $hits[] = basename($f); }
+        if (stripos(code_of($f), $sym) !== false) { $hits[] = basename($f); }
     }
     check("no reference to '$sym'", empty($hits), implode(', ', $hits));
 }
@@ -176,6 +196,81 @@ $gcode = preg_replace('!/\*.*?\*/!s', '', $gsrc);
 $gcode = preg_replace('!//.*!', '', $gcode);
 check('Oc_business_model (global layer) never scopes by user_id',
       stripos($gcode, 'user_id') === false);
+
+
+// -- Generated copy: the artifact is what leaves the building. --------------
+echo "
+Generated pitch copy
+";
+
+$lib = $MODULE . '/libraries/Oc_pitch_lib.php';
+check('one library generates every user-facing sentence', file_exists($lib));
+
+if (file_exists($lib)) {
+    $lsrc = file_get_contents($lib);
+    check('banned_phrases() is declared as data, not a comment',
+          strpos($lsrc, 'function banned_phrases') !== false);
+
+    foreach (['empty shop', 'guaranteed', 'you will make', 'risk-free'] as $bad) {
+        check("'" . $bad . "' is on the banned list", strpos($lsrc, "'" . $bad . "'") !== false);
+    }
+
+    // An earnings claim in generated copy is an FTC problem for the vendor as
+    // much as for the user (50-risk A7.3). The banned-list array is the one
+    // place these strings may legitimately appear, so it is removed first.
+    $body = code_of($lib);
+    $body = preg_replace('/return \[[^\]]*\];/s', '', $body);
+    foreach (['guaranteed', 'you will make', 'risk-free', 'double your'] as $bad) {
+        check("copy never emits '" . $bad . "'", stripos($body, $bad) === false);
+    }
+
+    check('a caveat is attached to every artifact', strpos($lsrc, 'function caveat') !== false);
+    check('the email is a DRAFT -- nothing here dispatches',
+          strpos($lsrc, 'function email') !== false && !preg_match('/\bmail\s*\(/', $body));
+}
+
+$pm = $MODULE . '/models/Oc_pitch_model.php';
+if (file_exists($pm)) {
+    $psrc = file_get_contents($pm);
+    check('pitch model has mark_sent() -- a log of what a human did',
+          strpos($psrc, 'function mark_sent') !== false);
+    check('pitch model has NO send()', !preg_match('/function\s+send\s*\(/', code_of($pm)));
+    check('pitch freezes its evidence rather than re-reading it',
+          strpos($psrc, 'gzencode') !== false);
+}
+
+// -- Alerts reach the consultant, never the business (FR-6.3). --------------
+echo "
+Alerts
+";
+
+$am = $MODULE . '/models/Oc_alert_model.php';
+if (file_exists($am)) {
+    $asrc  = file_get_contents($am);
+    $acode = code_of($am);
+
+    // oc_business carries a public phone and email. Nothing here may read them:
+    // a digest that could reach a scanned business would be the product
+    // contacting a stranger about its own observations of them.
+    check('the digest never reads a business phone number', !preg_match('/b\.phone/i', $acode));
+    check('the digest never reads a business email', !preg_match('/b\.email/i', $acode));
+    check('alert items store the numbers AS SENT', strpos($asrc, "'empty_chair_cents'") !== false);
+    check('the digest excludes businesses below the confidence floor',
+          strpos($acode, 'latest_confidence >=') !== false);
+}
+
+// -- CSRF: the shell has no JS prefilter, so forms carry the token. ---------
+echo "
+Forms
+";
+
+$formless = [];
+foreach (php_files($VIEWS) as $f) {
+    $src = file_get_contents($f);
+    if (stripos($src, 'method="post"') === false) { continue; }
+    if (strpos($src, 'oc_csrf()') === false) { $formless[] = basename($f); }
+}
+check('every POST form emits a CSRF token server-side', empty($formless), implode(', ', $formless));
 
 echo "\n" . str_repeat('─', 52) . "\n";
 echo ($fail === 0 ? "ALL GREEN" : "FAILURES") . ": $pass passed, $fail failed\n";

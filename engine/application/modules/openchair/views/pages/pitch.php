@@ -35,60 +35,40 @@ $other  = $hungry ? 'slammed' : 'hungry';
     <div class="sheet">
       <div class="eyebrow"><?= $hungry ? 'Prepared for' : 'Prepared for' ?> <?= html_escape($b->name) ?></div>
 
-      <?php if ($hungry): ?>
-        <h2>You have <?= number_format((int) $b->latest_open_slots) ?> open slots this week.<br>I can fill them.</h2>
-        <p class="lede">Your booking page shows <?= html_escape(oc_slots_phrase($b->latest_open_slots)) ?>
-          out of <?= number_format((int) $b->latest_bookable_slots) ?> across <?= (int) $b->staff_count ?> chairs
-          over the next seven days &mdash; concentrated on weekday afternoons.</p>
-      <?php else: ?>
-        <h2>You are booked out <?= html_escape(oc_next_available($b->latest_days_to_next)) ?>.<br>That is costing you.</h2>
-        <p class="lede">Your next online opening is <?= html_escape(oc_next_available($b->latest_days_to_next)) ?> away.
-          Every customer who checks your page today and cannot get in this week goes to the shop down the
-          road &mdash; and you never see them, so it never feels like a loss.</p>
-      <?php endif; ?>
+      <h2><?= html_escape($copy['headline']) ?></h2>
+      <p class="lede"><?= html_escape($copy['opening']) ?></p>
 
-      <?php if ($money !== null): ?>
+      <?php if (!empty($copy['money'])): ?>
         <div class="fig">
           <div>
-            <span><?= $hungry ? 'Unsold time, this week' : 'Demand you are turning away' ?></span>
-            <b><?= html_escape($money) ?></b>
+            <span><?= $hungry ? 'Unsold time, this week' : 'Demand turned away, weekly' ?></span>
+            <b><?= html_escape($copy['money']) ?></b>
           </div>
+          <?php if (!empty($copy['offer'])): ?>
           <div>
-            <span>Priced from</span>
-            <b><?= html_escape(oc_money($b->avg_price_cents)) ?></b>
+            <span>Realistically recoverable</span>
+            <b><?= html_escape($copy['offer']) ?></b>
           </div>
+          <?php endif; ?>
         </div>
       <?php else: ?>
         <div class="fig">
           <div><span>Figure withheld</span><b>&mdash;</b></div>
         </div>
-        <p style="margin-top:10px">We could not read enough of this calendar to put a number on paper.
-          Walk in with the observation, not the figure.</p>
+        <p style="margin-top:10px">We could not read enough of this calendar to put a number on
+          paper. Walk in with the observation, not the figure.</p>
       <?php endif; ?>
 
       <h3>What I would do</h3>
-      <?php if ($hungry): ?>
-        <ol>
-          <li><b>Midweek offer</b> aimed squarely at the afternoons that sit empty.</li>
-          <li><b>Google offer post</b> so the discount shows where people already search for you.</li>
-          <li><b>Review velocity</b> &mdash; ask every filled chair, so the next week starts higher.</li>
-          <li><b>Last-minute list</b> so a cancellation is refilled instead of lost.</li>
-        </ol>
-      <?php else: ?>
-        <ol>
-          <li><b>Waitlist automation</b> so the people you turn away are captured, not lost.</li>
-          <li><b>Price review</b> &mdash; a <?= html_escape(oc_next_available($b->latest_days_to_next)) ?> wait is the market telling you something.</li>
-          <li><b>Deposit gate</b> to kill the no-shows that cost you a booked chair.</li>
-          <li><b>Second chair or a hire</b> &mdash; and the numbers to justify it.</li>
-        </ol>
-      <?php endif; ?>
+      <ol>
+        <?php foreach ($copy['actions'] as $act): ?>
+          <li><b><?= html_escape($act[0]) ?>.</b> <?= html_escape($act[1]) ?></li>
+        <?php endforeach; ?>
+      </ol>
 
       <hr>
       <div class="foot">
-        Based on <?= html_escape(oc_unit()) ?> published on <?= html_escape($b->platform_name ?: 'your booking platform') ?>,
-        observed <?= html_escape(oc_data_age($b->last_good_scan_at)) ?>. This does not include walk-ins, phone
-        bookings, or time you blocked out yourself, and it is not a statement about how busy your shop is
-        overall. Figures are a range, not a forecast.
+        <?= html_escape($copy['caveat']) ?>
       </div>
     </div>
 
@@ -118,10 +98,44 @@ $other  = $hungry ? 'slammed' : 'hungry';
       </div>
 
       <div class="ctrl">
-        <label>Coming in phase 6</label>
-        <div class="stat-note" style="margin:0">Print-spec PDF, editable email and SMS variants, and the
-          frozen evidence copy so a pitch keeps its grid after the raw snapshot is purged at 14 days.</div>
+        <form method="post" action="<?= site_url('openchair/make-pitch') ?>">
+          <?= oc_csrf() ?><input type="hidden" name="business_id" value="<?= (int) $b->id ?>">
+          <input type="hidden" name="variant" value="<?= html_escape($variant) ?>">
+          <button class="btn btn-primary" type="submit" style="width:100%">Generate the one-pager</button>
+        </form>
+        <div class="stat-note" style="margin-top:9px">Freezes these exact numbers and this grid onto the
+          artifact. Raw snapshots are purged at 14 days; a pitch keeps its evidence for good, so the
+          paper never disagrees with itself later.</div>
       </div>
+
+      <div class="ctrl">
+        <label>Email draft</label>
+        <div class="stat-note" style="margin:0 0 7px"><b>Subject:</b> <?= html_escape($copy['email']['subject']) ?></div>
+        <textarea rows="9" readonly onclick="this.select()"
+                  style="font-size:12px;line-height:1.55"><?= html_escape($copy['email']['body']) ?></textarea>
+      </div>
+
+      <div class="ctrl">
+        <label>SMS draft &mdash; <?= mb_strlen($copy['sms']) ?> characters</label>
+        <textarea rows="4" readonly onclick="this.select()"
+                  style="font-size:12px;line-height:1.55"><?= html_escape($copy['sms']) ?></textarea>
+        <div class="stat-note" style="margin-top:7px">You send this from your own number, having checked
+          your own obligations. There is no send button here and no queue behind one.</div>
+      </div>
+
+      <?php if (!empty($previous)): ?>
+      <div class="ctrl">
+        <label><?= count($previous) ?> previously generated</label>
+        <?php foreach (array_slice($previous, 0, 5) as $prev): ?>
+          <div style="font-size:12px;margin-bottom:5px">
+            <a href="<?= site_url('openchair/onepager/' . (int) $prev->id) ?>">
+              <?= html_escape(oc_bucket_label($prev->kind === 'slammed' ? 'slammed' : 'hungry')) ?>
+              &middot; <?= html_escape(date('j M', strtotime($prev->created_at))) ?>
+            </a>
+          </div>
+        <?php endforeach; ?>
+      </div>
+      <?php endif; ?>
     </div>
 
   </div>
