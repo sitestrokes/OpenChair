@@ -1,7 +1,24 @@
 # OpenChair — project structure
 
-**Status:** skeleton only. Directories and framework files exist; **no product code has been
-written.** Everything marked *planned* below is a manifest entry, not a file on disk.
+**Status:** Phases 0 and 2–8 are built and green. **Phase 1 (the Radar spike) has not been run**,
+and it gates everything that turns seeded data into observed data — see §8.
+
+    197 automated checks, all passing
+      72  openchair-service   (meter, ledger, canary, removal, queue, isolation)
+      57  openchair-egress    (the read-only guard — this suite IS spike criterion S7)
+      28  openchair-worker    (adapter contract + chair-minute normalisation)
+      41  CI3 integrity       (the product-integrity rules from 05-prd.md §8)
+
+    10 migrations, all idempotent · 24 routes serving · 0 warnings on a clean pass
+
+Run them:
+
+    cd engine/openchair-service && DB_NAME=db_openchair node --test
+    php engine/application/modules/openchair/tests/integrity_test.php
+
+Local: **http://localhost/OpenChair/engine/** — `admin@openchair.local` / `OpenChair!2026`
+(the seed password is committed on purpose so a fresh clone can get in; change it before this
+faces anything).
 
 OpenChair is its own product on the **same platform** as Agentic Affiliates / InstantClose: the same
 CodeIgniter-3 HMVC engine, the same common modules (`auth`, `users`, `setting`, `whitelabel`,
