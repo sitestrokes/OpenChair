@@ -1,0 +1,34 @@
+# ── Secrets — never commit. Each process reads its own .env (see .env.example). ──
+.env
+**/.env
+!**/.env.example
+
+# ── Node ──
+node_modules/
+npm-debug.log*
+package-lock.json
+
+# ── Runtime artefacts ──
+# Per-fetch audit is rotated JSONL on disk, not a table (PRD Q8).
+audit/
+*.jsonl
+logs/
+*.log
+
+# ── Adapter capture output (raw pages recorded during the spike) ──
+crawl/openchair-worker/fixtures/_captured/
+
+# ── Local scratch ──
+.DS_Store
+Thumbs.db
+tmp/
+
+# ── CI3 runtime ──
+engine/application/logs/*
+!engine/application/logs/index.html
+engine/uploads/*
+!engine/uploads/index.html
+
+# ── Vendored CI3 framework (see STRUCTURE.md 2) ──
+# engine/system/ and application/third_party/MX are ported from the agentic
+# affiliate engine, not authored here. Un-ignore once the port is agreed.

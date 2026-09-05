@@ -1,0 +1,1133 @@
+<title>OpenChair</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap">
+<style>
+/* OpenChair inherits the InstantClose "Bridge Story x Nixtio" system:
+   cream ground, coral accent, Outfit/Manrope/Space Mono, radii 12/16/24/30.
+   Dark mode promotes the house espresso ink block (--sb #2A1E18) into a full ramp. */
+:root{
+  --ground:#F3EAE4; --surface:#FFFFFF; --raised:#FBF3EE; --sunken:#F8F0EB;
+  --line:#E1CDC1; --line-soft:#ECDDD4;
+  --tx:#1F1712; --tx2:#5F5148; --tx3:#8E7E74;
+  --accent:#E75C43; --accent-soft:#F0755E1F; --accent-tx:#C9432C;
+  --hot:#C63A22; --hot-soft:#C63A2216;
+  --mid:#9A6206; --mid-soft:#9A620616;
+  --cool:#0E8570; --cool-soft:#0E857016;
+  --paper:#FFFFFF; --paper-tx:#1F1712; --paper-line:#E1CDC1; --paper-fig:#F8F0EB; --paper-mute:#8E7E74;
+  --map-land:#F8F0EB; --map-street:#E6D4C9; --map-water:#E8DCE6;
+  --shadow:0 24px 55px -42px rgba(90,50,35,.35);
+  --grid-open:#C63A2224; --grid-open-line:#C63A2280; --grid-book:#DFCEC3;
+  --r1:12px; --r2:16px; --r3:24px; --r4:30px;
+}
+:root:not([data-theme="light"]), :root[data-theme="dark"]{ color-scheme:dark }
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#15100D; --surface:#1F1813; --raised:#33251E; --sunken:#2A1E18;
+    --line:#43332B; --line-soft:#33251E;
+    --tx:#FAEEE7; --tx2:#C7ADA0; --tx3:#9A7E71;
+    --accent:#F0755E; --accent-soft:#F0755E26; --accent-tx:#F79279;
+    --hot:#FF5C43; --hot-soft:#FF5C4324;
+    --mid:#E8A33A; --mid-soft:#E8A33A24;
+    --cool:#2FBF8C; --cool-soft:#2FBF8C24;
+    --map-land:#1B1511; --map-street:#3A2A23; --map-water:#241A21;
+    --shadow:0 24px 55px -38px rgba(0,0,0,.75);
+    --grid-open:#FF5C4330; --grid-open-line:#FF5C4399; --grid-book:#3E2E26;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#15100D; --surface:#1F1813; --raised:#33251E; --sunken:#2A1E18;
+  --line:#43332B; --line-soft:#33251E;
+  --tx:#FAEEE7; --tx2:#C7ADA0; --tx3:#9A7E71;
+  --accent:#F0755E; --accent-soft:#F0755E26; --accent-tx:#F79279;
+  --hot:#FF5C43; --hot-soft:#FF5C4324;
+  --mid:#E8A33A; --mid-soft:#E8A33A24;
+  --cool:#2FBF8C; --cool-soft:#2FBF8C24;
+  --map-land:#1B1511; --map-street:#3A2A23; --map-water:#241A21;
+  --shadow:0 24px 55px -38px rgba(0,0,0,.75);
+  --grid-open:#FF5C4330; --grid-open-line:#FF5C4399; --grid-book:#3E2E26;
+}
+
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--tx);
+  font-family:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{font-family:"Outfit","Manrope",system-ui,sans-serif;margin:0;text-wrap:balance;letter-spacing:-.02em}
+.mono{font-family:"Space Mono",ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+
+.app{display:grid;grid-template-columns:220px 1fr;min-height:100vh}
+.rail{background:var(--surface);border-right:1px solid var(--line);display:flex;flex-direction:column;
+  gap:2px;padding:18px 12px;position:sticky;top:0;height:100vh;overflow:auto}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 8px 18px;margin-bottom:4px;border-bottom:1px solid var(--line-soft)}
+.brand-mark{width:34px;height:34px;border-radius:11px;flex:none;display:grid;place-items:center;
+  background:linear-gradient(155deg,#F0755E,#E75C43)}
+.brand-name{font-family:"Outfit";font-weight:700;font-size:17px;letter-spacing:-.03em}
+.brand-sub{font-family:"Space Mono";font-size:9px;color:var(--tx3);letter-spacing:1.6px;text-transform:uppercase}
+.rail-group{font-family:"Space Mono";font-size:9px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;
+  color:var(--tx3);padding:18px 12px 8px}
+.navbtn{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border-radius:var(--r1);
+  color:var(--tx2);font-weight:600;font-size:13.5px;text-align:left;transition:background .12s,color .12s}
+.navbtn:hover{background:var(--sunken);color:var(--tx)}
+.navbtn[aria-current="page"]{background:var(--accent-soft);color:var(--accent-tx)}
+.navbtn .ico{width:16px;height:16px;flex:none;opacity:.9}
+.navbtn .tag{margin-left:auto;font-family:"Space Mono";font-size:8.5px;font-weight:700;letter-spacing:.5px;
+  padding:2px 6px;border-radius:99px;background:var(--mid-soft);color:var(--mid)}
+.rail-foot{margin-top:auto;padding-top:16px;border-top:1px solid var(--line-soft)}
+.quota{padding:8px 10px}
+.quota-row{display:flex;justify-content:space-between;font-size:11px;color:var(--tx3);margin-bottom:5px}
+.quota-bar{height:5px;background:var(--sunken);border-radius:99px;overflow:hidden}
+.quota-fill{height:100%;background:var(--accent);border-radius:99px}
+
+.main{display:flex;flex-direction:column;min-width:0}
+.topbar{display:flex;align-items:center;gap:10px;padding:13px 22px;border-bottom:1px solid var(--line);
+  background:var(--surface);position:sticky;top:0;z-index:20;flex-wrap:wrap}
+.search{display:flex;align-items:center;gap:9px;background:var(--sunken);border:1px solid var(--line);
+  border-radius:999px;padding:9px 16px;flex:1;max-width:430px}
+.search input{background:none;border:none;outline:none;color:var(--tx);font:inherit;width:100%}
+.kbd{font-family:"Space Mono";font-size:10px;color:var(--tx3);border:1px solid var(--line);border-radius:5px;padding:1px 5px}
+.btn{padding:9px 16px;border-radius:999px;font-weight:600;font-size:13px;border:1px solid var(--line);
+  background:var(--raised);color:var(--tx);transition:.12s;white-space:nowrap}
+.btn:hover{border-color:var(--tx3)}
+.btn-primary{background:linear-gradient(155deg,#F0755E,#E75C43);border-color:transparent;color:#fff}
+.btn-primary:hover{filter:brightness(1.06)}
+.btn-sm{padding:6px 13px;font-size:12.5px}
+.sample-flag{margin-left:auto;display:flex;align-items:center;gap:7px;font-size:11px;color:var(--tx3);
+  border:1px dashed var(--line);border-radius:99px;padding:5px 12px}
+.dot{width:6px;height:6px;border-radius:99px;background:var(--mid);flex:none}
+
+.page{padding:22px;display:none}
+.page.on{display:block}
+.pagehead{display:flex;align-items:flex-start;gap:14px;margin-bottom:18px;flex-wrap:wrap}
+.pagehead h1{font-size:24px;font-weight:700}
+.pagehead p{margin:5px 0 0;color:var(--tx2);max-width:66ch}
+.pagehead .spacer{flex:1}
+
+.split{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(350px,.88fr);gap:16px;align-items:start}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r3);overflow:hidden}
+.panel-head{display:flex;align-items:center;gap:10px;padding:13px 16px;border-bottom:1px solid var(--line-soft);flex-wrap:wrap}
+.panel-head h2{font-size:13.5px;font-weight:700}
+.panel-head .sub{font-size:11.5px;color:var(--tx3)}
+.panel-head .spacer{flex:1}
+
+.mapwrap{position:relative;background:var(--map-land)}
+.mapwrap svg{display:block;width:100%;height:auto}
+.pin{cursor:pointer;transition:transform .15s}
+.pin:hover{transform:scale(1.3)}
+.pin.sel circle:first-child{stroke:var(--tx);stroke-width:2}
+.maplegend{position:absolute;left:14px;bottom:14px;background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--r1);padding:10px 12px;display:flex;flex-direction:column;gap:7px;font-size:10.5px;box-shadow:var(--shadow)}
+.legrow{display:flex;align-items:center;gap:8px;color:var(--tx2);white-space:nowrap}
+.legscale{width:104px;height:9px;border-radius:3px;
+  background:linear-gradient(90deg,#0E8570,#22A98A,#5FC9A8,#E8C766,#FFA94D,#FF8352,#FF5C43)}
+.mapnote{position:absolute;right:14px;top:14px;font-family:"Space Mono";font-size:10px;color:var(--tx3);
+  background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:4px 10px}
+
+.filters{display:flex;gap:7px;padding:12px 16px;border-bottom:1px solid var(--line-soft);flex-wrap:wrap}
+.chip{padding:6px 13px;border-radius:999px;border:1px solid var(--line);font-size:12.5px;font-weight:600;
+  color:var(--tx2);display:inline-flex;align-items:center;gap:7px;transition:.12s}
+.chip:hover{border-color:var(--tx3);color:var(--tx)}
+.chip[aria-pressed="true"]{background:var(--accent-soft);border-color:transparent;color:var(--accent-tx)}
+.chip .cnt{font-family:"Space Mono";font-size:10px;opacity:.75}
+.chip.hot[aria-pressed="true"]{background:var(--hot-soft);color:var(--hot)}
+.chip.mid[aria-pressed="true"]{background:var(--mid-soft);color:var(--mid)}
+.chip.cool[aria-pressed="true"]{background:var(--cool-soft);color:var(--cool)}
+
+.list{max-height:565px;overflow:auto}
+.row{display:grid;grid-template-columns:42px 1fr auto;gap:12px;align-items:center;padding:12px 16px;
+  border-bottom:1px solid var(--line-soft);cursor:pointer;width:100%;text-align:left;transition:background .1s}
+.row:hover{background:var(--sunken)}
+.row[aria-selected="true"]{background:var(--accent-soft)}
+.score{width:42px;height:42px;border-radius:var(--r1);display:grid;place-items:center;
+  font-family:"Space Mono";font-weight:700;font-size:14px;flex:none}
+.score.hot{background:var(--hot-soft);color:var(--hot)}
+.score.mid{background:var(--mid-soft);color:var(--mid)}
+.score.cool{background:var(--cool-soft);color:var(--cool)}
+.score.low{background:var(--sunken);color:var(--tx3)}
+.row-name{font-weight:700;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.row-meta{font-size:11.5px;color:var(--tx3);display:flex;align-items:center;gap:8px;margin-top:3px;flex-wrap:wrap}
+.row-money{text-align:right;font-family:"Space Mono";font-size:12.5px;font-weight:700}
+.row-money small{display:block;font-size:10px;color:var(--tx3);font-family:"Manrope";font-weight:500;margin-top:3px}
+.bucket{font-size:9.5px;font-weight:700;letter-spacing:.6px;padding:3px 8px;border-radius:99px;text-transform:uppercase;
+  display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.bucket.hot{background:var(--hot-soft);color:var(--hot)}
+.bucket.mid{background:var(--mid-soft);color:var(--mid)}
+.bucket.cool{background:var(--cool-soft);color:var(--cool)}
+.bucket.low{background:var(--sunken);color:var(--tx3)}
+.conf{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;color:var(--tx3)}
+.confbars{display:inline-flex;gap:2px;align-items:flex-end;height:10px}
+.confbars i{width:3px;background:var(--tx3);border-radius:1px;display:block}
+.confbars i.off{opacity:.28}
+.plat{font-family:"Space Mono";font-size:10px;padding:2px 7px;border:1px solid var(--line);border-radius:99px;color:var(--tx3)}
+
+.detail-grid{display:grid;grid-template-columns:320px minmax(0,1fr);gap:16px;align-items:start}
+.stack{display:flex;flex-direction:column;gap:16px}
+.stat{padding:16px}
+.stat-label{font-family:"Space Mono";font-size:9px;letter-spacing:1.3px;text-transform:uppercase;color:var(--tx3);font-weight:700}
+.dial{display:flex;align-items:center;gap:16px;padding:16px}
+.money{font-family:"Space Mono";font-size:23px;font-weight:700;letter-spacing:-.02em;margin-top:8px}
+.rangebar{height:7px;background:var(--sunken);border-radius:99px;margin-top:10px;position:relative;overflow:hidden}
+.rangebar span{position:absolute;top:0;bottom:0;background:var(--accent);border-radius:99px;opacity:.8}
+.stat-note{font-size:11.5px;color:var(--tx3);margin-top:8px;line-height:1.5}
+.kv{display:flex;justify-content:space-between;gap:12px;padding:9px 16px;font-size:12.5px;border-top:1px solid var(--line-soft)}
+.kv dt{color:var(--tx3)}
+.kv dd{margin:0;font-weight:600;text-align:right}
+
+.disclose{border:1px solid var(--line);border-left:3px solid var(--mid);border-radius:var(--r2);
+  padding:14px 16px;background:var(--mid-soft)}
+.disclose h3{font-size:12.5px;font-weight:700;display:flex;align-items:center;gap:8px;color:var(--mid)}
+.disclose ul{margin:9px 0 0;padding-left:18px;color:var(--tx2);font-size:12px;line-height:1.7}
+.disclose p{margin:10px 0 0;font-size:11.5px;color:var(--tx3)}
+.disclose .copybtn{margin-top:11px;font-size:11.5px;padding:5px 12px;border-radius:999px;
+  border:1px solid var(--line);color:var(--tx2)}
+
+.gridscroll{overflow-x:auto;padding:0 16px 14px}
+table.slots{border-collapse:separate;border-spacing:2px;font-family:"Space Mono";font-size:10px;min-width:540px;width:100%}
+table.slots th{color:var(--tx3);font-weight:400;padding:6px 2px;text-align:center;white-space:nowrap}
+table.slots th.t{text-align:right;padding-right:9px;width:54px}
+table.slots td{height:15px;border-radius:3px;background:var(--grid-book)}
+table.slots td.open{background:var(--grid-open);box-shadow:inset 0 0 0 1px var(--grid-open-line)}
+table.slots td.dead{background:var(--grid-open);box-shadow:inset 0 0 0 1.5px var(--hot)}
+table.slots td.closed{background:transparent;box-shadow:inset 0 0 0 1px var(--line-soft)}
+.gridkey{display:flex;gap:16px;padding:0 16px 14px;font-size:10.5px;color:var(--tx3);flex-wrap:wrap}
+.gridkey span{display:inline-flex;align-items:center;gap:7px}
+.gridkey i{width:13px;height:11px;border-radius:3px;display:block}
+
+.dz{padding:16px;display:grid;grid-template-columns:66px repeat(7,1fr);gap:3px;font-size:10px}
+.dz div{display:grid;place-items:center;height:28px;border-radius:4px;font-family:"Space Mono"}
+.dz .lbl{color:var(--tx3);justify-content:flex-end;padding-right:8px;place-items:center end}
+.dz .hd{color:var(--tx3);height:18px}
+.dz .cell{color:var(--tx);font-weight:700}
+.dz .cell.flag{box-shadow:inset 0 0 0 1.5px var(--hot)}
+
+.pitchwrap{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:16px;align-items:start}
+.sheet{background:var(--paper);color:var(--paper-tx);border-radius:var(--r1);padding:40px 42px;
+  box-shadow:var(--shadow);max-width:720px;margin:0 auto;font-size:13px;line-height:1.62}
+.sheet .eyebrow{font-family:"Space Mono";font-size:9.5px;letter-spacing:1.6px;text-transform:uppercase;font-weight:700;color:var(--paper-mute)}
+.sheet h2{font-family:"Outfit";font-size:28px;font-weight:800;letter-spacing:-.03em;line-height:1.14;margin:10px 0 0}
+.sheet h3{font-family:"Outfit";font-size:13.5px;font-weight:700;margin:24px 0 8px}
+.sheet hr{border:none;border-top:1px solid var(--paper-line);margin:22px 0}
+.sheet .lede{font-size:15px;margin:13px 0 0;color:#3B342E}
+.sheet ol,.sheet ul{margin:8px 0 0;padding-left:20px}
+.sheet li{margin-bottom:6px}
+.sheet .fig{display:flex;gap:24px;margin:20px 0 0;padding:17px 19px;background:var(--paper-fig);border-radius:var(--r1);
+  align-items:baseline;flex-wrap:wrap}
+.sheet .fig b{font-family:"Space Mono";font-size:22px;font-weight:700;display:block;letter-spacing:-.02em}
+.sheet .fig span{font-family:"Space Mono";font-size:9.5px;letter-spacing:1.1px;text-transform:uppercase;color:var(--paper-mute);font-weight:700}
+.sheet .foot{font-size:10.5px;color:var(--paper-mute);line-height:1.6;margin-top:26px;border-top:1px solid var(--paper-line);padding-top:13px}
+.sheet .minigrid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-top:14px}
+.sheet .minigrid i{height:36px;border-radius:3px;display:block;background:#DFCEC3}
+.sheet .minigrid i.o{background:#EDB1A4;box-shadow:inset 0 0 0 1px #C63A22}
+.sheet .minigrid em{font-family:"Space Mono";font-style:normal;font-size:9px;text-align:center;color:var(--paper-mute)}
+.variant{display:flex;gap:7px;padding:12px 16px;border-bottom:1px solid var(--line-soft)}
+.ctrl{padding:13px 16px;border-top:1px solid var(--line-soft)}
+.ctrl label{font-family:"Space Mono";font-size:9px;letter-spacing:1.3px;text-transform:uppercase;color:var(--tx3);
+  font-weight:700;display:block;margin-bottom:8px}
+.seg{display:flex;background:var(--sunken);border-radius:999px;padding:3px;gap:3px}
+.seg button{flex:1;padding:6px;border-radius:999px;font-size:12px;font-weight:600;color:var(--tx2)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--tx);box-shadow:var(--shadow)}
+
+.trend{padding:18px 16px}
+.legend2{display:flex;gap:18px;font-size:11.5px;color:var(--tx2);padding:0 16px 16px;flex-wrap:wrap}
+.legend2 span{display:inline-flex;align-items:center;gap:7px}
+.legend2 i{width:15px;height:3px;border-radius:2px;display:block}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:13px;padding:16px}
+.mini{border:1px solid var(--line);border-radius:var(--r2);padding:14px}
+.mini h4{font-size:12.5px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.mini .big{font-family:"Space Mono";font-size:22px;font-weight:700}
+.bar{height:6px;background:var(--sunken);border-radius:99px;overflow:hidden;margin-top:9px}
+.bar i{display:block;height:100%;border-radius:99px}
+.tblwrap{overflow-x:auto}
+table.data{width:100%;border-collapse:collapse;font-size:12.5px;min-width:580px}
+table.data th{text-align:left;font-family:"Space Mono";font-size:9px;letter-spacing:1.2px;text-transform:uppercase;
+  color:var(--tx3);font-weight:700;padding:11px 16px;border-bottom:1px solid var(--line)}
+table.data td{padding:11px 16px;border-bottom:1px solid var(--line-soft)}
+table.data tr:last-child td{border-bottom:none}
+.stale{display:flex;align-items:flex-start;gap:10px;padding:12px 16px;background:var(--mid-soft);
+  border:1px solid var(--line);border-left:3px solid var(--mid);border-radius:var(--r2);
+  font-size:12.5px;color:var(--tx2);margin-bottom:16px}
+.stale b{color:var(--mid)}
+.notice{display:flex;gap:11px;align-items:flex-start;padding:12px 16px;border:1px solid var(--line);
+  border-left:3px solid var(--accent);border-radius:var(--r2);background:var(--accent-soft);
+  font-size:12.5px;color:var(--tx2);margin-bottom:16px}
+.notice b{color:var(--tx)}
+
+.demobar{position:fixed;left:50%;transform:translateX(-50%);bottom:20px;z-index:60;display:flex;align-items:center;
+  gap:13px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:9px 9px 9px 18px;
+  box-shadow:var(--shadow);max-width:calc(100% - 40px)}
+.demobar .step{font-size:12.5px;color:var(--tx2);max-width:420px}
+.demobar .step b{color:var(--tx);font-weight:700}
+.demobar .n{font-family:"Space Mono";font-size:11px;color:var(--accent-tx);font-weight:700}
+
+@media (max-width:1080px){
+  .split,.detail-grid,.pitchwrap{grid-template-columns:1fr}
+  .app{grid-template-columns:1fr}
+  .rail{position:static;height:auto;flex-direction:row;overflow-x:auto;align-items:center;gap:6px;padding:10px}
+  .rail-group,.rail-foot,.brand-sub{display:none}
+  .navbtn{width:auto;white-space:nowrap}
+  .brand{padding:0 12px 0 4px;border:none;margin:0}
+}
+@media (max-width:680px){
+  .sample-flag{order:-1;margin-left:0}
+  .demobar{left:12px;right:12px;transform:none;border-radius:var(--r2);flex-wrap:wrap}
+  .demobar .step{max-width:none}
+  .sheet{padding:26px 22px}
+  .page{padding:16px}
+}
+</style>
+
+<div class="app">
+  <nav class="rail" aria-label="Main">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg width="19" height="19" viewBox="0 0 20 20" fill="none">
+          <rect x="1.5" y="1.5" width="17" height="17" rx="4" stroke="#fff" stroke-width="1.5" opacity=".9"/>
+          <rect x="4.6" y="4.6" width="4.4" height="4.4" rx="1.2" fill="#fff"/>
+          <rect x="11" y="11" width="4.4" height="4.4" rx="1.2" fill="#fff" opacity=".45"/>
+          <rect x="4.6" y="11" width="4.4" height="4.4" rx="1.2" fill="#fff"/>
+        </svg>
+      </span>
+      <div>
+        <div class="brand-name">OpenChair</div>
+        <div class="brand-sub">Capacity radar</div>
+      </div>
+    </div>
+
+    <div class="rail-group">Prospect</div>
+    <button class="navbtn" data-go="today">
+      <svg class="ico" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 7a4 4 0 118 0c0 3 1 4 1 4H3s1-1 1-4z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M6.5 13.2a1.7 1.7 0 003 0" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      Today
+    </button>
+    <button class="navbtn" data-go="scan" aria-current="page">
+      <svg class="ico" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M10.8 10.8 14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Radar
+    </button>
+    <button class="navbtn" data-go="detail">
+      <svg class="ico" viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="2" y="3" width="12" height="11" rx="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M2 6.5h12M6 3v11" stroke="currentColor" stroke-width="1.2"/></svg>
+      Meter
+    </button>
+    <button class="navbtn" data-go="pitch">
+      <svg class="ico" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 2h6L13 5.5V14H3.5z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M9 2v4h4" stroke="currentColor" stroke-width="1.2"/></svg>
+      Pitch
+    </button>
+
+    <div class="rail-group">Retain</div>
+    <button class="navbtn" data-go="ledger">
+      <svg class="ico" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2 12l3.5-4 3 2.5L13 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Ledger <span class="tag">OTO2</span>
+    </button>
+
+    <div class="rail-group">Operate</div>
+    <button class="navbtn" data-go="coverage">
+      <svg class="ico" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.4"/><path d="M8 4.5v3.8l2.4 1.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      Coverage
+    </button>
+
+    <div class="rail-foot">
+      <div class="quota">
+        <div class="quota-row"><span>Watched</span><span class="mono">18 / 25</span></div>
+        <div class="quota-bar"><div class="quota-fill" style="width:72%"></div></div>
+        <div class="quota-row" style="margin:9px 0 5px"><span>Cities</span><span class="mono">1 / 1</span></div>
+        <div class="quota-bar"><div class="quota-fill" style="width:100%;background:var(--mid)"></div></div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="main">
+    <header class="topbar">
+      <div class="search">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="5" stroke="var(--tx3)" stroke-width="1.5"/><path d="M10.8 10.8 14 14" stroke="var(--tx3)" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <input id="q" value="barbershop, Tampa" autocomplete="off" aria-label="Niche and city">
+        <span class="kbd">&#8629;</span>
+      </div>
+      <button class="btn btn-primary" id="rescan">Scan</button>
+      <button class="btn" id="playdemo">&#9654; 60-second demo</button>
+      <div class="sample-flag"><span class="dot"></span> Sample data &mdash; not a live scan</div>
+    </header>
+
+    <!-- ============ TODAY ============ -->
+    <section class="page" id="p-today">
+      <div class="pagehead">
+        <div>
+          <h1>The 8am list</h1>
+          <p>Ranked by what <em>moved</em> overnight, not by what is merely bad. A shop that has been
+             quiet for six weeks is not news; one that lost twelve bookings since Tuesday is.</p>
+        </div>
+      </div>
+      <div class="notice">
+        <span aria-hidden="true">&#9670;</span>
+        <div><b>Nothing here is auto-sent.</b> OpenChair drafts; you decide who hears from you. Consent,
+        CAN-SPAM and TCPA obligations follow the sender, so the send button stays yours.</div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>Thursday 4 September &middot; 18 watched</h2><span class="spacer"></span><span class="sub">delivered 08:00 EDT</span></div>
+        <div class="tblwrap">
+          <table class="data">
+            <thead><tr><th>Business</th><th>Bucket</th><th>Score</th><th>Overnight</th><th>Empty-chair week</th><th>Why it is on the list</th></tr></thead>
+            <tbody id="alerttbl"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ RADAR ============ -->
+    <section class="page on" id="p-scan">
+      <div class="pagehead">
+        <div>
+          <h1>Barbershops &middot; Tampa, FL</h1>
+          <p>91 businesses found &middot; <b id="bookct">47</b> have public online booking and can be
+             measured. The other 44 have no bookable calendar to read. That is not a coverage failure:
+             a shop already paying for booking software is the shop that buys software.</p>
+        </div>
+      </div>
+
+      <div class="split">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Vacancy map</h2>
+            <span class="sub">next 7 days &middot; scanned 04:12 today</span>
+            <span class="spacer"></span>
+            <span class="sub mono">47 pins</span>
+          </div>
+          <div class="mapwrap">
+            <svg viewBox="0 0 640 430" role="img" aria-label="Map of Tampa with 47 businesses plotted, coloured by vacancy score and sized by unsold revenue">
+              <defs>
+                <pattern id="hatch" width="6" height="6" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+                  <line x1="0" y1="0" x2="0" y2="6" stroke="var(--map-street)" stroke-width="1" opacity=".55"/>
+                </pattern>
+              </defs>
+              <rect width="640" height="430" fill="var(--map-land)"/>
+              <path d="M640 120 L520 150 Q470 175 478 215 Q486 258 452 292 Q420 325 430 370 L444 430 L640 430 Z" fill="var(--map-water)"/>
+              <path d="M0 300 Q60 288 96 262 Q130 238 128 205 L124 160 L0 150 Z" fill="var(--map-water)" opacity=".7"/>
+              <text x="556" y="300" fill="var(--tx3)" font-size="10" font-family="Space Mono" opacity=".7" transform="rotate(-24 556 300)">HILLSBOROUGH BAY</text>
+              <g stroke="var(--map-street)" stroke-width="1">
+                <path d="M0 60h640M0 110h640M0 170h480M0 230h430M0 290h410M0 350h420M0 400h430"/>
+                <path d="M70 0v430M140 0v430M215 0v430M290 0v430M360 0v400M425 0v370"/>
+              </g>
+              <g stroke="var(--map-street)" stroke-width="2.6" opacity=".95">
+                <path d="M0 200 L200 200 L260 150 L640 108"/>
+                <path d="M182 0 L182 430"/>
+                <path d="M0 340 L300 335 L420 240 L500 150"/>
+              </g>
+              <rect x="140" y="110" width="75" height="60" fill="url(#hatch)"/>
+              <text x="150" y="146" fill="var(--tx3)" font-size="9" font-family="Space Mono" opacity=".85">YBOR</text>
+              <g id="pins"></g>
+            </svg>
+            <div class="mapnote">Illustrative geography</div>
+            <div class="maplegend">
+              <div class="legrow"><span class="legscale"></span></div>
+              <div class="legrow" style="justify-content:space-between;width:104px;color:var(--tx3)"><span>slammed</span><span>hungry</span></div>
+              <div class="legrow" style="border-top:1px solid var(--line-soft);padding-top:7px">
+                <svg width="26" height="14" viewBox="0 0 26 14" aria-hidden="true"><circle cx="6" cy="7" r="3" fill="var(--tx3)" opacity=".5"/><circle cx="18" cy="7" r="6" fill="var(--tx3)" opacity=".5"/></svg>
+                pin size = dollars at stake
+              </div>
+              <div class="legrow">
+                <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="5.4" fill="var(--tx3)" opacity=".35"/><path d="M4.2 7h5.6" stroke="var(--surface)" stroke-width="1.8"/></svg>
+                below confidence floor &mdash; no score
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Ranked prospects</h2>
+            <span class="spacer"></span>
+            <span class="sub mono" id="listcount">47 shown</span>
+          </div>
+          <div class="filters" role="group" aria-label="Filter by bucket">
+            <button class="chip hot" data-f="hot" aria-pressed="false">&#9650; Hungry <span class="cnt">14</span></button>
+            <button class="chip mid" data-f="mid" aria-pressed="false">&#9632; Steady <span class="cnt">21</span></button>
+            <button class="chip cool" data-f="cool" aria-pressed="false">&#9679; Slammed <span class="cnt">9</span></button>
+            <button class="chip" data-f="low" aria-pressed="false">? No score <span class="cnt">3</span></button>
+          </div>
+          <div class="list" id="list" role="listbox" aria-label="Prospects ranked by opportunity"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ METER / DETAIL ============ -->
+    <section class="page" id="p-detail">
+      <div class="pagehead">
+        <div>
+          <h1 id="d-name">Ybor Cuts &amp; Fades</h1>
+          <p id="d-addr">1704 E 7th Ave, Ybor City &middot; Booksy &middot; 3 chairs &middot; scanned 04:12 today</p>
+        </div>
+        <div class="spacer"></div>
+        <button class="btn btn-sm" data-go="scan">&larr; Map</button>
+        <button class="btn btn-sm btn-primary" data-go="pitch">Build the pitch &rarr;</button>
+      </div>
+
+      <div class="detail-grid">
+        <div class="stack">
+          <div class="panel">
+            <div class="dial">
+              <svg width="96" height="96" viewBox="0 0 96 96" role="img" aria-labelledby="dialt">
+                <title id="dialt">Vacancy score 78 out of 100</title>
+                <circle cx="48" cy="48" r="39" fill="none" stroke="var(--sunken)" stroke-width="10"/>
+                <circle id="dialarc" cx="48" cy="48" r="39" fill="none" stroke="var(--hot)" stroke-width="10"
+                        stroke-linecap="round" stroke-dasharray="191 245" transform="rotate(-90 48 48)"/>
+                <text id="dialnum" x="48" y="52" text-anchor="middle" fill="var(--tx)" font-family="Outfit" font-weight="800" font-size="27">78</text>
+                <text x="48" y="65" text-anchor="middle" fill="var(--tx3)" font-family="Space Mono" font-size="8">/100</text>
+              </svg>
+              <div>
+                <div class="stat-label">Vacancy score</div>
+                <div style="margin-top:7px"><span class="bucket hot" id="d-bucket">&#9650; Hungry</span></div>
+                <div class="stat-note">78 of 100 bookable chair-minutes over the next 7 days are still
+                  open, weighted so the near days count for more.</div>
+              </div>
+            </div>
+            <dl style="margin:0">
+              <div class="kv"><dt>Confidence</dt><dd><span class="confbars" aria-hidden="true"><i style="height:4px"></i><i style="height:7px"></i><i style="height:10px"></i><i class="off" style="height:10px"></i></span> High &middot; 0.87</dd></div>
+              <div class="kv"><dt>Horizon covered</dt><dd class="mono">7 of 7 days</dd></div>
+              <div class="kv"><dt>Prior scans</dt><dd class="mono">54</dd></div>
+              <div class="kv"><dt>Niche percentile</dt><dd>91st most vacant</dd></div>
+            </dl>
+          </div>
+
+          <div class="panel">
+            <div class="stat">
+              <div class="stat-label">Unsold value &middot; this week</div>
+              <div class="money" id="d-money">$1,860 &ndash; $2,340</div>
+              <div class="rangebar"><span style="left:22%;right:14%"></span></div>
+              <div class="stat-note">Priced from this shop's own published Booksy menu
+                (cut $35, cut&nbsp;+&nbsp;beard $55, fade $40). The range is service mix, not a forecast
+                of demand.</div>
+            </div>
+            <div class="kv"><dt>Price source</dt><dd>Published menu &middot; T2</dd></div>
+            <div class="kv"><dt>Open slots</dt><dd class="mono" id="d-slots">38 of 126</dd></div>
+            <div class="kv"><dt>Next available</dt><dd id="d-next">Today, 2:30pm</dd></div>
+            <div class="kv"><dt>Realistically recoverable</dt><dd class="mono">$280 &ndash; $650</dd></div>
+          </div>
+
+          <div class="disclose">
+            <h3>
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="6.4" stroke="currentColor" stroke-width="1.4"/><path d="M8 4.6v4.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="8" cy="11.4" r=".95" fill="currentColor"/></svg>
+              What this scan could not see
+            </h3>
+            <ul>
+              <li>Slots the owner blocked off privately</li>
+              <li>Staff holidays never published to the calendar</li>
+              <li>Walk-ins and bookings taken over the phone</li>
+              <li>Anything booked after 04:12 this morning</li>
+            </ul>
+            <p>Say <b>&ldquo;online-bookable open slots&rdquo;</b> &mdash; never &ldquo;your shop was
+              empty&rdquo;. The owner knows what walk-ins he had. He does not know what his calendar
+              showed the public, and that is the thing you can actually tell him.</p>
+            <button class="copybtn">Copy this disclosure</button>
+          </div>
+        </div>
+
+        <div class="stack">
+          <div class="panel">
+            <div class="panel-head">
+              <h2>Availability grid</h2>
+              <span class="sub">Mon 8 &ndash; Sun 14 Sep &middot; all 3 chairs pooled</span>
+            </div>
+            <div class="gridscroll">
+              <table class="slots" id="slotgrid" aria-label="Availability by time and day"></table>
+            </div>
+            <div class="gridkey">
+              <span><i style="background:var(--grid-book)"></i> booked</span>
+              <span><i style="background:var(--grid-open);box-shadow:inset 0 0 0 1px var(--grid-open-line)"></i> open &amp; bookable</span>
+              <span><i style="background:var(--grid-open);box-shadow:inset 0 0 0 1.5px var(--hot)"></i> open &amp; chronically dead</span>
+              <span><i style="box-shadow:inset 0 0 0 1px var(--line-soft)"></i> shop closed</span>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <h2>Dead-Zone Map</h2>
+              <span class="sub">mean vacancy per block &middot; 8 weeks &middot; min. 6 observations</span>
+              <span class="spacer"></span>
+              <span class="bucket mid">Tue 1&ndash;4pm chronic</span>
+            </div>
+            <div class="dz" id="dz"></div>
+            <div class="gridkey" style="padding-top:0">
+              <span>Outlined cells are empty <em>every</em> week, not just this one &mdash; and survive the
+                consistency test. That is where the offer goes.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ PITCH ============ -->
+    <section class="page" id="p-pitch">
+      <div class="pagehead">
+        <div>
+          <h1>Pitch pack</h1>
+          <p>One scan, two opposite offers. The data does not change &mdash; the problem you name does.</p>
+        </div>
+        <div class="spacer"></div>
+        <button class="btn btn-sm" data-go="detail">&larr; Meter</button>
+        <button class="btn btn-sm">Download PDF</button>
+      </div>
+
+      <div class="pitchwrap">
+        <div class="panel" style="background:var(--sunken);padding:24px 16px">
+          <div class="sheet" id="sheet"></div>
+        </div>
+
+        <div class="stack">
+          <div class="panel">
+            <div class="variant">
+              <button class="chip hot" id="v-hot" aria-pressed="true">&#9650; Hungry</button>
+              <button class="chip cool" id="v-cool" aria-pressed="false">&#9679; Slammed</button>
+            </div>
+            <div class="ctrl">
+              <label for="fmt">Format</label>
+              <div class="seg" id="fmt">
+                <button aria-pressed="true">One-pager</button>
+                <button aria-pressed="false">Email</button>
+                <button aria-pressed="false">SMS</button>
+              </div>
+            </div>
+            <div class="ctrl">
+              <label for="tone">Tone</label>
+              <div class="seg" id="tone">
+                <button aria-pressed="false">Blunt</button>
+                <button aria-pressed="true">Neighbourly</button>
+                <button aria-pressed="false">Formal</button>
+              </div>
+            </div>
+            <div class="kv"><dt>Availability grid</dt><dd>Redrawn, not captured</dd></div>
+            <div class="kv"><dt>Dollar figure</dt><dd>Range only</dd></div>
+            <div class="kv"><dt>Disclosure block</dt><dd>Locked on</dd></div>
+            <div class="kv"><dt>LossReel video</dt><dd style="color:var(--tx3)">OTO3</dd></div>
+          </div>
+
+          <div class="disclose" style="border-left-color:var(--accent);background:var(--accent-soft)">
+            <h3 style="color:var(--accent-tx)">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5 6.5 12 13 4.5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Rails on this copy
+            </h3>
+            <ul>
+              <li>No income or results claim about the shop</li>
+              <li>A range, never a single number</li>
+              <li>Source and scan time printed on the sheet</li>
+              <li>The grid is <b>redrawn from the data</b>, never a screen capture of
+                  the platform's page &mdash; their photos and layout are not ours to copy</li>
+              <li>Chairs are numbered, never named &mdash; no staff member appears on this sheet</li>
+              <li>The disclosure block cannot be removed &mdash; not even under white-label</li>
+              <li>OpenChair never sends this. You do.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ LEDGER ============ -->
+    <section class="page" id="p-ledger">
+      <div class="pagehead">
+        <div>
+          <h1>Ledger &middot; Ybor Cuts &amp; Fades</h1>
+          <p>The screen that won the client is the screen that keeps them. Same data, eight weeks on.</p>
+        </div>
+        <div class="spacer"></div>
+        <button class="btn btn-sm">White-label</button>
+        <button class="btn btn-sm btn-primary">Send report</button>
+      </div>
+
+      <div class="split">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Fill rate</h2>
+            <span class="sub">weekly &middot; online-bookable slots only</span>
+            <span class="spacer"></span>
+            <span class="bucket cool">41% &rarr; 68%</span>
+          </div>
+          <div class="trend">
+            <svg viewBox="0 0 600 215" role="img" aria-label="Fill rate rose from 41 percent in week 1 to 68 percent in week 8, while the Tampa barbershop median rose only from 38 to 42 percent">
+              <g stroke="var(--line-soft)" stroke-width="1">
+                <path d="M42 20h545M42 62h545M42 104h545M42 146h545M42 188h545"/>
+              </g>
+              <g fill="var(--tx3)" font-size="10" font-family="Space Mono" text-anchor="end">
+                <text x="34" y="24">80%</text><text x="34" y="66">65%</text>
+                <text x="34" y="108">50%</text><text x="34" y="150">35%</text><text x="34" y="192">20%</text>
+              </g>
+              <g fill="var(--tx3)" font-size="10" font-family="Space Mono" text-anchor="middle">
+                <text x="42" y="207">W1</text><text x="119" y="207">W2</text><text x="196" y="207">W3</text>
+                <text x="273" y="207">W4</text><text x="350" y="207">W5</text><text x="427" y="207">W6</text>
+                <text x="504" y="207">W7</text><text x="581" y="207">W8</text>
+              </g>
+              <path d="M42 137 L119 130 L196 118 L273 99 L350 92 L427 80 L504 72 L581 58 L581 188 L42 188 Z"
+                    fill="var(--cool)" opacity=".13"/>
+              <path d="M42 154 L119 152 L196 150 L273 148 L350 150 L427 143 L504 142 L581 143"
+                    fill="none" stroke="var(--tx3)" stroke-width="1.7" stroke-dasharray="4 4"/>
+              <path d="M42 137 L119 130 L196 118 L273 99 L350 92 L427 80 L504 72 L581 58"
+                    fill="none" stroke="var(--cool)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="42" cy="137" r="3.5" fill="var(--cool)" opacity=".55"/>
+              <circle cx="581" cy="58" r="5" fill="var(--cool)"/>
+              <text x="575" y="46" fill="var(--cool)" font-size="11" font-family="Space Mono" font-weight="700" text-anchor="end">68%</text>
+              <text x="48" y="130" fill="var(--tx3)" font-size="10" font-family="Space Mono">41%</text>
+              <line x1="273" y1="20" x2="273" y2="188" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="3 3"/>
+              <text x="280" y="34" fill="var(--accent-tx)" font-size="10" font-family="Space Mono">engagement starts</text>
+            </svg>
+          </div>
+          <div class="legend2">
+            <span><i style="background:var(--cool)"></i> this shop</span>
+            <span><i style="background:var(--tx3)"></i> Tampa barbershop median (n=31)</span>
+          </div>
+        </div>
+
+        <div class="stack">
+          <div class="panel">
+            <div class="panel-head"><h2>What changed</h2></div>
+            <div class="cards" style="grid-template-columns:1fr">
+              <div class="mini">
+                <h4>Tuesday afternoons <span class="bucket cool" style="margin-left:auto">recovered</span></h4>
+                <div style="font-size:12px;color:var(--tx2)">Was 88% open. Now 34% open, since the midweek offer started running.</div>
+                <div class="bar"><i style="width:66%;background:var(--cool)"></i></div>
+              </div>
+              <div class="mini">
+                <h4>Saturday <span class="bucket mid" style="margin-left:auto">at capacity</span></h4>
+                <div style="font-size:12px;color:var(--tx2)">Full six weeks running. The next conversation is a fourth chair, not more traffic.</div>
+                <div class="bar"><i style="width:96%;background:var(--mid)"></i></div>
+              </div>
+            </div>
+          </div>
+          <div class="disclose">
+            <h3>Attribution caveat &mdash; printed on every client report</h3>
+            <p style="margin-top:7px">OpenChair measures published availability, not causation. The Tampa
+              barbershop median rose 4 points over the same period, so the honest claim is the
+              <b>+13.7 point gap</b> against the market, not the full +27 raw rise. Claiming the raw
+              number is how a consultant loses a client in month three.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ COVERAGE ============ -->
+    <section class="page" id="p-coverage">
+      <div class="pagehead">
+        <div>
+          <h1>Coverage &amp; adapter health</h1>
+          <p>Which platforms Radar can currently read, and how much of your city it honestly sees.</p>
+        </div>
+      </div>
+      <div class="stale">
+        <span aria-hidden="true">&#9650;</span>
+        <div><b>Mindbody publishing is frozen.</b> The canary caught a population shift &mdash; mean
+        vacancy jumped 31 points overnight across <em>every</em> Mindbody venue at once, which is a
+        broken selector, not a market event. Last-good data is being served and labelled stale until
+        the adapter is fixed. This is the failure that would otherwise send a consultant into a
+        meeting with a confidently wrong number.</div>
+      </div>
+      <div class="panel">
+        <div class="tblwrap">
+          <table class="data">
+            <thead><tr><th>Adapter</th><th>Capability class</th><th>Success (7d)</th><th>Circuit</th><th>Venues</th><th>Fixtures</th></tr></thead>
+            <tbody id="covtbl"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="panel" style="margin-top:16px">
+        <div class="panel-head"><h2>City coverage &middot; Tampa barbershops</h2></div>
+        <div class="cards">
+          <div class="mini"><h4>Discovered</h4><div class="big">91</div><div style="font-size:11.5px;color:var(--tx3);margin-top:6px">Maps + website crawl</div></div>
+          <div class="mini"><h4>Bookable online</h4><div class="big" style="color:var(--accent-tx)">47</div><div class="bar"><i style="width:52%;background:var(--accent)"></i></div><div style="font-size:11.5px;color:var(--tx3);margin-top:7px">52% &mdash; say this number out loud on the sales page</div></div>
+          <div class="mini"><h4>Scored with confidence</h4><div class="big" style="color:var(--cool)">44</div><div class="bar"><i style="width:94%;background:var(--cool)"></i></div><div style="font-size:11.5px;color:var(--tx3);margin-top:7px">3 held back below the confidence floor</div></div>
+          <div class="mini"><h4>Removal requests</h4><div class="big">0</div><div style="font-size:11.5px;color:var(--tx3);margin-top:6px">public opt-out form &middot; 5 business-day SLA</div></div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<div class="demobar" id="demobar" hidden>
+  <span class="n" id="demon">1 / 6</span>
+  <span class="step" id="demostep"></span>
+  <button class="btn btn-sm" id="demonext">Next</button>
+  <button class="btn btn-sm" id="demostop">Exit</button>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* Sample dataset — illustrative, not a live scan. */
+  var SHOPS = [
+    {n:"Ybor Cuts & Fades",     a:"1704 E 7th Ave, Ybor City", p:"Booksy",   s:78,   lo:1860, hi:2340, open:38, tot:126, nx:"Today 2:30pm",  c:3, staff:3, d:"+12 open", why:"Twelve more open slots than last Thursday"},
+    {n:"The Sharp Room",        a:"908 W Kennedy Blvd",        p:"Vagaro",   s:74,   lo:1420, hi:1810, open:31, tot:112, nx:"Today 4:00pm",  c:3, staff:2, d:"+7 open",  why:"Tuesday block empty six weeks running"},
+    {n:"Nine & Co Barbers",     a:"3410 S Dale Mabry Hwy",     p:"Fresha",   s:69,   lo:1240, hi:1640, open:29, tot:118, nx:"Tomorrow 9:15am",c:2, staff:3, d:"+4 open",  why:"Added a chair in July, still not filling it"},
+    {n:"Bayshore Grooming",     a:"2201 Bayshore Blvd",        p:"Square",   s:66,   lo:1580, hi:2010, open:34, tot:140, nx:"Today 11:00am", c:3, staff:4, d:"+9 open",  why:"Largest dollar gap on your list"},
+    {n:"Hyde Park Fade Co.",    a:"712 S Howard Ave",          p:"Booksy",   s:61,   lo:980,  hi:1330, open:22, tot:104, nx:"Tomorrow 1:00pm",c:3, staff:2, d:"-9 score", why:"Slipped nine points in a week"},
+    {n:"Seminole Heights Cuts", a:"5810 N Florida Ave",        p:"Acuity",   s:57,   lo:820,  hi:1120, open:19, tot:96,  nx:"Fri 10:30am",   c:2, staff:2, d:"flat",     why:"Midweek only — evenings are full"},
+    {n:"Channelside Barber",    a:"1120 E Twiggs St",          p:"Vagaro",   s:52,   lo:760,  hi:1040, open:18, tot:110, nx:"Fri 3:45pm",    c:3, staff:3, d:"+3 open",  why:"Lumpy: Monday dead, Saturday full"},
+    {n:"Westshore Clippers",    a:"4142 W Boy Scout Blvd",     p:"Square",   s:48,   lo:640,  hi:900,  open:16, tot:118, nx:"Sat 9:00am",    c:3, staff:3, d:"flat",     why:"Steady — watch only"},
+    {n:"Palma Ceia Gents",      a:"3225 W Bay to Bay Blvd",    p:"Booksy",   s:44,   lo:520,  hi:740,  open:13, tot:108, nx:"Mon 12:15pm",   c:2, staff:2, d:"-2 open",  why:"Weekend demand outruns the weekday"},
+    {n:"Riverwalk Razor",       a:"400 N Ashley Dr",           p:"Fresha",   s:38,   lo:410,  hi:600,  open:11, tot:120, nx:"Mon 8:30am",    c:3, staff:3, d:"-5 open",  why:"Recovering after a quiet August"},
+    {n:"Old Seminole Shave Co", a:"6320 N Nebraska Ave",       p:"Booksy",   s:22,   lo:180,  hi:290,  open:6,  tot:114, nx:"In 11 days",    c:3, staff:2, d:"wait 9→11d", why:"Near capacity — this is a capacity pitch"},
+    {n:"Davis Islands Barber",  a:"238 E Davis Blvd",          p:"Vagaro",   s:14,   lo:90,   hi:160,  open:3,  tot:106, nx:"In 19 days",    c:3, staff:2, d:"wait 17→19d", why:"Nineteen-day wait — turning people away"},
+    {n:"Tampa Heights Trim",    a:"1401 N Franklin St",        p:"Mindbody", s:null, lo:null, hi:null, open:null,tot:null,nx:"—",       c:1, staff:2, d:"frozen",   why:"Adapter frozen by the canary — no number shown"}
+  ];
+
+  var GLYPH = {hot:"▲", mid:"■", cool:"●", low:"?"};
+  function band(s){ return s === null ? "low" : (s >= 60 ? "hot" : (s >= 30 ? "mid" : "cool")); }
+  function bandName(b){ return b === "hot" ? "Hungry" : b === "mid" ? "Steady" : b === "cool" ? "Slammed" : "No score"; }
+  function chipHTML(b){ return '<span class="bucket ' + b + '">' + GLYPH[b] + ' ' + bandName(b) + '</span>'; }
+  function money(v){ return "$" + v.toLocaleString("en-US"); }
+
+  /* Deterministic pseudo-random so the map is identical on every reload. */
+  var seed = 20260904;
+  function rnd(){ seed = (seed * 1103515245 + 12345) % 2147483648; return seed / 2147483648; }
+
+  var pinData = [];
+  SHOPS.forEach(function(s, i){
+    pinData.push({shop:i, x:60 + rnd()*340, y:40 + rnd()*340, s:s.s, v:s.hi === null ? 500 : s.hi});
+  });
+  for (var k = SHOPS.length; k < 47; k++){
+    pinData.push({shop:-1, x:40 + rnd()*400, y:30 + rnd()*370, s:Math.round(rnd()*100), v:200 + rnd()*1800});
+  }
+
+  /* Seven-stop vacancy ramp, teal -> sand -> coral. Teal (not green) so the scale
+     survives deuteranopia; lightness also falls monotonically for greyscale. */
+  var STOPS = ["#0E8570","#22A98A","#5FC9A8","#E8C766","#FFA94D","#FF8352","#FF5C43"];
+  function pinColor(s){
+    if (s === null) return "var(--tx3)";
+    return STOPS[Math.min(6, Math.floor(s / 100 * 7))];
+  }
+
+  var pinsG = document.getElementById("pins");
+  var SVGNS = "http://www.w3.org/2000/svg";
+  function drawPins(n){
+    pinsG.textContent = "";
+    pinData.slice(0, n).forEach(function(p){
+      var g = document.createElementNS(SVGNS, "g");
+      g.setAttribute("class", "pin");
+      var known = p.shop >= 0;
+      /* radius encodes dollars — the redundant channel alongside hue */
+      var r = 3 + Math.sqrt(p.v) / 13;
+      if (known){
+        g.setAttribute("tabindex", "0");
+        g.setAttribute("role", "button");
+        g.setAttribute("aria-label", SHOPS[p.shop].n + ", vacancy score " +
+          (SHOPS[p.shop].s === null ? "not available" : SHOPS[p.shop].s));
+        g.dataset.shop = String(p.shop);
+      }
+      var halo = document.createElementNS(SVGNS, "circle");
+      halo.setAttribute("cx", p.x.toFixed(1)); halo.setAttribute("cy", p.y.toFixed(1));
+      halo.setAttribute("r", (r * 1.85).toFixed(1));
+      halo.setAttribute("fill", pinColor(p.s)); halo.setAttribute("opacity", known ? ".24" : ".15");
+      var core = document.createElementNS(SVGNS, "circle");
+      core.setAttribute("cx", p.x.toFixed(1)); core.setAttribute("cy", p.y.toFixed(1));
+      core.setAttribute("r", r.toFixed(1));
+      core.setAttribute("fill", pinColor(p.s));
+      if (!known) core.setAttribute("opacity", ".7");
+      g.appendChild(halo); g.appendChild(core);
+      if (p.s === null){
+        var slash = document.createElementNS(SVGNS, "path");
+        slash.setAttribute("d", "M" + (p.x - r * .6).toFixed(1) + " " + p.y.toFixed(1) + "h" + (r * 1.2).toFixed(1));
+        slash.setAttribute("stroke", "var(--surface)"); slash.setAttribute("stroke-width", "1.8");
+        g.appendChild(slash);
+      }
+      pinsG.appendChild(g);
+    });
+  }
+
+  var listEl = document.getElementById("list");
+  var activeFilter = null, selected = 0;
+
+  function confBars(c){
+    var h = [4,7,10,10], out = "";
+    for (var i = 0; i < 4; i++) out += '<i class="' + (i < c ? "" : "off") + '" style="height:' + h[i] + 'px"></i>';
+    return out;
+  }
+
+  function renderList(){
+    var rows = SHOPS.map(function(s, i){ return {s:s, i:i}; });
+    if (activeFilter) rows = rows.filter(function(r){ return band(r.s.s) === activeFilter; });
+    listEl.textContent = "";
+    rows.forEach(function(r){
+      var b = band(r.s.s);
+      var el = document.createElement("button");
+      el.className = "row";
+      el.setAttribute("role", "option");
+      el.setAttribute("aria-selected", r.i === selected ? "true" : "false");
+      el.dataset.shop = String(r.i);
+      el.innerHTML =
+        '<span class="score ' + b + '">' + (r.s.s === null ? "—" : r.s.s) + '</span>' +
+        '<span><span class="row-name">' + r.s.n + ' ' + chipHTML(b) + '</span>' +
+          '<span class="row-meta"><span class="plat">' + r.s.p + '</span>' +
+          '<span class="conf">' + confBars(r.s.c) + '</span>' +
+          '<span>next: ' + r.s.nx + '</span></span></span>' +
+        '<span class="row-money">' +
+          (r.s.lo === null ? '<span style="color:var(--tx3);font-weight:400">no number</span>'
+                           : money(r.s.lo) + '–' + money(r.s.hi)) +
+          '<small>' + (r.s.open === null ? "below confidence floor"
+                                         : r.s.open + " of " + r.s.tot + " slots open") + '</small></span>';
+      listEl.appendChild(el);
+    });
+    document.getElementById("listcount").textContent = rows.length + " shown";
+  }
+
+  var DAYS = ["Mon 8","Tue 9","Wed 10","Thu 11","Fri 12","Sat 13","Sun 14"];
+  function buildGrid(){
+    var html = "<tr><th class='t'></th>";
+    DAYS.forEach(function(d){ html += "<th>" + d + "</th>"; });
+    html += "</tr>";
+    var gs = 7;
+    function g(){ gs = (gs * 1103515245 + 12345) % 2147483648; return gs / 2147483648; }
+    for (var h = 9; h <= 19; h++){
+      for (var half = 0; half < 2; half++){
+        var label = half === 0 ? ((h > 12 ? h - 12 : h) + (h < 12 ? "am" : "pm")) : "";
+        html += "<tr><th class='t'>" + label + "</th>";
+        for (var d = 0; d < 7; d++){
+          var cls;
+          if (d === 6) cls = "closed";
+          else if (h >= 18 && d < 4) cls = "closed";
+          else {
+            var dead = (d === 1 && h >= 13 && h < 16);
+            var pOpen = dead ? 0.95 : (d === 5 ? 0.10 : (h < 11 ? 0.55 : 0.32));
+            cls = g() < pOpen ? (dead ? "dead" : "open") : "";
+          }
+          html += "<td class='" + cls + "'></td>";
+        }
+        html += "</tr>";
+      }
+    }
+    document.getElementById("slotgrid").innerHTML = html;
+  }
+
+  function buildDZ(){
+    var blocks = [["8–11am",[.42,.55,.38,.40,.35,.08,null]],
+                  ["11–1pm",[.30,.61,.33,.28,.22,.05,null]],
+                  ["1–4pm", [.44,.88,.51,.46,.31,.06,null]],
+                  ["4–7pm", [.26,.58,.24,.19,.11,.04,null]]];
+    var html = "<div class='hd'></div>";
+    ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].forEach(function(d){ html += "<div class='hd'>" + d + "</div>"; });
+    blocks.forEach(function(b){
+      html += "<div class='lbl'>" + b[0] + "</div>";
+      b[1].forEach(function(v){
+        if (v === null){ html += "<div class='cell' style='background:var(--sunken);color:var(--tx3)'>—</div>"; return; }
+        var col = STOPS[Math.min(6, Math.floor(v * 7))];
+        var flag = v >= .8 ? " flag" : "";
+        html += "<div class='cell" + flag + "' style='background:" + col + Math.round(30 + v * 90).toString(16).padStart(2,"0") + "'>" +
+                Math.round(v * 100) + "</div>";
+      });
+    });
+    document.getElementById("dz").innerHTML = html;
+  }
+
+  var variant = "hot";
+  function miniGrid(hungry){
+    var out = "", pat = hungry ? [1,1,1,0,1,0,0] : [0,0,0,0,0,0,0];
+    for (var i = 0; i < 7; i++) out += "<i class='" + (pat[i] ? "o" : "") + "'></i>";
+    ["M","T","W","T","F","S","S"].forEach(function(d){ out += "<em>" + d + "</em>"; });
+    return out;
+  }
+  function renderSheet(){
+    var s = document.getElementById("sheet");
+    if (variant === "hot"){
+      s.innerHTML =
+        '<div class="eyebrow">Prepared for Ybor Cuts &amp; Fades · 4 Sep 2026</div>' +
+        '<h2>You had 38 open slots this week.<br>Most of them were Tuesday afternoon.</h2>' +
+        '<p class="lede">I pulled this from your own Booksy page — the same thing a customer sees ' +
+        'when they tap &ldquo;Book now&rdquo;. No guessing, no survey.</p>' +
+        '<div class="fig"><div><span>Online-bookable time unsold</span><b>$1,860–$2,340</b></div>' +
+        '<div><span>Open slots</span><b>38 / 126</b></div>' +
+        '<div><span>Chronic dead zone</span><b>Tue 1–4pm</b></div></div>' +
+        '<div class="minigrid">' + miniGrid(true) + '</div>' +
+        '<h3>What I would do about Tuesday</h3>' +
+        '<ol><li><b>A midweek-only offer</b> that never touches your Saturday price.</li>' +
+        '<li><b>A Google offer post</b> timed for Monday evening, when people plan the week.</li>' +
+        '<li><b>Rebooking prompts</b> to your last 90 days of clients, steered at the empty block.</li></ol>' +
+        '<h3>What this is worth</h3>' +
+        '<p>Filling half that Tuesday block is roughly <b>$280–$650 a week</b> at your own published ' +
+        'prices. That is the whole conversation.</p>' +
+        '<hr><p style="margin:0"><b>Ten minutes this week?</b> I will bring the calendar, not a slide deck.</p>' +
+        '<div class="foot">Source: publicly visible availability on your Booksy booking page, read at 04:12 on ' +
+        '4 Sep 2026. Priced from your own published service menu. This counts <i>online-bookable open slots</i> ' +
+        'only — it cannot see walk-ins, phone bookings, blocked time or staff days off, so treat it as the ' +
+        'floor, not the ceiling. OpenChair never books, holds or changes an appointment.</div>';
+    } else {
+      s.innerHTML =
+        '<div class="eyebrow">Prepared for Davis Islands Barber · 4 Sep 2026</div>' +
+        '<h2>Your next opening is 19 days out.<br>That is not a good problem.</h2>' +
+        '<p class="lede">I checked your Vagaro page the way a new customer would. The first bookable slot ' +
+        'is 19 days away, and it has been over a fortnight every week for six weeks.</p>' +
+        '<div class="fig"><div><span>Next available</span><b>19 days</b></div>' +
+        '<div><span>Slots open, next 7 days</span><b>3 / 106</b></div>' +
+        '<div><span>Weeks at capacity</span><b>6 of 6</b></div></div>' +
+        '<div class="minigrid">' + miniGrid(false) + '</div>' +
+        '<h3>What a 19-day wait actually costs</h3>' +
+        '<p>Most people who find you today will not wait three weeks. They book the shop that can see them ' +
+        'Thursday. You never learn their names, so this loss never shows up anywhere in your numbers — ' +
+        'which is exactly why it never gets fixed.</p>' +
+        '<h3>Three ways to stop the leak</h3>' +
+        '<ol><li><b>A waitlist that fills cancellations automatically</b> — the cheapest capacity you own.</li>' +
+        '<li><b>Deposits on peak slots</b>, so a no-show stops burning an hour you cannot restock.</li>' +
+        '<li><b>A price rise you can justify</b> — a six-week wait is the evidence, and I will put it on paper.</li></ol>' +
+        '<p>If the wait is still past three weeks after that, the conversation becomes a fourth chair, and I ' +
+        'will help you model whether it pays.</p>' +
+        '<hr><p style="margin:0"><b>Ten minutes this week?</b> I only want to talk about the people you are ' +
+        'turning away.</p>' +
+        '<div class="foot">Source: publicly visible availability on your Vagaro booking page, read at 04:12 on ' +
+        '4 Sep 2026. This counts <i>online-bookable open slots</i> only — it cannot see walk-ins, phone ' +
+        'bookings, blocked time or staff days off. OpenChair never books, holds or changes an appointment.</div>';
+    }
+  }
+
+  function fillAlerts(){
+    var order = [0, 11, 1, 4, 10];
+    document.getElementById("alerttbl").innerHTML = order.map(function(i){
+      var s = SHOPS[i], b = band(s.s);
+      var col = b === "cool" ? "var(--cool)" : b === "mid" ? "var(--mid)" : "var(--hot)";
+      return "<tr><td><b>" + s.n + "</b></td><td>" + chipHTML(b) + "</td>" +
+        "<td class='mono'>" + s.s + "</td>" +
+        "<td class='mono' style='color:" + col + "'>" + s.d + "</td>" +
+        "<td class='mono'>" + money(s.lo) + "–" + money(s.hi) + "</td>" +
+        "<td style='color:var(--tx2)'>" + s.why + "</td></tr>";
+    }).join("");
+  }
+
+  function fillCoverage(){
+    var ad = [
+      ["Booksy",   "C1 per-chair slot grid", "96.2%", "closed", "1,284", "refreshed 2d ago"],
+      ["Vagaro",   "C1 per-chair slot grid", "94.8%", "closed", "1,006", "refreshed 2d ago"],
+      ["Fresha",   "C1 per-chair slot grid", "91.4%", "closed", "812",   "refreshed 5d ago"],
+      ["Square",   "C1 service slot grid",   "97.1%", "closed", "744",   "refreshed 1d ago"],
+      ["Acuity",   "C1 service slot grid",   "89.0%", "half-open", "398", "refreshed 9d ago"],
+      ["Mindbody", "C2 class capacity",      "—", "OPEN · frozen", "512", "stale 14d"]
+    ];
+    document.getElementById("covtbl").innerHTML = ad.map(function(r){
+      var bad = r[3] !== "closed";
+      return "<tr><td><b>" + r[0] + "</b></td><td style='color:var(--tx2)'>" + r[1] + "</td>" +
+        "<td class='mono'>" + r[2] + "</td>" +
+        "<td><span class='bucket " + (bad ? "hot" : "cool") + "'>" + r[3] + "</span></td>" +
+        "<td class='mono'>" + r[4] + "</td><td style='color:var(--tx3)'>" + r[5] + "</td></tr>";
+    }).join("");
+  }
+
+  function showDetail(i){
+    var s = SHOPS[i]; selected = i;
+    document.getElementById("d-name").textContent = s.n;
+    document.getElementById("d-addr").textContent =
+      s.a + " · " + s.p + " · " + s.staff + " chairs · scanned 04:12 today";
+    var b = band(s.s);
+    var bk = document.getElementById("d-bucket");
+    bk.className = "bucket " + b;
+    bk.textContent = GLYPH[b] + " " + bandName(b);
+    document.getElementById("dialnum").textContent = s.s === null ? "—" : s.s;
+    var circ = 2 * Math.PI * 39, frac = (s.s === null ? 0 : s.s) / 100;
+    var arc = document.getElementById("dialarc");
+    arc.setAttribute("stroke-dasharray", (circ * frac).toFixed(1) + " " + circ.toFixed(1));
+    arc.setAttribute("stroke", pinColor(s.s));
+    document.getElementById("dialt").textContent =
+      "Vacancy score " + (s.s === null ? "unavailable" : s.s + " out of 100");
+    document.getElementById("d-money").innerHTML =
+      s.lo === null ? '<span style="font-size:15px;color:var(--tx3)">No number — below the confidence floor</span>'
+                    : money(s.lo) + " – " + money(s.hi);
+    document.getElementById("d-slots").textContent = s.open === null ? "—" : s.open + " of " + s.tot;
+    document.getElementById("d-next").textContent = s.nx;
+    renderList();
+    drawPins(pinData.length);
+    Array.prototype.forEach.call(pinsG.querySelectorAll(".pin"), function(p){
+      p.classList.toggle("sel", p.dataset.shop === String(i));
+    });
+    variant = (s.s !== null && s.s < 30) ? "cool" : "hot";
+    document.getElementById("v-hot").setAttribute("aria-pressed", variant === "hot" ? "true" : "false");
+    document.getElementById("v-cool").setAttribute("aria-pressed", variant === "cool" ? "true" : "false");
+    renderSheet();
+  }
+
+  function go(id){
+    Array.prototype.forEach.call(document.querySelectorAll(".page"), function(p){
+      p.classList.toggle("on", p.id === "p-" + id);
+    });
+    Array.prototype.forEach.call(document.querySelectorAll(".navbtn"), function(n){
+      if (n.dataset.go === id) n.setAttribute("aria-current", "page");
+      else n.removeAttribute("aria-current");
+    });
+    window.scrollTo(0, 0);
+  }
+
+  document.addEventListener("click", function(e){
+    var nav = e.target.closest("[data-go]");
+    if (nav){ go(nav.dataset.go); return; }
+    var row = e.target.closest(".row");
+    if (row){ showDetail(Number(row.dataset.shop)); go("detail"); return; }
+    var pin = e.target.closest(".pin");
+    if (pin && pin.dataset.shop){ showDetail(Number(pin.dataset.shop)); go("detail"); return; }
+    var chip = e.target.closest(".chip[data-f]");
+    if (chip){
+      activeFilter = (activeFilter === chip.dataset.f) ? null : chip.dataset.f;
+      Array.prototype.forEach.call(document.querySelectorAll(".chip[data-f]"), function(c){
+        c.setAttribute("aria-pressed", c.dataset.f === activeFilter ? "true" : "false");
+      });
+      renderList();
+      return;
+    }
+    if (e.target.closest("#v-hot") || e.target.closest("#v-cool")){
+      variant = e.target.closest("#v-hot") ? "hot" : "cool";
+      document.getElementById("v-hot").setAttribute("aria-pressed", variant === "hot" ? "true" : "false");
+      document.getElementById("v-cool").setAttribute("aria-pressed", variant === "cool" ? "true" : "false");
+      renderSheet();
+      return;
+    }
+    var seg = e.target.closest(".seg button");
+    if (seg){
+      Array.prototype.forEach.call(seg.parentNode.querySelectorAll("button"), function(x){
+        x.setAttribute("aria-pressed", x === seg ? "true" : "false");
+      });
+    }
+  });
+
+  pinsG.addEventListener("keydown", function(e){
+    if (e.key !== "Enter" && e.key !== " ") return;
+    var pin = e.target.closest(".pin");
+    if (pin && pin.dataset.shop){ e.preventDefault(); showDetail(Number(pin.dataset.shop)); go("detail"); }
+  });
+
+  var timer = null;
+  function streamScan(done){
+    go("scan");
+    if (timer) clearInterval(timer);
+    var n = 0, head = document.getElementById("bookct");
+    drawPins(0);
+    timer = setInterval(function(){
+      n += 3;
+      if (n >= pinData.length){ n = pinData.length; clearInterval(timer); timer = null; if (done) done(); }
+      drawPins(n);
+      head.textContent = Math.min(n, 47);
+    }, 55);
+  }
+  document.getElementById("rescan").addEventListener("click", function(){ streamScan(); });
+  document.getElementById("q").addEventListener("keydown", function(e){ if (e.key === "Enter") streamScan(); });
+
+  var DEMO = [
+    {t:'Type <b>&ldquo;barbershop, Tampa&rdquo;</b> and scan. 47 pins drop as each shop resolves — results stream in, they never sit behind a spinner.', run:function(){ streamScan(); }},
+    {t:'Hue is <b>vacancy</b>, size is <b>dollars</b>. The big red pin top-left is the one to call. Click it.', run:function(){ go("scan"); }},
+    {t:'This is <b>their own Booksy grid</b>. 38 open slots, and Tuesday 1–4pm is dead <i>every</i> week, not just this one. $1,860–$2,340 of online-bookable time went unsold.', run:function(){ showDetail(0); go("detail"); }},
+    {t:'Tap Pitch. The one-pager renders from their calendar: the grid, the range, and the midweek fix.', run:function(){ variant = "hot"; renderSheet(); go("pitch"); }},
+    {t:'Now a <b>teal</b> pin — Davis Islands Barber. Next available: <b>19 days</b>. Nobody pitches this shop, because nobody knows it is slammed.', run:function(){ showDetail(11); go("detail"); }},
+    {t:'Same scan, and the offer <b>flips</b>: waitlist, deposits, a justified price rise. Two pitches, one scan, live.', run:function(){ variant = "cool"; renderSheet();
+        document.getElementById("v-cool").setAttribute("aria-pressed","true");
+        document.getElementById("v-hot").setAttribute("aria-pressed","false"); go("pitch"); }}
+  ];
+  var step = 0, bar = document.getElementById("demobar");
+  function runStep(){
+    document.getElementById("demon").textContent = (step + 1) + " / " + DEMO.length;
+    document.getElementById("demostep").innerHTML = DEMO[step].t;
+    DEMO[step].run();
+  }
+  document.getElementById("playdemo").addEventListener("click", function(){ step = 0; bar.hidden = false; runStep(); });
+  document.getElementById("demonext").addEventListener("click", function(){
+    step++;
+    if (step >= DEMO.length){ bar.hidden = true; step = 0; return; }
+    runStep();
+  });
+  document.getElementById("demostop").addEventListener("click", function(){ bar.hidden = true; step = 0; });
+
+  /* Boot into a realistic working state, not an empty shell. */
+  drawPins(pinData.length);
+  buildGrid();
+  buildDZ();
+  fillAlerts();
+  fillCoverage();
+  showDetail(0);
+  go("scan");
+})();
+</script>

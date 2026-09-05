@@ -1,0 +1,19 @@
+{
+  "name": "openchair-service",
+  "version": "0.0.0",
+  "description": "OpenChair API service: markets, scan orchestration, Meter/Ledger/Pitch reads for the CI3 module. Thin API — never launches a browser, never reaches the internet.",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "check": "node --check src/server.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "mysql2": "^3.11.0"
+  }
+}

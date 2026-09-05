@@ -1,0 +1,17 @@
+{
+  "name": "openchair-egress",
+  "version": "0.0.0",
+  "description": "OpenChair egress broker: the ONLY door to the internet. Refuses every non-GET/HEAD request, holds all proxy credentials, writes the per-fetch JSONL audit. Crawl VM only.",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "main": "src/broker.js",
+  "scripts": {
+    "start": "node src/broker.js",
+    "check": "node --check src/broker.js",
+    "test": "node --test"
+  },
+  "dependencies": {}
+}

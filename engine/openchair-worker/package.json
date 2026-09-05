@@ -1,0 +1,19 @@
+{
+  "name": "openchair-worker",
+  "version": "0.0.0",
+  "description": "OpenChair Radar worker: pulls due businesses off oc_scan_queue, runs the platform adapter, normalises to the canonical chair-minutes grid. Crawl VM only. All egress goes through openchair-egress.",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "main": "src/worker.js",
+  "scripts": {
+    "start": "node src/worker.js",
+    "check": "node --check src/worker.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "mysql2": "^3.11.0"
+  }
+}
