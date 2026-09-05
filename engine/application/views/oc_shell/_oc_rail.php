@@ -26,6 +26,16 @@ if (isset($ic_brand) && is_array($ic_brand)) {
     if (!empty($ic_brand['logo'])) { $brand_logo = (string) $ic_brand['logo']; }
 }
 
+// Use the <img> ONLY for a genuine white-label override. The stock OpenChair
+// logo is drawn inline instead, because an external SVG loaded through <img> is
+// its own document: it cannot inherit `currentColor` from this page, so the
+// wordmark would paint black and vanish against the dark rail. Inline, it tracks
+// the theme. App_Controller pre-fills ic_brand['logo'] with the stock asset for
+// every request, so identity is by comparison against that default.
+$g          = $this->config->item('global_data');
+$stock_logo = (!empty($g['logo_url'])) ? base_url($g['logo_url']) : '';
+$is_custom  = ($brand_logo !== '' && $brand_logo !== $stock_logo);
+
 /** Rail item: [key, label, url, tier-tag|null] */
 $groups = [];
 $groups['Prospect'] = [
@@ -65,7 +75,7 @@ function oc_rail_icon($key)
 ?>
 <nav class="rail" aria-label="Main">
   <a class="brand" href="<?= site_url('openchair') ?>">
-    <?php if ($brand_logo !== ''): ?>
+    <?php if ($is_custom): ?>
       <img src="<?= html_escape($brand_logo) ?>" alt="<?= html_escape($brand_name) ?>" style="max-height:34px;max-width:150px">
     <?php else: ?>
       <span class="brand-mark" aria-hidden="true">

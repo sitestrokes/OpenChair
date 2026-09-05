@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 208 44" width="208" height="44" role="img" aria-label="OpenChair — capacity radar">
+  <title>OpenChair</title>
+  <defs>
+    <linearGradient id="ocMark" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F0755E"/>
+      <stop offset="1" stop-color="#E75C43"/>
+    </linearGradient>
+  </defs>
+
+  <!-- The mark: a chair grid seen from above. Two cells filled, one half-lit,
+       one empty — booked, booked, partly open, open. The product in one glyph. -->
+  <rect x="1" y="5" width="34" height="34" rx="11" fill="url(#ocMark)"/>
+  <g transform="translate(9 13)">
+    <rect x="0"   y="0"   width="8" height="8" rx="2.2" fill="#fff"/>
+    <rect x="10"  y="0"   width="8" height="8" rx="2.2" fill="#fff" opacity=".45"/>
+    <rect x="0"   y="10"  width="8" height="8" rx="2.2" fill="#fff"/>
+    <rect x="10"  y="10"  width="8" height="8" rx="2.2" fill="#fff" opacity=".18"/>
+  </g>
+
+  <!-- Wordmark. Outfit is loaded by the shell; the stack degrades sensibly
+       anywhere the font is not available (an SVG favicon in a browser tab, a
+       PDF, an email client). -->
+  <text x="45" y="24"
+        font-family="Outfit, 'Segoe UI', system-ui, -apple-system, sans-serif"
+        font-size="19" font-weight="700" letter-spacing="-0.6"
+        fill="currentColor">OpenChair</text>
+  <text x="46" y="35"
+        font-family="'Space Mono', ui-monospace, Menlo, monospace"
+        font-size="7.5" font-weight="700" letter-spacing="1.7"
+        fill="currentColor" opacity=".62">CAPACITY RADAR</text>
+</svg>

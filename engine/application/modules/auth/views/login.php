@@ -3,15 +3,13 @@ $logo       = base_url($globaldata['logo_url']);
 $fav        = base_url($globaldata['fav_url']);
 $site_title = $this->config->item('site_title', 'ion_auth');
 
-// Agentic Affiliates-branded login ("Bridge Story" design). The engine's
-// $whiteLabelData defaults to the global engine branding, which we
-// intentionally do NOT use here — this is the Agentic Affiliates product surface.
-// (A per-tenant white-label favicon may still override below.)
+// OpenChair-branded login. The engine's $whiteLabelData defaults to the global
+// branding; a per-tenant white-label favicon may still override below.
 if (!empty($whiteLabelData['fav_url'])) $fav = $whiteLabelData['fav_url'];
-$brand = 'Agentic Affiliates';
+$brand = 'OpenChair';
 
-// Placeholder illustration — swap for the final custom art when it's ready.
-$illus = base_url('assets/images/login/bridge-story-placeholder.png');
+// Artwork is inline SVG below rather than a bitmap: one less asset to ship,
+// one less 404 when a deployment forgets it, and it stays sharp at any size.
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -26,8 +24,14 @@ $illus = base_url('assets/images/login/bridge-story-placeholder.png');
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 /* ============================================================
-   "BRIDGE STORY" LOGIN — soft pink ground, form on the LEFT,
-   the woman-at-laptop + Triple-Trigger flow illustration RIGHT.
+   OPENCHAIR LOGIN — warm blush ground, form on the LEFT, an
+   inline week-grid illustration on the RIGHT.
+
+   The login stays in the house CREAM palette rather than the
+   product's dark ramp. Deliberate: it is the surface a buyer
+   meets first and shares a house identity with the rest of the
+   suite; the espresso ramp starts once you are inside, where
+   the map has to glow.
    ============================================================ */
 :root{
   --pink:#FBEBE6; --pink2:#F9E2DA; --blush:#F6D3C8;
@@ -107,8 +111,8 @@ a{color:inherit;text-decoration:none}
 
 /* ---------- RIGHT — the Bridge-story illustration ---------- */
 .right{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
-.right .art{position:absolute;inset:0;
-  background:url('<?= $illus ?>') center center / contain no-repeat}
+.right .art{position:absolute;inset:0;display:grid;place-items:center;padding:6%}
+.right .art svg{width:100%;max-width:520px;height:auto}
 /* feather the left edge of the art into the form ground so there's no seam */
 .right::before{content:'';position:absolute;inset:0;pointer-events:none;
   background:linear-gradient(90deg, var(--blush) 0%, rgba(246,211,200,0) 12%)}
@@ -139,12 +143,13 @@ a{color:inherit;text-decoration:none}
       <div class="mk">
         <svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 00-7 7v3.5L3.5 16a1 1 0 00.9 1.4H8a4 4 0 008 0h3.6a1 1 0 00.9-1.4L19 12.5V9a7 7 0 00-7-7z"/></svg>
       </div>
-      <div><b><?= html_escape($brand) ?></b><small>Voice Bridge</small></div>
+      <div><b><?= html_escape($brand) ?></b><small>Capacity radar</small></div>
     </div>
 
     <div class="form-wrap">
-      <h1 class="hl">Every lead gets a live conversation.</h1>
-      <p class="lead">Share a Bridge link and the moment someone opts in your page talks back — then the phone and SMS lanes follow up.</p>
+      <h1 class="hl">Walk in with their calendar.</h1>
+      <p class="lead">OpenChair reads the public booking pages of local businesses and turns unsold
+        time into a number — so your opener is their own week, not a cold pitch.</p>
 
       <?php if (isset($message) && $message != ''): ?>
         <div class="msg"><?php echo $message; ?></div>
@@ -189,12 +194,53 @@ a{color:inherit;text-decoration:none}
       </form>
     </div>
 
-    <div class="foot">© <?= date('Y') ?> <?= html_escape($brand) ?> · Triple-Trigger Bridge — All Rights Reserved</div>
+    <div class="foot">© <?= date('Y') ?> <?= html_escape($brand) ?> · Live capacity prospecting</div>
   </div>
 
   <!-- ===== RIGHT — Bridge-story illustration (placeholder art) ===== -->
   <div class="right">
-    <div class="art" role="img" aria-label="Share your Bridge link, a lead opts in, we talk first, then phone and SMS follow up"></div>
+    <div class="art" role="img" aria-label="A week of booking slots: most booked, a block of Tuesday afternoons open, priced as unsold time">
+      <svg viewBox="0 0 420 320" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="lgCoral" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#F0755E"/><stop offset="1" stop-color="#E75C43"/>
+          </linearGradient>
+        </defs>
+
+        <!-- A week's grid. Booked cells are solid; the open ones are outlined and
+             cluster in the midweek afternoons — which is the whole pitch: the gap
+             has a shape, and the shape is where the offer goes. -->
+        <g font-family="'Space Mono', ui-monospace, monospace" font-size="9" fill="#A78477">
+          <text x="8"  y="30">Mon</text><text x="62" y="30">Tue</text><text x="116" y="30">Wed</text>
+          <text x="170" y="30">Thu</text><text x="224" y="30">Fri</text><text x="278" y="30">Sat</text>
+          <text x="332" y="30">Sun</text>
+        </g>
+        <?php
+        // Deterministic: same picture on every render, no JS, no flicker.
+        $open = [
+          [0,0,0,0,0,0,1], [0,1,0,0,0,0,1], [0,1,1,0,0,0,1], [1,1,1,1,0,0,1],
+          [0,1,1,0,0,0,1], [0,1,0,0,0,0,1], [0,0,0,0,0,1,1], [0,0,0,0,0,0,1],
+        ];
+        foreach ($open as $r => $row) {
+            foreach ($row as $c => $is_open) {
+                $x = 8 + $c * 54; $y = 42 + $r * 30;
+                echo $is_open
+                    ? '<rect x="' . $x . '" y="' . $y . '" width="46" height="22" rx="5" fill="#F0755E" fill-opacity=".16" stroke="#E75C43" stroke-opacity=".55" stroke-width="1.3"/>'
+                    : '<rect x="' . $x . '" y="' . $y . '" width="46" height="22" rx="5" fill="#E3C9BE" fill-opacity=".75"/>';
+            }
+        }
+        ?>
+
+        <!-- The number is the product. -->
+        <g transform="translate(8 292)">
+          <rect x="0" y="-24" width="212" height="34" rx="17" fill="url(#lgCoral)"/>
+          <text x="18" y="-2" font-family="'Space Mono', ui-monospace, monospace"
+                font-size="14" font-weight="700" fill="#fff">$1,860 unsold</text>
+        </g>
+        <text x="232" y="290" font-family="'Space Mono', ui-monospace, monospace"
+              font-size="9" fill="#A78477">38 open slots · this week</text>
+      </svg>
+    </div>
   </div>
 
 </div>

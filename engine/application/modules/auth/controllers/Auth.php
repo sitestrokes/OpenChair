@@ -25,7 +25,12 @@ class Auth extends MY_Controller {
     	$this->data['whiteLabelData'] =  [	
 			'site_title' => $this->config->item('site_title', 'ion_auth'),
 			'logo' => base_url($globaldata['logo_url']),
-			'fav_url' => $globaldata['fav_url'],
+			// base_url() here too. The host passed fav_url through RAW while
+			// logo went through base_url(), so the login page emitted a
+			// document-relative favicon href — which resolves against whatever
+			// path the login happens to be served from and 404s on any URL
+			// deeper than the doc root.
+			'fav_url' => base_url($globaldata['fav_url']),
 			'footer_text' => $globaldata['footer_text']
 		];
 
