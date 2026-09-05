@@ -6,7 +6,6 @@
 # ── Node ──
 node_modules/
 npm-debug.log*
-package-lock.json
 
 # ── Runtime artefacts ──
 # Per-fetch audit is rotated JSONL on disk, not a table (PRD Q8).
@@ -32,3 +31,6 @@ engine/uploads/*
 # ── Vendored CI3 framework (see STRUCTURE.md 2) ──
 # engine/system/ and application/third_party/MX are ported from the agentic
 # affiliate engine, not authored here. Un-ignore once the port is agreed.
+
+# Node lockfiles are committed per-service, not at the root
+!engine/*/package-lock.json
