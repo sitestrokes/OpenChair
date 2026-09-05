@@ -273,3 +273,136 @@ table.data tr:last-child td{border-bottom:none}
   .sheet{padding:26px 22px}
   .page{padding:16px}
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   HOST-ENGINE TOKEN COMPATIBILITY
+
+   The common modules (setting, users, whitelabel, config) were written against
+   the Agentic Affiliates engine's token vocabulary — --txt, --mute, --coral,
+   --disp and friends. OpenChair's ramp uses different names (--tx, --tx3,
+   --accent). Ported verbatim, those views resolved ~30 undefined variables:
+   text painted with no colour, cards with no surface, and fonts falling back to
+   the browser default serif. That is what made Settings and Manage Users look
+   broken next to the product screens.
+
+   These are ALIASES, not copies. Because custom properties resolve lazily at
+   use time, `--txt: var(--tx)` follows the theme on its own — one declaration
+   covers light, dark and the explicit toggle, and there is no second palette to
+   keep in sync.
+
+   Adding a token here is cheap. Rewriting four ported modules' CSS is not, and
+   would have to be redone every time one is re-synced from the host.
+   ══════════════════════════════════════════════════════════════════════════ */
+:root{
+  /* ── Type. The reason ported pages were rendering in Times. ── */
+  --disp:"Outfit","Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --body:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"Space Mono",ui-monospace,Menlo,Consolas,monospace;
+  --serif:"Outfit",Georgia,serif;   /* Fraunces is not loaded here; Outfit reads closer than a default serif */
+
+  /* ── Surfaces ── */
+  --bg:var(--ground);
+  --surface2:var(--sunken);
+  --raise:var(--raised);
+  --panel:var(--surface);
+  --scrim:rgba(0,0,0,.62);
+
+  /* ── Text ── */
+  --txt:var(--tx);
+  --txt2:var(--tx2);
+  --mute:var(--tx3);
+  --faint:var(--tx3);
+
+  /* ── Lines ── */
+  --line2:var(--line);
+  --line-2:var(--line);
+
+  /* ── Accent ── */
+  --coral:var(--accent);
+  --coral2:var(--accent-tx);
+  --coraldim:var(--accent-soft);
+
+  /* ── Semantic. --green/--amber map onto the vacancy scale so a "success"
+       chip in Settings is the same green as a Slammed bucket on Radar. ── */
+  --green:var(--cool);
+  --amber:var(--mid);
+  --red:var(--hot);
+  --blue:#4B9BE8;
+  --violet:#9B87F5;
+
+  /* ── Radii + elevation ── */
+  --r2:16px; --r3:24px; --r4:30px;
+  --card-shadow:var(--shadow);
+
+  /* ── The espresso ink block. In the host this was a dark accent ON cream; here
+       the whole surface is already espresso, so it resolves to the raised step
+       rather than a near-black card nobody could read. ── */
+  --sb:var(--raised);
+  --sb2:var(--sunken);
+  --sb-line:var(--line);
+  --sb-txt:var(--tx);
+  --sb-txt2:var(--tx2);
+  --sb-mute:var(--tx3);
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){ --scrim:rgba(31,20,14,.55) }
+}
+:root[data-theme="light"]{ --scrim:rgba(31,20,14,.55) }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   TYPOGRAPHY + SHELL POLISH
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* Ported views set their own font-family in places and inherit in others; make
+   the inherited case correct rather than chasing each declaration. */
+body,.main,.page{font-family:var(--body)}
+h1,h2,h3,h4,h5{font-family:var(--disp);letter-spacing:-.02em}
+.mono,code,kbd,pre,.kbd{font-family:var(--mono)}
+
+/* Tabular figures everywhere a number is compared down a column. A vacancy
+   score that shifts by a pixel between rows reads as sloppy on the one screen
+   whose entire job is comparing numbers. */
+.score,.row-money,.big,.money,.quota-row,.kpi .n,table.data td,table.data th{
+  font-variant-numeric:tabular-nums}
+
+/* The rail's own type, so a white-labelled brand name cannot wrap oddly. */
+.brand-name{font-family:var(--disp);font-weight:700;font-size:16.5px;letter-spacing:-.03em;
+  line-height:1.15;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.brand-sub{font-family:var(--mono);font-size:8.5px;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--tx3);margin-top:2px}
+
+/* Ported forms: the host styled inputs globally in ic_shell; oc_shell does not,
+   so every <input> in Settings/Users was arriving with UA chrome — white boxes
+   on a dark card. */
+input[type=text],input[type=email],input[type=password],input[type=url],
+input[type=number],input[type=search],select,textarea{
+  background:var(--sunken);color:var(--tx);border:1px solid var(--line);
+  border-radius:var(--r1);padding:9px 12px;font:inherit;width:100%;max-width:100%;
+  transition:border-color .14s,box-shadow .14s}
+input:focus,select:focus,textarea:focus{
+  outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+input::placeholder,textarea::placeholder{color:var(--tx3)}
+input[type=checkbox],input[type=radio]{width:auto;accent-color:var(--accent)}
+label{color:var(--tx2)}
+
+/* Tables in ported views had no borders in the dark ramp. */
+table{border-collapse:collapse}
+th{color:var(--tx3)}
+td,th{border-color:var(--line-soft)}
+
+/* Links inside ported content. */
+.page a:not(.btn):not(.navbtn):not(.chip):not(.row){color:var(--accent-tx)}
+.page a:not(.btn):not(.navbtn):not(.chip):not(.row):hover{text-decoration:underline}
+
+/* Accessibility: the skip link the shell renders. */
+.oc-skip-link{position:absolute;left:-9999px;top:0;z-index:100;
+  background:var(--accent);color:#fff;padding:10px 16px;border-radius:0 0 var(--r1) 0;font-weight:700}
+.oc-skip-link:focus{left:0}
+
+/* Footer strip under the main column. */
+.oc-foot{padding:18px 22px 26px;color:var(--tx3);font-size:11.5px;border-top:1px solid var(--line-soft);
+  margin-top:auto}
+
+/* The rail's theme toggle sits in the foot and should read as secondary. */
+.rail-foot .navbtn{font-size:12.5px;color:var(--tx3)}
+.rail-foot .navbtn:hover{color:var(--tx)}

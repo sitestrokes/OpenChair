@@ -3,12 +3,12 @@ $logo = base_url($globaldata['logo_url']);
 $fav  = base_url($globaldata['fav_url']);
 $site_title = $this->config->item('site_title', 'ion_auth');
 
-// Agentic Affiliates-branded forgot-password. The engine's $whiteLabelData defaults to
+// OpenChair-branded forgot-password. The engine's $whiteLabelData defaults to
 // the generic agency global branding, which we intentionally do NOT use here —
-// this is the Agentic Affiliates product surface. (A real per-tenant white-label logo,
+// this is the OpenChair product surface. (A real per-tenant white-label logo,
 // if ever passed, can still override the favicon.)
 if (!empty($whiteLabelData['fav_url'])) $fav = $whiteLabelData['fav_url'];
-$brand = 'Agentic Affiliates';
+$brand = 'OpenChair';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -19,8 +19,10 @@ $brand = 'Agentic Affiliates';
 <title>Forgot Password · <?= html_escape($brand) ?></title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<!-- Fraunces: soft editorial serif (display) · Manrope: clean body -->
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- Outfit (display) + Manrope (body) + Space Mono (micro-labels) — the same
+     three faces the product uses, so the brand does not change between the
+     login and the first screen behind it. -->
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
 /* ============================================================
    "BRIDGE STORY" — soft pink ground, form on the LEFT, a warm
@@ -31,7 +33,7 @@ $brand = 'Agentic Affiliates';
   --ink:#1F1712; --ink2:#5F5148; --mute:#8E7E74; --faint:#B9A79C;
   --coral:#F0755E; --coral-deep:#E75C43; --coral-soft:#F9C9BC;
   --surface:#FFFFFF; --line:#EBD8CF; --line2:#E1C9BD;
-  --disp:'Fraunces',Georgia,serif;
+  --disp:'Outfit','Manrope',system-ui,sans-serif;
   --body:'Manrope',system-ui,sans-serif;
   --r-field:12px; --r-btn:12px;
   --shadow-btn:0 14px 30px -12px rgba(231,92,67,.5);
@@ -148,9 +150,9 @@ a{color:inherit;text-decoration:none}
   <div class="left">
     <div class="brand">
       <div class="mk">
-        <svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 00-7 7v3.5L3.5 16a1 1 0 00.9 1.4H8a4 4 0 008 0h3.6a1 1 0 00.9-1.4L19 12.5V9a7 7 0 00-7-7z"/></svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.2" y="3.2" width="7.6" height="7.6" rx="2.1"/><rect x="13.2" y="3.2" width="7.6" height="7.6" rx="2.1" opacity=".45"/><rect x="3.2" y="13.2" width="7.6" height="7.6" rx="2.1"/><rect x="13.2" y="13.2" width="7.6" height="7.6" rx="2.1" opacity=".18"/></svg>
       </div>
-      <div><b><?= html_escape($brand) ?></b><small>Voice Bridge</small></div>
+      <div><b><?= html_escape($brand) ?></b><small>Capacity radar</small></div>
     </div>
 
     <div class="form-wrap">
@@ -182,7 +184,7 @@ a{color:inherit;text-decoration:none}
       </form>
     </div>
 
-    <div class="foot">© <?= date('Y') ?> <?= html_escape($brand) ?> · Triple-Trigger Bridge — All Rights Reserved</div>
+    <div class="foot">© <?= date('Y') ?> <?= html_escape($brand) ?> · Live capacity prospecting</div>
   </div>
 
   <!-- ===== RIGHT — brand story ===== -->

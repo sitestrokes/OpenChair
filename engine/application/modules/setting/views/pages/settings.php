@@ -67,7 +67,7 @@ $overview = [
 <div class="card pad stab on" data-tab="keys">
   <div class="cardhead"><div class="ico"><?= ic_svg('key', 17) ?></div><h3>Keys &amp; connections</h3></div>
   <div style="font-size:12.5px;color:var(--mute);margin-bottom:14px;max-width:660px;line-height:1.6">
-    <b style="color:var(--txt)">Bring your own keys.</b> Agentic Affiliates runs on your own AI and telephony
+    <b style="color:var(--txt)">Bring your own keys.</b> OpenChair runs on your own AI
     accounts, so you stay in full control of your usage and billing. Add your OpenAI or Gemini key to
     power the live in-page voice and build Bridges, and your Twilio key to unlock the phone + SMS lanes.
     Keys are stored encrypted at rest.

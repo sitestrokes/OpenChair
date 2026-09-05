@@ -1,7 +1,7 @@
 <?php defined('BASEPATH') OR exit('No direct script access allowed'); ?>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-<!-- Agentic Affiliates settings styles, ID-scoped to #ic-set so the IC theme styles ONLY the settings
+<!-- OpenChair settings styles, ID-scoped to #ic-set so this theme styles ONLY the settings
      panel and never bleeds onto the global engine header/sidebar. Tokens mirror the light
      "Bridge Story × Nixtio" shell (ic_shell/layout.php). -->
 <style>

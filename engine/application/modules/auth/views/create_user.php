@@ -3,12 +3,12 @@ $logo = base_url($globaldata['logo_url']);
 $fav  = base_url($globaldata['fav_url']);
 $site_title = $this->config->item('site_title', 'ion_auth');
 
-// Agentic Affiliates-branded create-user. The engine's $whiteLabelData defaults to the
+// OpenChair-branded create-user. The engine's $whiteLabelData defaults to the
 // generic agency global branding, which we intentionally do NOT use here — this
-// is the Agentic Affiliates product surface. (A real per-tenant white-label logo, if
+// is the OpenChair product surface. (A real per-tenant white-label logo, if
 // ever passed, can still override the favicon.)
 if (!empty($whiteLabelData['fav_url'])) $fav = $whiteLabelData['fav_url'];
-$brand = 'Agentic Affiliates';
+$brand = 'OpenChair';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -19,13 +19,16 @@ $brand = 'Agentic Affiliates';
 <title><?php echo lang('create_user_heading');?> · <?= html_escape($brand) ?></title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<!-- Outfit (display) + Manrope (body) + Space Mono (micro-labels) — the same
+     three faces the product uses, so the brand does not change between the
+     login and the first screen behind it. -->
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#080b12; --surface:#0f1320; --surface2:#141a2b; --line:#1f2740; --line2:#2c3658;
   --txt:#eef1fb; --txt2:#aab2cd; --mute:#7e89a9; --faint:#5a647f;
   --coral:#ff6a4d; --coral2:#ff8b73; --coraldim:#ff6a4d22; --green:#34e3a4; --blue:#5ac8ff;
-  --disp:'Archivo',sans-serif; --body:'Inter',sans-serif; --mono:'Space Mono',monospace;
+  --disp:'Outfit','Manrope',system-ui,sans-serif; --body:'Manrope',system-ui,sans-serif; --mono:'Space Mono',monospace;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
@@ -117,11 +120,11 @@ a{color:inherit;text-decoration:none}
 </head>
 <body>
 
-<!-- ===== LEFT — Agentic Affiliates value prop ===== -->
+<!-- ===== LEFT — OpenChair value prop ===== -->
 <div class="left">
   <div class="brand">
     <div class="mk">
-      <svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 00-7 7v3.5L3.5 16a1 1 0 00.9 1.4H8a4 4 0 008 0h3.6a1 1 0 00.9-1.4L19 12.5V9a7 7 0 00-7-7z"/></svg>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.2" y="3.2" width="7.6" height="7.6" rx="2.1"/><rect x="13.2" y="3.2" width="7.6" height="7.6" rx="2.1" opacity=".45"/><rect x="3.2" y="13.2" width="7.6" height="7.6" rx="2.1"/><rect x="13.2" y="13.2" width="7.6" height="7.6" rx="2.1" opacity=".18"/></svg>
     </div>
     <div><b><?= html_escape($brand) ?></b><small>Talks back</small></div>
   </div>
@@ -129,7 +132,7 @@ a{color:inherit;text-decoration:none}
   <div class="hero">
     <div class="pill"><span class="blip"></span> New Account</div>
     <h1>Create your <em>account</em> and start closing on autopilot.</h1>
-    <p>Spin up a new operator, paste an affiliate link, and Agentic Affiliates builds a Bridge that catches every lead with a live conversation.</p>
+    <p>Spin up a new operator and OpenChair reads the public booking pages in their market, turning unsold chair-time into a number they can walk in with.</p>
     <div class="lanes">
       <div class="lane">🎙️ <b>Browser</b> <span class="t">0s</span></div>
       <div class="lane">📞 <b>Phone</b> <span class="t">15s</span></div>

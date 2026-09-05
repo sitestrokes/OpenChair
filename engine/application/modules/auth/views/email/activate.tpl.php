@@ -1,7 +1,7 @@
 <?php
 /**
  * Welcome / account-access email — sent when an account is created (users
- * module / manual registration). Agentic Affiliates brand, email-safe (table layout,
+ * module / manual registration). OpenChair brand, email-safe (table layout,
  * inline styles only). Vars: $identity, $password, $email, $product.
  * Replaces the legacy engine welcome template.
  */
@@ -20,14 +20,14 @@ $product   = isset($product) ? (string) $product : '';
         <tr><td style="padding:28px 36px 22px;border-bottom:1px solid #ECDDD4;">
           <table role="presentation" cellpadding="0" cellspacing="0"><tr>
             <td style="width:40px;height:40px;background:#F0755E;border-radius:11px;text-align:center;vertical-align:middle;font-size:22px;line-height:40px;color:#1a0e08;font-weight:700;">&#128276;</td>
-            <td style="padding-left:11px;font-size:21px;font-weight:700;letter-spacing:-.5px;color:#1F1712;">Agentic Affiliates</td>
+            <td style="padding-left:11px;font-size:21px;font-weight:700;letter-spacing:-.5px;color:#1F1712;">OpenChair</td>
           </tr></table>
         </td></tr>
 
         <!-- Hero -->
         <tr><td style="padding:34px 36px 8px;">
           <div style="font-family:Georgia,'Times New Roman',serif;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#E75C43;font-weight:700;margin-bottom:12px;">Welcome aboard</div>
-          <h1 style="margin:0 0 14px;font-size:26px;line-height:1.22;font-weight:700;letter-spacing:-.6px;color:#1F1712;">Your Agentic Affiliates account is ready</h1>
+          <h1 style="margin:0 0 14px;font-size:26px;line-height:1.22;font-weight:700;letter-spacing:-.6px;color:#1F1712;">Your OpenChair account is ready</h1>
           <p style="margin:0 0 8px;font-size:15px;line-height:1.65;color:#5F5148;">
             Welcome<?= $product ? ' to <b style="color:#1F1712;">' . html_escape($product) . '</b>' : '' ?>! Your account has been created. Use the details below to sign in and start turning every lead into a live conversation.
           </p>
@@ -62,7 +62,7 @@ $product   = isset($product) ? (string) $product : '';
         <tr><td style="padding:22px 36px 4px;">
           <table role="presentation" cellpadding="0" cellspacing="0"><tr>
             <td style="border-radius:999px;background:#F0755E;background-image:linear-gradient(135deg,#F0755E,#E75C43);">
-              <a href="<?= html_escape($login_url) ?>" style="display:inline-block;padding:15px 34px;font-size:15px;font-weight:700;color:#FFFFFF;text-decoration:none;border-radius:999px;">Log in to Agentic Affiliates &rarr;</a>
+              <a href="<?= html_escape($login_url) ?>" style="display:inline-block;padding:15px 34px;font-size:15px;font-weight:700;color:#FFFFFF;text-decoration:none;border-radius:999px;">Log in to OpenChair &rarr;</a>
             </td>
           </tr></table>
           <p style="margin:14px 0 0;font-size:12.5px;line-height:1.6;color:#8E7E74;">
@@ -90,7 +90,7 @@ $product   = isset($product) ? (string) $product : '';
 
         <!-- Footer -->
         <tr><td style="padding:20px 36px;background:#F8F0EB;border-top:1px solid #ECDDD4;text-align:center;">
-          <p style="margin:0;font-size:11px;color:#B9A79C;">&copy; <?= date('Y') ?> Agentic Affiliates &middot; All rights reserved.</p>
+          <p style="margin:0;font-size:11px;color:#B9A79C;">&copy; <?= date('Y') ?> OpenChair &middot; All rights reserved.</p>
         </td></tr>
 
       </table>

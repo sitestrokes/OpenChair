@@ -1,6 +1,6 @@
 <?php
 /**
- * Reset-password email — Agentic Affiliates brand, email-safe (table layout, inline
+ * Reset-password email — OpenChair brand, email-safe (table layout, inline
  * styles only; no external CSS/fonts/SVG so it renders across mail clients).
  * Vars: $identity (email/username), $forgotten_password_code.
  * Keeps the same reset URL Ion Auth built: auth/reset_password/<code>.
@@ -18,7 +18,7 @@ $reset_url = site_url('auth/reset_password/' . $forgotten_password_code);
         <tr><td style="padding:28px 36px 22px;border-bottom:1px solid #ECDDD4;">
           <table role="presentation" cellpadding="0" cellspacing="0"><tr>
             <td style="width:40px;height:40px;background:#F0755E;border-radius:11px;text-align:center;vertical-align:middle;font-size:22px;line-height:40px;color:#1a0e08;font-weight:700;">&#128276;</td>
-            <td style="padding-left:11px;font-size:21px;font-weight:700;letter-spacing:-.5px;color:#1F1712;">Agentic Affiliates</td>
+            <td style="padding-left:11px;font-size:21px;font-weight:700;letter-spacing:-.5px;color:#1F1712;">OpenChair</td>
           </tr></table>
         </td></tr>
 
@@ -27,7 +27,7 @@ $reset_url = site_url('auth/reset_password/' . $forgotten_password_code);
           <div style="font-family:Georgia,'Times New Roman',serif;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#E75C43;font-weight:700;margin-bottom:12px;">Password reset</div>
           <h1 style="margin:0 0 16px;font-size:25px;line-height:1.25;font-weight:700;letter-spacing:-.5px;color:#1F1712;">Reset your password</h1>
           <p style="margin:0 0 14px;font-size:15px;line-height:1.65;color:#5F5148;">
-            Hi <b style="color:#1F1712;"><?= html_escape($identity) ?></b>, we received a request to reset the password for your Agentic Affiliates account. Click the button below to choose a new one.
+            Hi <b style="color:#1F1712;"><?= html_escape($identity) ?></b>, we received a request to reset the password for your OpenChair account. Click the button below to choose a new one.
           </p>
 
           <!-- CTA button -->
@@ -56,7 +56,7 @@ $reset_url = site_url('auth/reset_password/' . $forgotten_password_code);
           <p style="margin:0 0 4px;font-size:12px;color:#8E7E74;">
             Need a hand? <a href="https://engageleads.zendesk.com/" style="color:#E75C43;text-decoration:none;">Contact support</a>
           </p>
-          <p style="margin:0;font-size:11px;color:#B9A79C;">&copy; <?= date('Y') ?> Agentic Affiliates &middot; All rights reserved.</p>
+          <p style="margin:0;font-size:11px;color:#B9A79C;">&copy; <?= date('Y') ?> OpenChair &middot; All rights reserved.</p>
         </td></tr>
 
       </table>
