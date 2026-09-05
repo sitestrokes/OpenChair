@@ -1,0 +1,120 @@
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+/**
+ * S1 — Today. The habit screen (40-ux-spec.md §2.2).
+ *
+ * Two bucket columns side by side, because that IS the product's argument: the
+ * same scan produces two opposite pitches, and the Slammed column is the half
+ * nobody else sells to.
+ *
+ * Vars: $totals, $counts, $hungry[], $slammed[]
+ */
+$stale = oc_is_stale($totals['last_scan']);
+?>
+<div class="page">
+
+  <div class="pagehead">
+    <div>
+      <h1>Today</h1>
+      <p>What your market looks like this morning. Two buckets, one scan &mdash; the red list needs
+         customers, the green list needs capacity.</p>
+    </div>
+  </div>
+
+  <?php if ($stale): ?>
+    <div class="stale">
+      <span aria-hidden="true">&#9888;</span>
+      <div><b>Data is <?= html_escape(oc_data_age($totals['last_scan'])) ?>.</b>
+        Availability changes through the day; treat these as of the last observation, not this minute.</div>
+    </div>
+  <?php endif; ?>
+
+  <!-- The number is the product (40-ux-spec P1): money first, on every screen. -->
+  <div class="cards" style="padding:0 0 18px">
+    <div class="mini">
+      <h4>Unsold time this week</h4>
+      <div class="big"><?= html_escape(oc_revenue_range($totals['ecr_cents'])) ?></div>
+      <div class="stat-note">Across <?= (int) $totals['businesses'] ?> businesses with public online booking.
+        A range, never a single figure &mdash; priced from their own published menus.</div>
+    </div>
+    <div class="mini">
+      <h4>Open slots</h4>
+      <div class="big"><?= number_format($totals['open_slots']) ?></div>
+      <div class="stat-note"><?= html_escape(oc_unit()) ?> in the next 7 days.</div>
+    </div>
+    <div class="mini">
+      <h4>Hungry</h4>
+      <div class="big" style="color:var(--hot)"><?= (int) $counts['hungry'] ?></div>
+      <div class="stat-note">Sell them customers.</div>
+    </div>
+    <div class="mini">
+      <h4>Slammed</h4>
+      <div class="big" style="color:var(--cool)"><?= (int) $counts['slammed'] ?></div>
+      <div class="stat-note">Sell them capacity. Nobody else is pitching these.</div>
+    </div>
+  </div>
+
+  <?php if (!empty($totals['below_floor'])): ?>
+    <div class="notice">
+      <span aria-hidden="true">&#9432;</span>
+      <div><b><?= (int) $totals['below_floor'] ?> businesses are not showing a score.</b>
+        We could not read enough of their calendar to stand behind a number, so we are showing you the
+        gap instead of a guess. They are excluded from the totals above.</div>
+    </div>
+  <?php endif; ?>
+
+  <div class="split">
+    <?php
+    $cols = [
+      ['title' => 'Hungry',  'sub' => 'sell them customers', 'rows' => $hungry,  'cls' => 'hot',
+       'empty' => 'No business in this market is showing high vacancy today.'],
+      ['title' => 'Slammed', 'sub' => 'sell them capacity',  'rows' => $slammed, 'cls' => 'cool',
+       'empty' => 'Nobody is booked far enough out to qualify today.'],
+    ];
+    foreach ($cols as $col): ?>
+      <div class="panel">
+        <div class="panel-head">
+          <h2><span class="bucket <?= $col['cls'] ?>"><?= oc_bucket_glyph($col['cls'] === 'hot' ? 'hungry' : 'slammed') ?> <?= html_escape($col['title']) ?></span></h2>
+          <span class="sub"><?= html_escape($col['sub']) ?></span>
+        </div>
+        <?php if (empty($col['rows'])): ?>
+          <div class="empty" style="padding:34px 20px;text-align:center;color:var(--tx3)"><?= html_escape($col['empty']) ?></div>
+        <?php else: ?>
+          <div class="list">
+            <?php foreach ($col['rows'] as $b):
+              $cls  = oc_bucket_class($b->latest_bucket, $b->latest_confidence);
+              $score = oc_score_or_gap($b->latest_vacancy_bp, $b->latest_confidence);
+              $low  = oc_below_floor($b->latest_confidence);
+            ?>
+              <a class="row" href="<?= site_url('openchair/business/' . (int) $b->id) ?>">
+                <span class="score <?= $cls ?>"><?= html_escape($score) ?></span>
+                <span>
+                  <span class="row-name"><?= html_escape($b->name) ?></span>
+                  <span class="row-meta">
+                    <span class="plat"><?= html_escape($b->platform_name ?: '—') ?></span>
+                    <?php if ($col['cls'] === 'cool'): ?>
+                      next available: <?= html_escape(oc_next_available($b->latest_days_to_next)) ?>
+                    <?php else: ?>
+                      <?= html_escape(oc_slots_phrase($b->latest_open_slots)) ?>
+                    <?php endif; ?>
+                  </span>
+                </span>
+                <span class="row-money">
+                  <?php if ($low): ?>
+                    &mdash;<small>not enough data</small>
+                  <?php else: ?>
+                    <?= html_escape(oc_money($b->latest_empty_chair_cents)) ?><small>unsold, low end</small>
+                  <?php endif; ?>
+                </span>
+              </a>
+            <?php endforeach; ?>
+          </div>
+        <?php endif; ?>
+        <div class="ctrl">
+          <a class="btn btn-sm" href="<?= site_url('openchair/radar?bucket=' . ($col['cls'] === 'hot' ? 'hungry' : 'slammed')) ?>">See all <?= html_escape(strtolower($col['title'])) ?></a>
+        </div>
+      </div>
+    <?php endforeach; ?>
+  </div>
+
+</div>

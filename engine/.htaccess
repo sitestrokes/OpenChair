@@ -1,0 +1,56 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# SECURITY: deny raw static fetches of source / dev / data files.
+#
+# This directory (engine/) is the web DocumentRoot in production. The repo-root
+# .htaccess that denies these types sits ABOVE the docroot, so it never applies
+# here — which left *.py, *.md, *.txt (jsondata), tests/, pdf-tutorials/ and the
+# owner-uploaded chatbot-KB *.txt files publicly readable. These blocks close
+# that. They only affect STATIC file fetches; PHP routing is untouched because
+# the CI3 rewrite below routes extensionless requests to index.php and .php is
+# never denied here. (jsondata *.txt are read server-side via file_get_contents,
+# not over HTTP, so denying .txt fetches is safe; robots.txt/ads.txt are not
+# used.) config.php/database.php and bridge-service/.env are already protected.
+<FilesMatch "(?i)\.(env|env\..*|py|pyc|md|markdown|sql|txt|log|bak|old|orig|swp|dist|sample|example|ini|yml|yaml|sh|lock|zip|tar|gz|tgz|rar|7z)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order deny,allow
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# Never serve dotfiles (.env, .git*, .htaccess itself, ...).
+<FilesMatch "(?i)^\.">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order deny,allow
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+RewriteEngine On
+
+# Belt-and-braces: block whole dev/data directories from serving raw files.
+# NOTE: pdf-tutorials/ is NOT blocked as a directory — the app serves its
+# tutorial *.pdf to users via base_url('pdf-tutorials/<name>.pdf'). Its source
+# files (build_*.py, *.md, __pycache__) are already denied by the FilesMatch
+# extension rule above (.pdf is not in that list, so the PDFs still serve).
+# tests/ is entirely internal (.py/.sh) and stays blocked wholesale.
+RewriteRule ^tests/ - [F,L]
+RewriteRule ^uploads/(chatbot_kb|kb_files)/ - [F,L]
+
+# Preserve the Authorization header for PHP. Apache + CGI/FastCGI strip it
+# from the environment by default, which breaks Bearer-token APIs.
+RewriteCond %{HTTP:Authorization} .
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php/$1 [L]
+
+<FilesMatch "\.(woff|woff2|ttf|otf|eot)$">
+    Header set Access-Control-Allow-Origin "*"
+</FilesMatch>
