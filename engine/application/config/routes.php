@@ -48,6 +48,7 @@ $route['openchair/scan']       = 'openchair/openchair/scan';
 $route['openchair/radar']      = 'openchair/openchair/radar';
 $route['openchair/prospects']  = 'openchair/openchair/prospects';
 $route['openchair/ledger']     = 'openchair/openchair/ledger';
+$route['openchair/ledger/(:num)'] = 'openchair/openchair/ledger/$1';
 $route['openchair/coverage']   = 'openchair/openchair/coverage';
 $route['openchair/adapters']   = 'openchair/openchair/adapters';
 // Business Detail and Pitch take an id; the bare form falls back to the first

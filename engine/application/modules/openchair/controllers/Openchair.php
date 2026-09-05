@@ -30,6 +30,7 @@ class Openchair extends App_Controller
         $this->load->model('openchair/oc_market_model');
         $this->load->model('openchair/oc_pitch_model');
         $this->load->model('openchair/oc_alert_model');
+        $this->load->model('openchair/oc_ledger_model');
         $this->load->library('openchair/oc_pitch_lib');
         $this->load->helper('openchair/oc_format');
         $this->load->library('oc_render_lib');
@@ -292,11 +293,39 @@ class Openchair extends App_Controller
         ];
     }
 
-    /** S8 — Ledger. The 8-week trend; real rollups land in Phase 7. */
-    public function ledger()
+    /**
+     * S8 — Ledger. One component, two jobs: the prospecting artifact and the
+     * retainer report are the same screen.
+     */
+    public function ledger($id = null)
     {
-        $this->data['b'] = $this->oc_business_model->first_in_market($this->_city(), $this->_niche());
-        $this->_render('pages/ledger', 'ledger', 'Ledger');
+        // Default to a watched business — the Ledger is about businesses you
+        // have a relationship with, not the whole market.
+        if (!$id) {
+            $watched = $this->oc_prospect_model->watchlist($this->user_id, ['limit' => 1]);
+            $id = $watched ? (int) $watched[0]->business_id : null;
+        }
+        $b = $id ? $this->oc_business_model->find($id)
+                 : $this->oc_business_model->first_in_market($this->_city(), $this->_niche());
+        if (!$b) { show_404(); return; }
+
+        $weeks  = $this->oc_ledger_model->trend($b->id, 8);
+        $cohort = $this->oc_ledger_model->cohort($b->city_key, $b->niche_key, 8);
+
+        $this->data['b']       = $b;
+        $this->data['weeks']   = $weeks;
+        $this->data['cohort']  = $cohort;
+        $this->data['zones']   = $this->oc_ledger_model->dead_zones($b->id);
+        $this->data['caveat']  = $this->oc_ledger_model->caveat();
+        // Campaign start is set when a prospect becomes a client. Until then the
+        // report is the prospecting view and there is no lift to claim.
+        $prospect = $this->oc_prospect_model->find($this->user_id, $b->id);
+        $this->data['lift'] = ($prospect && $prospect->stage === 'won' && $prospect->last_pitched_at)
+            ? $this->oc_ledger_model->lift($weeks, $cohort, substr($prospect->last_pitched_at, 0, 10))
+            : null;
+
+        $this->data['watchlist'] = $this->oc_prospect_model->watchlist($this->user_id, ['limit' => 30]);
+        $this->_render('pages/ledger', 'ledger', 'Ledger — ' . $b->name);
     }
 
     /** S9 — Coverage. What we can and cannot see, stated honestly. */
