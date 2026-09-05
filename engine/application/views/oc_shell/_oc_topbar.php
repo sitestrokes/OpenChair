@@ -17,8 +17,20 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  */
 $q = isset($oc_query) ? (string) $oc_query : '';
 $is_demo = !empty($oc_is_demo);
+
+// The scan box belongs to the PRODUCT screens. Showing "barbershop, Tampa" with
+// a Scan button on the White-label or Manage Users page is chrome that invites
+// the wrong action — those pages are account settings, not prospecting. They get
+// the page title instead, so the topbar still says where you are.
+$product_pages = ['today', 'radar', 'business', 'pitch', 'prospects', 'ledger', 'coverage', 'adapters'];
+$is_product = in_array(isset($page) ? (string) $page : '', $product_pages, true);
 ?>
 <header class="topbar">
+<?php if (!$is_product): ?>
+  <div class="topbar-title"><?= html_escape(isset($page_title) ? $page_title : '') ?></div>
+  <span class="spacer" style="flex:1"></span>
+  <a class="btn btn-sm" href="<?= site_url('openchair') ?>">&larr; Back to OpenChair</a>
+<?php else: ?>
   <form method="get" action="<?= site_url('openchair/scan') ?>" role="search"
         style="display:contents">
     <div class="search">
@@ -38,4 +50,5 @@ $is_demo = !empty($oc_is_demo);
       <span class="dot" aria-hidden="true"></span> Sample data
     </span>
   <?php endif; ?>
+<?php endif; ?>
 </header>

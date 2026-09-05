@@ -50,7 +50,7 @@ $rows = isset($configData) && is_array($configData) ? $configData : [];
           <td style="padding:13px 16px;color:var(--txt2);font-size:12.5px"><?= html_escape($created_on) ?></td>
           <td style="padding:13px 16px;text-align:right;white-space:nowrap">
             <button type="button" class="btn gho sm" onclick="cfgEdit(this)" data-id="<?= (int) $config->id ?>" data-key="<?= html_escape($name) ?>">Edit</button>
-            <button type="button" class="btn gho sm" style="border-color:#5a2630;color:#ffb4b4" onclick="cfgDelete(<?= (int) $config->id ?>)">Delete</button>
+            <button type="button" class="btn gho sm" style="border-color:var(--hot);color:var(--hot)" onclick="cfgDelete(<?= (int) $config->id ?>)">Delete</button>
           </td>
         </tr>
       <?php endforeach; endif; ?>

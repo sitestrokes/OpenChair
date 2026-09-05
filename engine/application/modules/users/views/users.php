@@ -100,7 +100,7 @@ $product_access = $this->config->item('access_specifier');
                     <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
                         <a href="javascript:void(0);" class="btn gho sm resetAccount" data-userid="<?= $u->id ?>" data-email="<?= $u->email ?>" title="Reset Password"><i class="fas fa-sync-alt"></i></a>
                         <a href="<?= base_url('useroperation/'.$u->id) ?>" class="btn gho sm" data-userid="<?= $u->id ?>" data-action="edit" title="Edit User"><i class="fa fa-edit"></i></a>
-                        <a href="javascript:void(0);" class="btn gho sm deleteSelected2" data-userid="<?= $u->id ?>" title="Delete User" style="border-color:#5a2630;color:#ffb4b4"><i class="fa fa-trash"></i></a>
+                        <a href="javascript:void(0);" class="btn gho sm deleteSelected2" data-userid="<?= $u->id ?>" title="Delete User" style="border-color:var(--hot);color:var(--hot)"><i class="fa fa-trash"></i></a>
                         <a href="javascript:void(0);" class="btn gho sm toggleuser <?= $lockClass ?>" data-status="<?= $u->active ?>" data-userid="<?= $u->id ?>" title="Lock/Unlock"><i class="fa <?= $lock ?>"></i></a>
                     </div>
                 </td>

@@ -442,3 +442,130 @@ label, h1, h2, h3, h4, h5, p, li, td, th, dt, dd, span, small, b, strong{
 /* Prospect rows carry a stage <select> and three buttons; give the select room
    without letting it stretch like a full-width form field. */
 .list select.input{width:auto;min-width:104px}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   HOST-ENGINE COMPONENT COMPATIBILITY
+
+   The token layer above fixed COLOURS for the ported modules. This fixes
+   LAYOUT, which is the other half of the same problem: Settings, Manage Users,
+   White-label and API Config are written against the host shell's component
+   vocabulary — .card.pad, .cardhead, .grid2, .field, .setrow, .btn.pri —
+   and oc_shell defines none of it. Those pages were rendering as unstyled
+   stacked boxes: two-column forms collapsing into one, buttons falling back to
+   browser chrome, cards with no surface.
+
+   Ported faithfully from the host's ic_shell/layout.php rather than
+   reinvented, so a page re-synced from the host keeps working.
+
+   THE COLLISIONS, and how each is handled — this is the part that was
+   actually overlapping:
+
+     .btn      oc_shell's base is compatible; only the .pri/.gho/.sub/.sm
+               MODIFIERS were missing. Additive, so Radar's .btn-primary is
+               untouched.
+     .chip     oc_shell's is an interactive filter chip with pressed states;
+               the host's is a static status badge. The colour modifiers are
+               added; the base is left alone so Radar's filters still work.
+     .ico      oc_shell scopes its 16px glyph to .navbtn .ico. The host's is a
+               34px circle scoped to .cardhead .ico. Both scoped, no clash.
+     .pagehead oc_shell's flex container is compatible with the host's markup
+               once .psub exists.
+     .tabs     identical intent in both; defined once here.
+     .dot/.lbl small enough to be equivalent either way.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Page headers ── */
+.headrow{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;flex-wrap:wrap}
+.pagehead h1{font-family:var(--disp);font-weight:600;font-size:clamp(24px,2.6vw,32px);
+  letter-spacing:-.9px;margin-bottom:6px}
+.psub{color:var(--tx3);font-size:14px;max-width:640px;line-height:1.6}
+.psub b{color:var(--tx2)}
+
+/* ── Cards ── */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r3);
+  box-shadow:var(--shadow)}
+.card.pad{padding:20px 22px}
+.cardhead{display:flex;align-items:center;gap:11px;margin-bottom:16px}
+.cardhead .ico{width:34px;height:34px;border-radius:50%;background:var(--sunken);
+  display:grid;place-items:center;font-size:15px;flex:none}
+.cardhead h3{font-family:var(--disp);font-weight:700;font-size:15px}
+.cardhead .right{margin-left:auto}
+.right{margin-left:auto}
+
+/* ── Forms. The .field/.input pair is most of these pages. ── */
+.field{margin-bottom:16px;min-width:0}
+.field label{display:block;font-size:12.5px;font-weight:600;color:var(--tx2);margin-bottom:7px}
+.input{background:var(--sunken);color:var(--tx);border:1px solid var(--line);
+  border-radius:var(--r1);padding:10px 13px;font:inherit;width:100%;max-width:100%;
+  transition:border-color .14s,box-shadow .14s}
+.input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.input::placeholder{color:var(--tx3)}
+.hint{font-size:11.5px;color:var(--tx3);margin-top:6px;line-height:1.55}
+.lbl{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1.3px;
+  text-transform:uppercase;color:var(--tx3)}
+
+/* Two-column form grid. THE overlap fix: without this the columns stacked and
+   long labels ran under the adjacent field. min-width:0 stops a wide input
+   forcing the track past its share and pushing the neighbour off-screen. */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px 28px;align-items:start}
+.grid2 > *{min-width:0}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px 22px;align-items:start}
+.grid3 > *{min-width:0}
+@media(max-width:820px){ .grid2,.grid3{grid-template-columns:1fr} }
+
+/* ── Settings rows ── */
+.setrow{display:flex;align-items:center;gap:14px;padding:14px 2px;
+  border-bottom:1px solid var(--line-soft);flex-wrap:wrap}
+.setrow:last-child{border-bottom:0}
+.setrow .right{margin-left:auto}
+
+/* ── Button modifiers (additive — the base stays oc_shell's) ── */
+.btn.pri{background:linear-gradient(135deg,var(--accent),var(--accent-tx));color:#fff;
+  border-color:transparent;font-weight:700}
+.btn.pri:hover{filter:brightness(1.06)}
+.btn.pri:disabled{background:var(--sunken);color:var(--tx3);cursor:not-allowed;filter:none}
+.btn.gho{background:transparent;color:var(--tx2);border:1px solid var(--line)}
+.btn.gho:hover{color:var(--tx);border-color:var(--tx3);background:var(--sunken)}
+.btn.sub{background:var(--sunken);color:var(--tx2)}
+.btn.sub:hover{color:var(--tx)}
+.btn.sm{padding:7px 12px;font-size:12px;border-radius:var(--r1)}
+
+/* ── Status-badge chip modifiers (the base filter chip is untouched) ── */
+.chip.green{background:var(--cool-soft);color:var(--cool);border-color:transparent}
+.chip.amber{background:var(--mid-soft);color:var(--mid);border-color:transparent}
+.chip.blue{background:rgba(75,155,232,.16);color:var(--blue);border-color:transparent}
+.chip.mute{background:var(--sunken);color:var(--tx3);border-color:transparent}
+.chip.coral{background:var(--accent-soft);color:var(--accent-tx);border-color:transparent}
+
+/* ── Tabs ── */
+.tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);margin:20px 0 22px;flex-wrap:wrap}
+.tabs a{font-size:12.5px;font-weight:600;color:var(--tx3);padding:9px 14px;
+  border-bottom:2px solid transparent;cursor:pointer;margin-bottom:-1px}
+.tabs a:hover{color:var(--tx2)}
+.tabs a.on{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* ── Ported pages are loaded straight into <main> with no .page wrapper, so
+      they had NO padding and ran edge-to-edge under the topbar. ── */
+.main > main > .headrow:first-child,
+.main > main > form:first-child,
+.main > main > .card:first-child{margin-top:0}
+.main > main{padding:22px}
+.main > main > .page{padding:0}   /* product pages already pad themselves */
+
+/* ── Tables in ported pages ── */
+.card table,.panel table{width:100%;border-collapse:collapse}
+.card th,.panel th{text-align:left;font-family:var(--mono);font-size:9px;letter-spacing:1.2px;
+  text-transform:uppercase;color:var(--tx3);font-weight:700;padding:11px 12px;
+  border-bottom:1px solid var(--line)}
+.card td,.panel td{padding:11px 12px;border-bottom:1px solid var(--line-soft)}
+
+/* ── SweetAlert2 sits on the light default; make it belong here. ── */
+.swal2-popup{background:var(--surface)!important;color:var(--tx)!important;
+  border:1px solid var(--line)!important;border-radius:var(--r3)!important}
+.swal2-title,.swal2-html-container{color:var(--tx)!important}
+.swal2-input,.swal2-textarea{background:var(--sunken)!important;color:var(--tx)!important;
+  border:1px solid var(--line)!important}
+
+/* Account pages get the page title in the topbar instead of the scan box. */
+.topbar-title{font-family:var(--disp);font-weight:600;font-size:16px;letter-spacing:-.02em;
+  color:var(--tx)}

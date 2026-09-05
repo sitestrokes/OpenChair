@@ -272,6 +272,70 @@ foreach (php_files($VIEWS) as $f) {
 }
 check('every POST form emits a CSRF token server-side', empty($formless), implode(', ', $formless));
 
+
+// -- UI: no page stylesheet may restyle the shell. ---------------------------
+echo "
+Shell isolation
+";
+
+// The mechanism behind "this page looks fine but it broke the sidebar": a view
+// brings its own <style>, writes a BARE .app or .rail rule, and every other page
+// inherits it. The settings page was doing exactly this with .app, .sidebar and
+// .nav-backdrop inside a media query, where a line-start check does not see them.
+$SHELL_CLASSES = [
+    'app','rail','main','topbar','brand','brand-mark','brand-name','brand-sub',
+    'navbtn','rail-group','rail-foot','quota','page','search','oc-foot',
+    'oc-skip-link','sidebar','nav-backdrop','row','rowwrap','list','panel',
+    'score','bucket','pin','mapwrap','pagehead',
+];
+
+$leaks = [];
+$view_dirs = glob($ROOT . '/modules/*/views', GLOB_ONLYDIR);
+$view_files = [];
+foreach ($view_dirs as $d) { $view_files = array_merge($view_files, php_files($d)); }
+
+foreach ($view_files as $f) {
+    $src = file_get_contents($f);
+
+    // Only views rendered INSIDE the shell can leak into it. A standalone
+    // document (login, the one-pager) brings its own <html> and never loads
+    // oc-shell.css, so its .brand is its own.
+    if (preg_match('/<!doctype html|<html/i', $src)) { continue; }
+    if (!preg_match_all('/<style[^>]*>(.*?)<\/style>/is', $src, $blocks)) { continue; }
+
+    foreach ($blocks[1] as $css) {
+        if (!preg_match_all('/(?:^|[
+{}])\s*([.#][^{}
+]{0,120}?)\s*\{/', $css, $sels)) { continue; }
+        foreach ($sels[1] as $sel) {
+            $sel = trim($sel);
+            // Anchored on an ID -> cannot reach the shell. Only a bare class is global.
+            if ($sel === '' || $sel[0] === '#' || $sel[0] === '@') { continue; }
+            if (!preg_match_all('/\.([A-Za-z][\w-]*)/', $sel, $cls)) { continue; }
+            foreach ($cls[1] as $c) {
+                if (in_array($c, $SHELL_CLASSES, true)) {
+                    $leaks[] = basename($f) . ' -> .' . $c;
+                    break 2;
+                }
+            }
+        }
+    }
+}
+check('no page stylesheet restyles a shell selector', empty($leaks), implode(', ', array_unique($leaks)));
+
+// The settings page carries its own palette. It must ALIAS the shell tokens
+// rather than restate hex values, or it renders as a light island in a dark app.
+$scoped = $ROOT . '/modules/setting/views/pages/_ic_settings_scoped.php';
+if (file_exists($scoped)) {
+    $ssrc = file_get_contents($scoped);
+    check('the settings palette aliases the shell, it does not hard-code colours',
+          strpos($ssrc, '--txt:var(--tx)') !== false && strpos($ssrc, '--bg:var(--ground)') !== false);
+    // A self-reference (--surface: var(--surface)) is invalid CSS and silently
+    // resolves to nothing, which is worse than a wrong colour.
+    check('no self-referential custom property',
+          !preg_match('/--([a-z0-9-]+)\s*:\s*var\(\s*--\s*\)/', $ssrc));
+}
+
 echo "\n" . str_repeat('─', 52) . "\n";
 echo ($fail === 0 ? "ALL GREEN" : "FAILURES") . ": $pass passed, $fail failed\n";
 exit($fail === 0 ? 0 : 1);

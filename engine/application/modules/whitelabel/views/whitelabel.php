@@ -100,6 +100,10 @@ $wl_bon    = !empty($wld['bonus_tab']);
 <style>
   /* dark specimen row for the logo/favicon upload preview */
   .wl-specimen{display:flex;align-items:center;gap:16px;margin-top:12px;padding:14px 16px;border:1px dashed var(--line2);border-radius:var(--r2);background:var(--bg);}
+  /* The plate behind the logo preview stays WHITE in both themes, deliberately.
+     Almost every uploaded logo is drawn for a white ground; previewing one on
+     the dark surface would hide a white wordmark entirely and make a
+     transparent PNG look broken. */
   .wl-specimen img.chnagethumb{max-width:160px;max-height:60px;object-fit:contain;cursor:pointer;border:1px solid var(--line);border-radius:8px;padding:8px;background:#fff;}
   .wl-specimen img.chnagethumb:hover{border-color:var(--coral);}
 </style>

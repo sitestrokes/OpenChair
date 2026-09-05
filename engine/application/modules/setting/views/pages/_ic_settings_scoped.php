@@ -6,28 +6,36 @@
      "Bridge Story × Nixtio" shell (ic_shell/layout.php). -->
 <style>
 
+/* OpenChair port. This block used to hard-code the host's CREAM hex values,
+   which painted the entire Settings page as a bright light island bolted into
+   the dark app -- the most visible theme conflict in the product.
+
+   It now ALIASES the shell's tokens instead of restating colours. Because
+   custom properties resolve lazily, Settings follows light, dark and the
+   explicit toggle with no second palette to maintain. The local names are kept
+   so the 117 scoped rules below need no edits, and so this file can still be
+   diffed against its upstream. */
 #ic-set{
-  --bg:#F3EAE4; --surface:#FFFFFF; --surface2:#F8F0EB; --raise:#FBF3EE; --line:#ECDDD4; --line2:#E1CDC1;
-  --txt:#1F1712; --txt2:#5F5148; --mute:#8E7E74; --faint:#B9A79C;
-  --coral:#F0755E; --coral2:#E75C43; --coraldim:#F0755E24; --green:#1FA274; --amber:#C07A12; --blue:#2E74B5; --violet:#7A5AF0;
+  /* --surface and --line are NOT redeclared: they share their names with the
+     shell's tokens, so `--surface: var(--surface)` would be a self-reference,
+     which CSS treats as invalid and resolves to nothing. They inherit from
+     :root already. */
+  --bg:var(--ground); --surface2:var(--sunken);
+  --raise:var(--raised); --line2:var(--line-soft);
+  --txt:var(--tx); --txt2:var(--tx2); --mute:var(--tx3); --faint:var(--tx3);
+  --coral:var(--accent); --coral2:var(--accent-tx); --coraldim:var(--accent-soft);
+  --green:var(--cool); --amber:var(--mid); --blue:#4B9BE8; --violet:#9B87F5;
   --r1:12px; --r2:16px; --r3:24px; --r4:30px;
   --disp:'Outfit',system-ui,sans-serif; --body:'Manrope',system-ui,sans-serif; --mono:'Space Mono',monospace;
   --sw:236px;
 }
 #ic-set *{box-sizing:border-box;margin:0;padding:0}
 #ic-set ::selection{background:var(--coraldim)}
-#ic-set{font-family:var(--body);color:var(--txt);background:var(--bg);-webkit-font-smoothing:antialiased;font-size:14px;line-height:1.5}
+#ic-set{font-family:var(--body);color:var(--tx);background:transparent;-webkit-font-smoothing:antialiased;font-size:14px;line-height:1.5}
 #ic-set a{color:inherit;text-decoration:none}
 #ic-set button,#ic-set input,#ic-set select,#ic-set textarea{font-family:inherit}
 #ic-set ::-webkit-scrollbar{width:9px;height:9px}#ic-set ::-webkit-scrollbar-thumb{background:var(--line2);border-radius:6px}#ic-set ::-webkit-scrollbar-track{background:transparent}
 
-#ic-set .app{display:grid;grid-template-columns:var(--sw) 1fr;min-height:100vh}
-#ic-set .sidebar{background:var(--surface);border-right:1px solid var(--line);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;padding:18px 14px;overflow-y:auto}
-#ic-set .brand{display:flex;align-items:center;gap:10px;padding:6px 8px 16px}
-#ic-set .brand .mk{width:34px;height:34px;border-radius:10px;background:linear-gradient(155deg,var(--coral),var(--coral2));display:grid;place-items:center;box-shadow:0 6px 18px -6px rgba(240,117,94,.55)}
-#ic-set .brand .mk svg{width:18px;height:18px;fill:#fff}
-#ic-set .brand b{font-family:var(--disp);font-weight:700;font-size:17px;letter-spacing:-.4px}
-#ic-set .brand small{display:block;font-family:var(--mono);font-size:8px;color:var(--mute);letter-spacing:1.4px;text-transform:uppercase;margin-top:2px}
 #ic-set .navgroup{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--faint);padding:14px 10px 7px}
 #ic-set .navitem{display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:var(--r1);color:var(--txt2);font-size:13.5px;font-weight:500;cursor:pointer;transition:.13s;position:relative}
 #ic-set .navitem svg{width:17px;height:17px;opacity:.75;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
@@ -42,7 +50,6 @@
 #ic-set .logout:hover{background:var(--surface2);color:var(--coral)}
 
 #ic-set .main{display:flex;flex-direction:column;min-width:0}
-#ic-set .topbar{display:flex;align-items:center;gap:14px;padding:14px 26px;border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(255,255,255,.85);backdrop-filter:blur(10px);z-index:20}
 #ic-set .crumb{font-family:var(--mono);font-size:11px;color:var(--mute);letter-spacing:.4px}
 #ic-set .crumb b{color:var(--txt2)}
 #ic-set .pill{font-family:var(--mono);font-size:11px;color:var(--txt2);background:var(--surface);border:1px solid var(--line);padding:7px 12px;border-radius:30px;white-space:nowrap}
@@ -150,17 +157,17 @@
 #ic-set .navtoggle:hover{border-color:var(--line2)}
 #ic-set .nav-backdrop{display:none}
 @media(max-width:880px){
-  .app{grid-template-columns:1fr}
+  #ic-set .app{grid-template-columns:1fr}
   /* Sidebar becomes a slide-in overlay instead of vanishing. */
-  .sidebar{position:fixed;left:0;top:0;width:var(--sw);max-width:84vw;height:100%;
+  #ic-set .sidebar{position:fixed;left:0;top:0;width:var(--sw);max-width:84vw;height:100%;
     transform:translateX(-102%);transition:transform .22s ease;z-index:60;box-shadow:0 18px 50px rgba(90,50,35,.35)}
-  .app.nav-open .sidebar{transform:translateX(0)}
-  .nav-backdrop{display:block;position:fixed;inset:0;background:rgba(31,20,14,.45);
+  #ic-set .app.nav-open .sidebar{transform:translateX(0)}
+  #ic-set .nav-backdrop{display:block;position:fixed;inset:0;background:rgba(31,20,14,.45);
     opacity:0;pointer-events:none;transition:opacity .22s;z-index:55}
-  .app.nav-open .nav-backdrop{opacity:1;pointer-events:auto}
-  .navtoggle{display:inline-flex}
-  .kpis{grid-template-columns:repeat(2,1fr)}
-  .grid12{grid-template-columns:1fr}
+  #ic-set .app.nav-open .nav-backdrop{opacity:1;pointer-events:auto}
+  #ic-set .navtoggle{display:inline-flex}
+  #ic-set .kpis{grid-template-columns:repeat(2,1fr)}
+  #ic-set .grid12{grid-template-columns:1fr}
 }
 
 
@@ -184,7 +191,6 @@ if ($ic_set_accent !== ''):
   --coral2:<?= $ic_set_accent ?>;
   --coraldim:<?= $ic_set_accent ?>22;
 }
-#ic-set .brand .mk{background:linear-gradient(155deg,<?= $ic_set_accent ?>,<?= $ic_set_accent ?>cc)}
 #ic-set .acct .av{background:radial-gradient(circle at 35% 30%,<?= $ic_set_accent ?>,<?= $ic_set_accent ?>cc)}
 <?php endif; ?>
 
