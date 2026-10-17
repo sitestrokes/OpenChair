@@ -142,7 +142,7 @@ function oc_rail_icon($key)
   <div class="rail-foot">
     <?php if (!empty($oc_quota) && is_array($oc_quota)): ?>
       <div class="quota">
-        <div class="oc-plan">Agency plan<?php foreach ($oc_quota as $q): ?> &middot; <?= (int) $q['used'] ?> of <?= (int) $q['cap'] ?> <?= html_escape(strtolower($q['label'])) ?><?php endforeach; ?></div>
+        <div class="oc-plan"><b>Agency plan</b><?php foreach ($oc_quota as $i => $q): ?><?= $i ? " &middot; " : "<br>" ?><?= (int) $q['used'] ?> of <?= (int) $q['cap'] ?> <?= html_escape(strtolower($q['label'])) ?><?php endforeach; ?></div>
       </div>
     <?php endif; ?>
     <button type="button" class="navbtn" onclick="ocToggleTheme()" style="margin-top:8px">

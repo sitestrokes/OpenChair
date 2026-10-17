@@ -197,7 +197,10 @@ $css_v = '?v=' . @filemtime(FCPATH . 'assets/css/visuals/business.css');
 
         <div class="ocb-card ocb-tile">
           <div class="ocb-k">Trend</div>
-          <?php if ($s['trend']['delta'] === null): ?>
+          <?php if ($gap): ?>
+            <div class="ocb-v ocb-v--gap">&mdash;</div>
+            <div class="ocb-n">no trend below the confidence floor</div>
+          <?php elseif ($s['trend']['delta'] === null): ?>
             <div class="ocb-v ocb-v--gap">&mdash;</div>
             <div class="ocb-n">first full week; needs 2</div>
           <?php else: $dl = (int) $s['trend']['delta']; ?>

@@ -591,3 +591,4 @@ label, h1, h2, h3, h4, h5, p, li, td, th, dt, dd, span, small, b, strong{
 /* With more rail items than a short window can hold, flex children shrank to fit
    and their text spilled below the panel. Keep their height; the rail scrolls. */
 .rail > *{flex-shrink:0}
+.oc-plan b{display:block;font-weight:700;color:var(--tx2)}
