@@ -188,12 +188,16 @@ class Oc_scan_model extends CI_Model
         return $this->db->select('c.id AS candidate_id, c.website, c.status AS cand_status, c.detected_platform_key,'
                                . ' c.last_error, c.business_id, b.name, b.latest_vacancy_bp, b.latest_confidence,'
                                . ' b.latest_days_to_next, b.last_good_scan_at, b.status AS biz_status,'
-                               . ' q.status AS queue_status, q.due_at, q.last_error AS queue_error, p.name AS platform_name', false)
+                               . ' q.status AS queue_status, q.due_at, q.attempts AS queue_attempts, q.last_error AS queue_error,'
+                               . ' p.name AS platform_name, dp.rollout AS detected_rollout,'
+                               . ' (SELECT r.status FROM oc_scan_run r WHERE r.business_id = b.id ORDER BY r.observed_on DESC, r.id DESC LIMIT 1) AS last_run_status,'
+                               . ' (SELECT r.error_code FROM oc_scan_run r WHERE r.business_id = b.id ORDER BY r.observed_on DESC, r.id DESC LIMIT 1) AS last_run_error', false)
                         ->from('oc_scan_request_item i')
                         ->join('oc_discovery_candidate c', 'c.id = i.candidate_id')
                         ->join('oc_business b', 'b.id = c.business_id', 'left')
                         ->join('oc_platform p', 'p.id = b.platform_id', 'left')
                         ->join('oc_scan_queue q', 'q.business_id = b.id', 'left')
+                        ->join('oc_platform dp', 'dp.platform_key = c.detected_platform_key', 'left')
                         ->where('i.request_id', (int) $request_id)
                         ->order_by('c.id', 'ASC')
                         ->get()->result();

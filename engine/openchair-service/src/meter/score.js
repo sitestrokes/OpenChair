@@ -82,6 +82,29 @@ export function toObservations(grid, baseDate) {
 }
 
 /**
+ * Open chair-minutes on days 1..H after baseDate — the scoring window.
+ *
+ * Null when the grid has no per-day breakdown (a C5 next-available read), in
+ * which case the caller falls back to the grid total.
+ *
+ * @param {Object} grid
+ * @param {string} baseDate ISO date
+ * @param {number} H
+ * @returns {number|null}
+ */
+export function openMinutesInWindow(grid, baseDate, H) {
+  const byDay = grid?.byDay;
+  if (!byDay || !Object.keys(byDay).length) return null;
+  const base = new Date(`${baseDate}T00:00:00Z`).getTime();
+  let sum = 0;
+  for (const [day, cell] of Object.entries(byDay)) {
+    const off = Math.round((new Date(`${day}T00:00:00Z`).getTime() - base) / 86400000);
+    if (off >= 1 && off <= H) sum += Number(cell?.open ?? 0);
+  }
+  return sum;
+}
+
+/**
  * @typedef {Object} MeterOutput
  * @property {number}  vacancyBp
  * @property {number}  confidence          0..100
@@ -137,8 +160,14 @@ export function score({ grid, business, context = {} }) {
   // NOTE: the whole confidence OBJECT goes in, not the number — the model reads
   // .refuse and .dollarsAllowed off it to decide whether money may be shown at
   // all, independently of the numeric threshold.
+  // Money covers the SAME window as the score: days 1..H after baseDate. The
+  // grid's openMinutes spans the whole read horizon (14 days on Booksy), and
+  // pricing that as "unsold this week" doubled the headline figure — the one
+  // number an owner checks against their own week.
+  const windowOpen = openMinutesInWindow(grid, context.baseDate ?? new Date().toISOString().slice(0, 10), H);
+
   const rev = emptyChairRevenue({
-    openMinutes: grid.openMinutes,
+    openMinutes: windowOpen ?? grid.openMinutes,
     rate,
     confidence: conf,
     sellThrough: [config.sellThroughLow, config.sellThroughHigh],
@@ -164,7 +193,7 @@ export function score({ grid, business, context = {} }) {
     publishable: confidence >= config.confidenceFloor && !conf?.refuse,
     showDollars: rev?.showDollars === true,
     whyNoDollars: rev?.showDollars === true ? null : (rev?.why ?? null),
-    openMinutes: grid.openMinutes,
+    openMinutes: windowOpen ?? grid.openMinutes,
     envelopeMinutes: grid.envelopeMinutes,
     // TWO figures, and they are not interchangeable (35-scoring-model.md §3.1):
     //
@@ -278,4 +307,4 @@ export async function persist({ businessId, observedOn, out, grid, scanRunId = n
   );
 }
 
-export default { score, persist, toObservations, toSchemaBucket };
+export default { score, persist, toObservations, toSchemaBucket, openMinutesInWindow };

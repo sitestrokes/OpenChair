@@ -166,12 +166,7 @@ class Oc_visuals_lib
             $unseen_window = null;
             $mon      = strtotime($days[0]['date']);
             $bookable = 0; $empty = 0;
-            foreach ($days as $d) {
-                foreach ($d['rows'] as $row) {
-                    $empty    += substr_count($row, 'e');
-                    $bookable += substr_count($row, 'e') + substr_count($row, 'b');
-                }
-            }
+            foreach ($days as $d) { $empty += $d['m_empty']; $bookable += $d['m_bookable']; }
         } else {
             // ── Lay out every tile, then mark exactly E of the seen ones empty ──
             $days = [];
@@ -230,8 +225,11 @@ class Oc_visuals_lib
                 // Walk-in tiles are a standing exclusion, not a missed check.
                 $u  += substr_count(substr($row, 0, $online), 'u');
             }
-            $d['empty']    = $e;
-            $d['bookable'] = $bk;
+            // Observed days carry exact chair-hours from minutes; derived days
+            // are counted from their tiles (which were placed to match exactly).
+            $d['empty']    = isset($d['m_empty']) ? $d['m_empty'] : $e;
+            $d['bookable'] = isset($d['m_bookable']) ? $d['m_bookable'] : $bk;
+            unset($d['m_empty'], $d['m_bookable']);
             $d['unseen']   = $u;
             $d['full']     = !$d['shut'] && $bk > 0 && $e === 0;
             $d['worst_window'] = $d['shut'] ? null : $this->worst_window($d['rows'], $online);
@@ -624,13 +622,17 @@ class Oc_visuals_lib
         $col = array_flip(array_keys($hashes));
         $chairs = count($col);
 
-        // Seven days from the first snapshot day.
+        // Seven days, the Meter's own window: days 1..7 after the read (today is
+        // partly in the past at read time, so its early slots look "booked").
+        // Falls back to starting on the read day when the snapshot is short.
         $days_in = [];
         foreach ($grid['days'] as $d) {
             if (preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) ($d['date'] ?? ''))) { $days_in[$d['date']] = $d; }
         }
         ksort($days_in);
         $first = strtotime((string) array_key_first($days_in));
+        if (count($days_in) >= 8) { $first = strtotime('+1 day', $first); }
+        $slot = max(5, (int) ($grid['slotMinutes'] ?? 30));
 
         $days = [];
         for ($i = 0; $i < 7; $i++) {
@@ -638,22 +640,32 @@ class Oc_visuals_lib
             $date = date('Y-m-d', $t);
             $units = isset($days_in[$date]) ? (array) ($days_in[$date]['units'] ?? []) : [];
             $rows = [];
+            $open_min = 0; $env_min = 0;
             foreach (range(self::FIRST_HOUR, self::LAST_HOUR) as $h) {
                 $row = str_repeat('x', $chairs);
+                $hs = $h * 60; $he = $hs + 60;
                 foreach ($units as $u) {
                     $h_ = (string) ($u['staffHash'] ?? '');
                     if (!isset($col[$h_])) { continue; }
                     $env = (array) ($u['envelope'] ?? []);
                     $es = isset($env[0]) ? (int) $env[0] : 0;
                     $ee = isset($env[1]) ? (int) $env[1] : 0;
-                    $hs = $h * 60; $he = $hs + 60;
-                    if ($ee <= $hs || $es >= $he) { continue; }          // outside the envelope: shut
-                    $open = false;
+                    // Bookable minutes of this chair inside this hour.
+                    $bk = max(0, min($ee, $he) - max($es, $hs));
+                    if ($bk === 0) { continue; }                          // outside the envelope: shut
+                    // Open minutes: each open slot counts its length, clipped to
+                    // the hour and the envelope.
+                    $op = 0;
                     foreach ((array) ($u['open'] ?? []) as $m) {
                         $m = (int) $m;
-                        if ($m >= $hs && $m < $he) { $open = true; break; }
+                        $op += max(0, min($m + $slot, $he, $ee) - max($m, $hs, $es));
                     }
-                    $row[$col[$h_]] = $open ? 'e' : 'b';
+                    $op = min($op, $bk);
+                    $open_min += $op; $env_min += $bk;
+                    // A tile is one chair-hour: empty when at least half of its
+                    // bookable time was open. The day's NUMBERS below come from
+                    // the minutes themselves, not from counting tiles.
+                    $row[$col[$h_]] = ($op * 2 >= $bk) ? 'e' : 'b';
                 }
                 $rows[] = $row;
             }
@@ -667,6 +679,9 @@ class Oc_visuals_lib
                 'date'  => $date,
                 'shut'  => $all_shut,
                 'rows'  => $rows,
+                // Exact chair-hours, from minutes (0.5 rounds up, as a person would).
+                'm_empty'    => (int) round($open_min / 60),
+                'm_bookable' => (int) round($env_min / 60),
             ];
         }
         return ['chairs' => $chairs, 'days' => $days];

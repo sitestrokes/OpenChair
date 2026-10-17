@@ -2,7 +2,10 @@
 
 **Status:** Phases 0 and 2–8 are built and green, plus the **signature visuals**
 (Chair Score, five shareable cards, the redesigned business screen and share links —
-[docs/60-signature-visuals.md](docs/60-signature-visuals.md)). **Phase 1 (the Radar spike) has not been run**,
+[docs/60-signature-visuals.md](docs/60-signature-visuals.md)), and the **Radar pipeline** end to end on
+fixtures — New scan → discovery → queue → worker (Booksy + Square adapters) → Meter → observed Chair Week —
+with agency tenancy, tier gating and a security pass ([docs/70-radar-build.md](docs/70-radar-build.md)).
+Live crawling stays off until the spike's go/no-go. **Phase 1 (the Radar spike) has not been run**,
 and it gates everything that turns seeded data into observed data — see §8.
 
     197 automated checks, all passing

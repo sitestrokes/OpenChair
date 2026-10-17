@@ -12,15 +12,39 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  * Vars: $req, $items[], $skipped[], $watched_map
  */
 $moving = false;
-$state = function ($it) use (&$moving) {
+// Plain-English reasons for a failed read. The codes come from the worker and
+// the service; anything unlisted falls back to a generic line, never the code.
+$why = [
+    'blocked'   => 'the site refused the read',
+    'captcha'   => 'the site asked for a human check',
+    'not_found' => 'the booking page was not found',
+    'timeout'   => 'the site did not answer in time',
+];
+$why_code = [
+    'NO_GRID_PARSED'  => 'the page changed shape — we could not find the calendar',
+    'UNSAFE_STAFF_ID' => 'the page mixed staff names into the calendar, so we did not keep it',
+    'STAFF_NAME_LEAK' => 'the page mixed staff names into the calendar, so we did not keep it',
+    'FIXTURE_MISSING' => 'the booking page was not found',
+];
+$state = function ($it) use (&$moving, $why, $why_code) {
     if (in_array($it->cand_status, ['new', 'probing'], true)) { $moving = true; return ['Waiting for discovery', 'low']; }
-    if ($it->cand_status === 'rejected')     { return ['Not read — the owner asked not to be scanned', 'low']; }
-    if ($it->cand_status === 'not_bookable') {
-        return [$it->detected_platform_key ? 'Recognised (' . $it->detected_platform_key . '), not read yet' : 'No supported online booking found', 'low'];
+    if ($it->cand_status === 'rejected')     { return ['Not read — not a link we can read, or the owner opted out', 'low']; }
+    if ($it->cand_status === 'not_bookable') { return ['No supported online booking found', 'low']; }
+    if (!$it->business_id) {
+        // Recognised, but on a platform without a live/shadow adapter yet.
+        if ($it->detected_platform_key && !in_array($it->detected_rollout, ['live', 'shadow'], true)) {
+            return ['Recognised (' . $it->detected_platform_key . ') — not read yet', 'low'];
+        }
+        $moving = true;
+        return ['Recognised — creating the listing', 'mid'];
     }
-    if (!$it->business_id) { $moving = true; return ['Recognised — creating the listing', 'mid']; }
+    $failed = $it->last_run_status && !in_array($it->last_run_status, ['ok', 'partial'], true);
+    if ($failed) {
+        $r = isset($why_code[$it->last_run_error]) ? $why_code[$it->last_run_error]
+           : (isset($why[$it->last_run_status]) ? $why[$it->last_run_status] : 'the read did not complete');
+        return [($it->queue_status === 'failed' ? 'Read failed — ' : 'Last read failed, retrying — ') . $r, 'hot'];
+    }
     if ($it->last_good_scan_at) { return ['Read ' . oc_data_age($it->last_good_scan_at), 'cool']; }
-    if ($it->queue_status === 'failed') { return ['Read failed — will retry tomorrow', 'hot']; }
     $moving = true;
     return ['Queued for the next read', 'mid'];
 };

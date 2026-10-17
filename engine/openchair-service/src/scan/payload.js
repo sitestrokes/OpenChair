@@ -247,7 +247,9 @@ export function validateData(p) {
     services.push({ key: typeof s.key === 'string' ? s.key.slice(0, 120) : '', name, durationMin: dur, priceCents: price });
   }
 
-  return { grid, snapshot, staff, services, capability: grid.capability, slotMinutes, horizonDays };
+  // The shop's published name (a business, not a person); cleaned again where it is written.
+  const businessName = typeof p.businessName === 'string' ? p.businessName.slice(0, 200) : null;
+  return { grid, snapshot, staff, services, businessName, capability: grid.capability, slotMinutes, horizonDays };
 }
 
 export default { STATUSES, CAPABILITIES, CAPS, PayloadError, findNameKey, validateEnvelope, validateData };

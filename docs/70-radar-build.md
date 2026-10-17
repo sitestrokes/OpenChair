@@ -1,6 +1,7 @@
 # 70 — Radar build: goal, contract and plan
 
-**Decided with the founder (Oct 2026):** build *everything except the live crawl*. The whole
+**Status: built.** R1–R9 done; 422 automated checks green (integrity 99 · service 155 · worker 111 ·
+egress 57). End-to-end run verified on fixtures (§7). **Decided with the founder (Oct 2026):** build *everything except the live crawl*. The whole
 Radar pipeline is built and tested end to end against **fixture pages**; first adapters are
 **Booksy and Square Appointments**. No request is made to a real booking platform. Plus the
 product layers around it (team/agency tenancy, access-code gating) and a security pass.
@@ -81,9 +82,10 @@ The validator additionally refuses: `openStarts` outside the envelope, non-integ
   snapshot: { v: 1, slotMinutes, days: [ { date, units: [ { staffHash, envelope: [start,end], open: [starts…] } ] } ] },
   staff:    [ { staffHash, staffKey } ],
   services: [ { key, name, durationMin, priceCents } ],
+  businessName: 'Fade Lab',   // the SHOP's public name (never a person's); replaces a discovery placeholder only (oc_014)
 }
 ```
-`grid`, `snapshot`, `staff`, `services` are present only for `ok`/`partial`. Payload cap stays 256 KB.
+`grid`, `snapshot`, `staff`, `services`, `businessName` are present only for `ok`/`partial`. Payload cap stays 256 KB.
 
 ### 3.3 Snapshot blob (`oc_scan_snapshot.grid_gz`, codec `gzip_json_v1`)
 
@@ -92,9 +94,13 @@ Exactly `payload.snapshot`, with each `staffHash` rewritten by the service to th
 
 ### 3.4 CI3 read of a snapshot → Chair Week
 
-Hours 9a–6p rows; a unit's hour cell is **empty** if any open slot starts in that hour, **booked**
-if the hour is inside its envelope with no open start, **shut** outside the envelope; chairs ordered
-by `oc_staff.label` ("Chair 1…"). Days = the 7 days from the snapshot's first date. `source: observed`.
+The week is the Meter's own window — **days 1..7 after the read** (falls back to starting on the read
+day when the snapshot holds fewer than 8 days). Hours are the 9a–6p rows. For each chair and hour:
+bookable minutes = the hour ∩ the chair's envelope; open minutes = each open slot's length, clipped
+to the hour and the envelope. A tile is **shut** with no bookable minutes, **empty** when open ≥ half
+of bookable, otherwise **booked**. The day's and week's **numbers** ("199 of 280 chair-hours") come
+from the minutes, not from counting tiles, so they match the Meter's score to rounding. Chairs are
+ordered by `oc_staff.label` ("Chair 1…"). `source: observed`.
 
 ## 4. Safety switches
 
@@ -122,12 +128,56 @@ by `oc_staff.label` ("Chair 1…"). Days = the 7 days from the snapshot's first 
 
 ## 6. Security checklist
 
-- [ ] Service internal + worker tokens required in production; constant-time compare (exists)
-- [ ] Worker cannot reach the network unless `broker` + `OC_ALLOW_LIVE=1`; adapters import no network module (CI grep)
-- [ ] Snapshot/staff never carry a person's name (validator + service re-check)
-- [ ] Discovery accepts only `https` URLs on known platform hosts; length-capped; no fetch
-- [ ] CI3: CSRF on every POST; tenant scoping on prospect/share/pitch/alert/market; assignment limited to the team
-- [ ] Security headers on every response (CSP-lite, X-Frame-Options, nosniff, Referrer-Policy)
-- [ ] Public `/c/{token}`: token format check, per-IP rate limit (no IP stored beyond a short window), noindex
-- [ ] Access gates enforced in controllers, not only the rail
-- [ ] Cron CLI refuses web requests (`is_cli()`)
+- [x] Service internal + worker tokens required in production; constant-time compare (exists)
+- [x] Worker cannot reach the network unless `broker` + `OC_ALLOW_LIVE=1`; adapters import no network module (CI grep)
+- [x] Snapshot/staff never carry a person's name (validator + service re-check)
+- [x] Discovery accepts only `https` URLs on known platform hosts; length-capped; no fetch
+- [x] CI3: CSRF on every POST; tenant scoping on prospect/share/pitch/alert/market; assignment limited to the team
+- [x] Security headers on every response (CSP-lite, X-Frame-Options, nosniff, Referrer-Policy)
+- [x] Public `/c/{token}`: token format check, per-IP rate limit (no IP stored beyond a short window), noindex
+- [x] Access gates enforced in controllers, not only the rail
+- [x] Cron CLI refuses web requests (`is_cli()`)
+
+## 7. Running it
+
+```bash
+# schema (idempotent; oc_011 moves Booksy + Square from research to SHADOW, never live)
+for f in sql/migrations/oc_0*.sql; do mysql db_openchair < "$f"; done
+
+# service (app box) — jobs on a timer with OC_JOBS=1, or via cron:
+cd engine/openchair-service && node src/server.js
+node src/jobs/run.js discover|enqueue-due|reap|canary|rollup|cohort|purge|all
+
+# worker (crawl VM) — fixture mode by default; --once = one claim cycle
+cd engine/openchair-worker && OC_SERVICE_URL=http://127.0.0.1:4100 node src/worker.js [--once]
+
+# CI3 tenant jobs (CLI only)
+php engine/index.php cron digest|housekeep|all
+```
+
+Production needs `OC_INTERNAL_TOKEN` and `OC_WORKER_CALLBACK_TOKEN` (24+ chars) on the service, the
+worker token on the worker, and the same internal token in CI3 `oc_internal_token`.
+
+### Verified end to end (fixtures, local DB)
+
+New scan with 10 links → discovery placed 9 (Vagaro recognised, no adapter) → worker read 6 `ok`, and
+mapped the negatives correctly (403 → `blocked`, stale page → `NO_GRID_PARSED`, staff-name page →
+refused `UNSAFE_STAFF_ID`) → completion stored snapshots, "Chair N" labels (no names), menus, and
+replaced Square's "Unnamed business" with the published shop name → the Meter **refused to publish a
+first read** (needs 2 prior reads and evidence over 4 weeks — by design) → with 4 weeks of history
+simulated in the local DB only, the next real read published: confidence 95, Hungry/Steady/Slammed,
+lead-time override on both 9- and 12-day shops → CI3 Chair Week renders `source: observed`, and its
+"199 of 280 chair-hours" matches the Meter's score.
+
+### Bugs this run caught and fixed
+- Money priced the whole 14-day read horizon as "this week" — now the Meter's 7-day window (`openMinutesInWindow`).
+- The observed grid over-counted empty hours (any open slot ⇒ empty hour) and started on the read day — now
+  minute-exact numbers, ≥50% tiles, days 1..7.
+- Square listings stayed "Unnamed business" — adapters now report the shop's public name (oc_014).
+- Open redirect through posted `back` targets — closed (`_safe_back`).
+
+### Still the founder's call
+- **The spike.** Fixtures are synthetic; adapters are `0.1.0-modelled` and platforms sit in `shadow`.
+  Going live = real recordings → adapter re-verification → version bump → `rollout='live'` → `OC_ALLOW_LIVE=1`.
+- **Access codes** (`oc_access_codes`, `oc_access_enforce`) — enforcement is built and tested, off until set.
+- **CSP** is report-only until the ported modules' third-party embeds are cleaned up.

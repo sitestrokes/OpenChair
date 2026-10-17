@@ -138,14 +138,18 @@ export async function runDiscovery(opts = {}) {
       businessId = Number(existing.id);
       summary.attached++;
     } else {
-      const name = (String(c.name ?? '').trim() || d.slugName || 'Unnamed business').slice(0, 191);
+      const typed = String(c.name ?? '').trim();
+      const name = (typed || d.slugName || 'Unnamed business').slice(0, 191);
+      // A slug guess or the placeholder may be replaced by the shop's published
+      // name on the first read (oc_014); a name someone typed may not.
+      const fromSlug = typed ? 0 : 1;
       const res = await query(
         `INSERT INTO oc_business
-           (platform_id, platform_business_key, name, booking_url, address_line, city, region_code,
+           (platform_id, platform_business_key, name, name_from_slug, booking_url, address_line, city, region_code,
             country_code, city_key, niche_key, lat, lng, timezone, status, first_seen_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', NOW())
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', NOW())
          ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID(id)`,
-        [p.id, d.platformBusinessKey, name, d.canonicalUrl, c.address_line ?? null,
+        [p.id, d.platformBusinessKey, name, fromSlug, d.canonicalUrl, c.address_line ?? null,
          where.city, where.region, where.country, c.city_key, c.niche_key,
          c.lat ?? null, c.lng ?? null, where.timezone],
       );

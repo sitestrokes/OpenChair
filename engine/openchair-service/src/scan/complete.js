@@ -269,6 +269,20 @@ export async function ingest(businessId, observedOn, data) {
       [data.grid.staffCount || null, data.slotMinutes, avgPrice, avgPrice, businessId],
     );
 
+    // The shop's published name replaces a PLACEHOLDER only — the "Unnamed
+    // business" discovery writes for a URL with no slug, or the title-cased slug
+    // itself. A name a person typed (or an earlier read set) is never overwritten
+    // by a scan.
+    const shopName = cleanShopName(data.businessName);
+    if (shopName) {
+      await conn.query(
+        `UPDATE oc_business
+            SET name = ?, name_from_slug = 0
+          WHERE id = ? AND (name IS NULL OR name = '' OR name_from_slug = 1)`,
+        [shopName, businessId],
+      );
+    }
+
     return { snapshotNew, avgPrice };
   });
 
@@ -343,6 +357,20 @@ export async function ingest(businessId, observedOn, data) {
     bucket: out.bucket,
     publishable: out.publishable,
   };
+}
+
+
+/**
+ * A shop's public name from the scan payload, or null. Business names are not
+ * personal data; the payload's staff blocks never carry names at all.
+ *
+ * @param {unknown} v
+ * @returns {string|null}
+ */
+function cleanShopName(v) {
+  if (typeof v !== 'string') return null;
+  const s = v.replace(/[\u0000-\u001f\u007f]/g, '').replace(/\s+/g, ' ').trim().slice(0, 120);
+  return s.length >= 2 ? s : null;
 }
 
 export default { completeScan, ingest, deadZoneCells, schemaStaffHash, serviceKey };

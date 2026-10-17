@@ -163,6 +163,9 @@ export async function read(ctx) {
       slotMinutes: slotLen,
       units,
       services: services(business),
+      // The SHOP's public name — a business, not a person — so a listing found
+      // by URL alone stops being "Unnamed business" after its first read.
+      businessName: shopName(business?.name),
     };
   } catch (err) {
     return {
@@ -236,6 +239,19 @@ function isIsoDate(d) {
 
 function sha1(s) {
   return createHash('sha1').update(s).digest('hex');
+}
+
+/**
+ * A shop's public name, cleaned: trimmed, single-spaced, at most 120 chars, or
+ * null. Business names are not personal data; staff names are, and never pass
+ * through here.
+ *
+ * @param {unknown} v
+ * @returns {string|null}
+ */
+function shopName(v) {
+  const s = String(v ?? '').replace(/\s+/g, ' ').trim().slice(0, 120);
+  return s.length >= 2 ? s : null;
 }
 
 export default { meta, read };

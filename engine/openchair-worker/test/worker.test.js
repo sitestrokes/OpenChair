@@ -97,7 +97,7 @@ describe('worker — one claim cycle against a fake service', () => {
 
   const TOP = ['queueId', 'businessId', 'platformId', 'observedOn', 'status', 'adapterVersion', 'tier',
     'bytes', 'costMicros', 'durationMs', 'errorCode', 'error', 'capability', 'horizonDays', 'slotMinutes'];
-  const DATA = ['grid', 'snapshot', 'staff', 'services'];
+  const DATA = ['grid', 'snapshot', 'staff', 'services', 'businessName'];
 
   test('an ok read matches §3.2 exactly', () => {
     const p = fake.completions.find((c) => c.queueId === 1);

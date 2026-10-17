@@ -213,3 +213,17 @@ describe('bucket vocabulary maps to the schema enum', () => {
     assert.equal(toSchemaBucket('nonsense'), null);
   });
 });
+
+describe('money covers the scoring window, not the read horizon', () => {
+  test('openMinutesInWindow sums days 1..H only', async () => {
+    const { openMinutesInWindow } = await import('../src/meter/score.js');
+    const byDay = {};
+    for (let d = 0; d < 14; d++) {
+      const iso = new Date(Date.UTC(2026, 9, 17 + d)).toISOString().slice(0, 10);
+      byDay[iso] = { open: 100, envelope: 600 };
+    }
+    // today (offset 0) and days 8..13 are outside a 7-day window
+    assert.equal(openMinutesInWindow({ byDay }, '2026-10-17', 7), 700);
+    assert.equal(openMinutesInWindow({ byDay: {} }, '2026-10-17', 7), null);
+  });
+});

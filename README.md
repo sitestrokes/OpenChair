@@ -22,6 +22,7 @@ unsold time into a dollar range, and hand a consultant a pitch built on that bus
 | 8 | [20-architecture.md](docs/20-architecture.md) | Build target, the Radar adapter framework, the 5-layer read-only guarantee, anti-bot tiers, cost model, the spike, phased plan |
 | 9 | [50-risk-compliance-qa.md](docs/50-risk-compliance-qa.md) | Scraping legality, per-platform risk, data protection, the canary, acceptance criteria, go/no-go gate |
 | 10 | [60-signature-visuals.md](docs/60-signature-visuals.md) | **The Chair Score and the five shareable cards** — goal, PDF page-by-page mapping, architecture, integrity rules, open decisions |
+| 11 | [70-radar-build.md](docs/70-radar-build.md) | **The Radar build** — goal, cross-service contract, safety switches, security checklist, how to run, the verified end-to-end run |
 
 Roughly 8,600 lines of design across nine documents, plus 17 tables of DDL and a runnable
 scoring implementation.
