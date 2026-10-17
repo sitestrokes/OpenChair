@@ -22,9 +22,24 @@ class Openchair extends App_Controller
     const DEMO_CITY  = 'us-fl-tampa';
     const DEMO_NICHE = 'barbershop';
 
+    /**
+     * The tenant every per-agency row is keyed by (oc_012_team_tenancy.sql): the
+     * agency owner for a team member, the user themself otherwise. $this->user_id
+     * stays the ACTOR — who made a link, who generated a pitch.
+     *
+     * @var int
+     */
+    protected $tenant_id;
+
     public function __construct()
     {
         parent::__construct();
+        $parent = (int) ($this->user->parent_user_id ?? 0);
+        $this->tenant_id = ($parent > 0 && $parent !== (int) $this->user_id) ? $parent : (int) $this->user_id;
+        $this->data['oc_tenant_id'] = $this->tenant_id;
+        $this->load->library('oc_render_lib');
+        // R7: may this account use OpenChair at all? Refused by URL, not only hidden.
+        $this->_gate('core');
         $this->load->model('openchair/oc_business_model');
         $this->load->model('openchair/oc_prospect_model');
         $this->load->model('openchair/oc_market_model');
@@ -52,11 +67,11 @@ class Openchair extends App_Controller
         $this->data['slammed'] = $this->oc_business_model->market($city, $niche, ['bucket' => 'slammed', 'sort' => 'next', 'limit' => 8]);
 
         // The 8am list, as sent. Null until a digest has been built.
-        $digest = $this->oc_alert_model->latest($this->user_id);
+        $digest = $this->oc_alert_model->latest($this->tenant_id);
         $this->data['digest'] = $digest['run'];
         $this->data['digest_items'] = $digest['items'];
 
-        $this->_render('pages/today', 'today', 'Today');
+        $this->_render('pages/today', 'today', 'Home');
     }
 
     /** S4 — Radar. The hero: map + ranked list. */
@@ -68,6 +83,7 @@ class Openchair extends App_Controller
         $bucket = $this->input->get('bucket', true);
         $sort   = $this->input->get('sort', true);
         $opts   = ['sort' => $sort ?: 'vacancy'];
+        if ($bucket === 'slammed') { $this->_gate('slammed'); }
         if ($bucket && in_array($bucket, ['hungry', 'neutral', 'slammed'], true)) {
             $opts['bucket'] = $bucket;
         }
@@ -79,11 +95,11 @@ class Openchair extends App_Controller
         $this->data['f_sort']     = $opts['sort'];
         // One query for the whole list rather than one per row.
         $this->data['watched_map'] = $this->oc_prospect_model->watched_map(
-            $this->user_id,
+            $this->tenant_id,
             array_map(function ($b) { return (int) $b->id; }, $this->data['businesses'])
         );
 
-        $this->_render('pages/radar', 'radar', 'Radar');
+        $this->_render('pages/radar', 'radar', 'Find businesses');
     }
 
     /**
@@ -101,14 +117,14 @@ class Openchair extends App_Controller
 
         if (!$b) { show_404(); return; }
 
-        $prospect = $this->oc_prospect_model->find($this->user_id, $b->id);
+        $prospect = $this->oc_prospect_model->find($this->tenant_id, $b->id);
         $watched  = $prospect && !in_array($prospect->stage, ['archived'], true);
 
         $this->data['b']        = $b;
         $this->data['prospect'] = $prospect;
         $this->data['watched']  = $watched;
         $this->data['summary']  = $this->oc_visuals_lib->summary($b);
-        $this->data['shares']   = $this->oc_share_model->for_business($this->user_id, $b->id, 5);
+        $this->data['shares']   = $this->oc_share_model->for_business($this->tenant_id, $b->id, 5);
         $this->data['is_demo']  = $this->oc_business_model->is_demo_market($b->city_key);
         $this->data['team']     = $this->_team();
         $this->data['assignee'] = $this->_user_label(
@@ -117,7 +133,7 @@ class Openchair extends App_Controller
 
         // A link just made without JavaScript comes back as ?shared=<token>.
         $shared = $this->input->get('shared', true);
-        $this->data['shared_link'] = $shared ? $this->oc_share_model->find_own($this->user_id, $shared) : null;
+        $this->data['shared_link'] = $shared ? $this->oc_share_model->find_own($this->tenant_id, $shared) : null;
         $this->data['share_error'] = $this->input->get('share_error', true);
 
         $this->_render('pages/business', $watched ? 'prospects' : 'radar', $b->name);
@@ -152,7 +168,7 @@ class Openchair extends App_Controller
             return;
         }
 
-        $token = $this->oc_share_model->create($this->user_id, $b, $kind, $logo, $card);
+        $token = $this->oc_share_model->create($this->tenant_id, $this->user_id, $b, $kind, $logo, $card);
         if (!$token) { show_error('Could not make the link.', 500); return; }
 
         if ($this->input->is_ajax_request()) {
@@ -178,7 +194,7 @@ class Openchair extends App_Controller
             'assigned_user_id' => in_array($uid, $team, true) ? $uid : null,
             'next_due_on'      => preg_match('/^\d{4}-\d{2}-\d{2}$/', $due) && strtotime($due) ? $due : null,
         ];
-        $this->db->where('user_id', (int) $this->user_id)
+        $this->db->where('user_id', (int) $this->tenant_id)
                  ->where('business_id', $id)
                  ->update('oc_prospect', $set);
 
@@ -186,17 +202,16 @@ class Openchair extends App_Controller
     }
 
     /**
-     * This account's team: the user, their sub-users, and their agency parent.
+     * This agency's team: the owner (the tenant) and every sub-user under them.
+     * The only people a prospect may be assigned to — anyone else could not see it.
      *
      * @return array id => label
      */
     private function _team()
     {
-        $me = (int) $this->user_id;
-        $parent = (int) ($this->user->parent_user_id ?? 0);
+        $owner = (int) $this->tenant_id;
         $this->db->select('id, first_name, last_name, email')->from('users')
-                 ->group_start()->where('id', $me)->or_where('parent_user_id', $me);
-        if ($parent > 0) { $this->db->or_where('id', $parent); }
+                 ->group_start()->where('id', $owner)->or_where('parent_user_id', $owner);
         $rows = $this->db->group_end()->where('active', 1)->order_by('first_name', 'ASC')->get()->result();
 
         $out = [];
@@ -244,11 +259,12 @@ class Openchair extends App_Controller
         if (!in_array($variant, ['hungry', 'slammed'], true)) {
             $variant = ($b->latest_bucket === 'slammed') ? 'slammed' : 'hungry';
         }
+        if ($variant === 'slammed') { $this->_gate('slammed'); }
 
         $this->data['b']        = $b;
         $this->data['variant']  = $variant;
         $this->data['copy']     = $this->oc_pitch_lib->build($b, $variant);
-        $this->data['previous'] = $this->oc_pitch_model->for_business($this->user_id, $b->id);
+        $this->data['previous'] = $this->oc_pitch_model->for_business($this->tenant_id, $b->id);
         $this->_render('pages/pitch', 'pitch', 'Pitch — ' . $b->name);
     }
 
@@ -259,11 +275,11 @@ class Openchair extends App_Controller
         $opts  = [];
         if ($stage && $stage !== 'all') { $opts['stage'] = $stage; }
 
-        $this->data['watched'] = $this->oc_prospect_model->watchlist($this->user_id, $opts);
-        $this->data['counts']  = $this->oc_prospect_model->stage_counts($this->user_id);
+        $this->data['watched'] = $this->oc_prospect_model->watchlist($this->tenant_id, $opts);
+        $this->data['counts']  = $this->oc_prospect_model->stage_counts($this->tenant_id);
         $this->data['f_stage'] = $stage ?: 'all';
 
-        $this->_render('pages/prospects', 'prospects', 'Prospects');
+        $this->_render('pages/prospects', 'prospects', 'My pipeline');
     }
 
     // ── Watchlist actions ────────────────────────────────────────────────────
@@ -281,7 +297,7 @@ class Openchair extends App_Controller
         $id = (int) $this->input->post('business_id', true);
         if (!$id) { show_error('No business.', 400); return; }
 
-        $added = $this->oc_prospect_model->watch($this->user_id, $id);
+        $added = $this->oc_prospect_model->watch($this->tenant_id, $id);
         $this->_after_action(['ok' => true, 'watching' => true, 'added' => $added]);
     }
 
@@ -291,7 +307,7 @@ class Openchair extends App_Controller
         $id = (int) $this->input->post('business_id', true);
         if (!$id) { show_error('No business.', 400); return; }
 
-        $this->oc_prospect_model->unwatch($this->user_id, $id);
+        $this->oc_prospect_model->unwatch($this->tenant_id, $id);
         $this->_after_action(['ok' => true, 'watching' => false]);
     }
 
@@ -301,7 +317,7 @@ class Openchair extends App_Controller
         $id = (int) $this->input->post('business_id', true);
         $to = (string) $this->input->post('stage', true);
 
-        $ok = $this->oc_prospect_model->set_stage($this->user_id, $id, $to);
+        $ok = $this->oc_prospect_model->set_stage($this->tenant_id, $id, $to);
         $this->_after_action(['ok' => $ok, 'stage' => $to]);
     }
 
@@ -309,7 +325,7 @@ class Openchair extends App_Controller
     public function notes()
     {
         $id = (int) $this->input->post('business_id', true);
-        $this->oc_prospect_model->set_notes($this->user_id, $id, (string) $this->input->post('notes'));
+        $this->oc_prospect_model->set_notes($this->tenant_id, $id, (string) $this->input->post('notes'));
         $this->_after_action(['ok' => true]);
     }
 
@@ -328,7 +344,7 @@ class Openchair extends App_Controller
                          ->set_output(json_encode($payload));
             return;
         }
-        redirect($this->input->post('back', true) ?: 'openchair/radar');
+        redirect($this->_safe_back($this->input->post('back', true), 'openchair/radar'));
     }
 
     /**
@@ -349,7 +365,7 @@ class Openchair extends App_Controller
         $copy = $this->oc_pitch_lib->build($b, $variant);
         $grid = $this->_grid_for($b);
 
-        $pitch_id = $this->oc_pitch_model->create($this->user_id, $b, $variant, 'onepager', $copy, $grid);
+        $pitch_id = $this->oc_pitch_model->create($this->tenant_id, $b, $variant, 'onepager', $copy, $grid, $this->user_id);
         redirect('openchair/onepager/' . $pitch_id);
     }
 
@@ -361,7 +377,7 @@ class Openchair extends App_Controller
      */
     public function onepager($id = null)
     {
-        $pitch = $this->oc_pitch_model->find($this->user_id, (int) $id);
+        $pitch = $this->oc_pitch_model->find($this->tenant_id, (int) $id);
         if (!$pitch) { show_404(); return; }
 
         $this->data['pitch'] = $pitch;
@@ -386,6 +402,7 @@ class Openchair extends App_Controller
         $b = $id ? $this->oc_business_model->find($id) : null;
         if (!$b) { show_404(); return; }
         if (!in_array($kind, Oc_visuals_lib::KINDS, true)) { show_404(); return; }
+        if ($kind === 'progress') { $this->_gate('ledger'); }
 
         $card = $this->oc_visuals_lib->card($b, $kind, $this->_card_ctx($b, $this->input->get('logo') !== '0'));
 
@@ -424,7 +441,7 @@ class Openchair extends App_Controller
      */
     private function _card_ctx($b, $show_logo = true)
     {
-        $prospect = $this->oc_prospect_model->find($this->user_id, $b->id);
+        $prospect = $this->oc_prospect_model->find($this->tenant_id, $b->id);
         return [
             'brand'          => isset($this->data['ic_brand']) ? $this->data['ic_brand'] : [],
             'show_logo'      => $show_logo,
@@ -443,17 +460,18 @@ class Openchair extends App_Controller
      */
     public function build_digest()
     {
-        $market = $this->oc_market_model->current($this->user_id);
+        $this->_gate('alerts');
+        $market = $this->oc_market_model->current($this->tenant_id);
         if (!$market) {
-            $res = $this->oc_market_model->save($this->user_id, [
+            $res = $this->oc_market_model->save($this->tenant_id, [
                 'city_key' => $this->_city(), 'niche_key' => $this->_niche(),
                 'city' => 'Tampa', 'region_code' => 'FL', 'country_code' => 'US',
                 'buckets' => 'hungry,slammed',
             ]);
-            $market = $res['ok'] ? $this->oc_market_model->find($this->user_id, $res['id']) : null;
+            $market = $res['ok'] ? $this->oc_market_model->find($this->tenant_id, $res['id']) : null;
         }
         if ($market) {
-            $this->oc_alert_model->build($this->user_id, $market, date('Y-m-d'), 'in_app');
+            $this->oc_alert_model->build($this->tenant_id, $market, date('Y-m-d'), 'in_app');
         }
         redirect('openchair');
     }
@@ -487,10 +505,11 @@ class Openchair extends App_Controller
      */
     public function ledger($id = null)
     {
+        $this->_gate('ledger');
         // Default to a watched business — the Ledger is about businesses you
         // have a relationship with, not the whole market.
         if (!$id) {
-            $watched = $this->oc_prospect_model->watchlist($this->user_id, ['limit' => 1]);
+            $watched = $this->oc_prospect_model->watchlist($this->tenant_id, ['limit' => 1]);
             $id = $watched ? (int) $watched[0]->business_id : null;
         }
         $b = $id ? $this->oc_business_model->find($id)
@@ -507,13 +526,13 @@ class Openchair extends App_Controller
         $this->data['caveat']  = $this->oc_ledger_model->caveat();
         // Campaign start is set when a prospect becomes a client. Until then the
         // report is the prospecting view and there is no lift to claim.
-        $prospect = $this->oc_prospect_model->find($this->user_id, $b->id);
+        $prospect = $this->oc_prospect_model->find($this->tenant_id, $b->id);
         $this->data['lift'] = ($prospect && $prospect->stage === 'won' && $prospect->last_pitched_at)
             ? $this->oc_ledger_model->lift($weeks, $cohort, substr($prospect->last_pitched_at, 0, 10))
             : null;
 
-        $this->data['watchlist'] = $this->oc_prospect_model->watchlist($this->user_id, ['limit' => 30]);
-        $this->_render('pages/ledger', 'ledger', 'Ledger — ' . $b->name);
+        $this->data['watchlist'] = $this->oc_prospect_model->watchlist($this->tenant_id, ['limit' => 30]);
+        $this->_render('pages/ledger', 'ledger', 'Client report — ' . $b->name);
     }
 
     /** S9 — Coverage. What we can and cannot see, stated honestly. */
@@ -524,7 +543,7 @@ class Openchair extends App_Controller
         $this->data['funnel']    = $this->oc_business_model->discovery_funnel($city, $this->_niche());
         $this->data['totals']    = $this->oc_business_model->market_totals($city, $this->_niche());
 
-        $this->_render('pages/coverage', 'coverage', 'Coverage');
+        $this->_render('pages/coverage', 'coverage', 'What we can see');
     }
 
     /** S10 — Adapters. Per-platform health. Admin only. */
@@ -539,19 +558,171 @@ class Openchair extends App_Controller
     }
 
     /**
-     * S2/S3 — Scan setup and progress.
+     * S2 — New scan: pick a niche and a city, paste public booking links.
      *
-     * Radar does not exist until Phase 3, so this states that plainly rather than
-     * showing a spinner that will never resolve. 40-ux-spec.md P2: a fake progress
-     * bar is worse than an honest empty state.
+     * Radar reads only what is pasted here (and, later, what a Places import
+     * finds). Nothing is fetched on submit: the service's discovery job
+     * recognises each platform from the URL's shape and queues the business
+     * for the nightly read. docs/70-radar-build.md R1.
      */
     public function scan()
     {
-        $this->data['q'] = (string) $this->input->get('q', true);
+        $this->load->model('openchair/oc_scan_model');
+        $this->data['q']       = (string) $this->input->get('q', true);
+        $this->data['niches']  = $this->oc_scan_model->niches();
+        $this->data['recent']  = $this->oc_scan_model->recent($this->tenant_id);
+        $this->data['errors']  = $this->session->flashdata('oc_scan_errors') ?: [];
+        $this->data['old']     = $this->session->flashdata('oc_scan_old') ?: [];
         $this->_render('pages/scan', 'radar', 'New scan');
     }
 
+    /** POST — record the request and nudge discovery. */
+    public function scan_submit()
+    {
+        $this->load->model('openchair/oc_scan_model');
+        $city  = $this->oc_scan_model->parse_city($this->input->post('city', true));
+        $niche = (string) $this->input->post('niche', true);
+        $paste = $this->oc_scan_model->clean_urls((string) $this->input->post('urls', true));
+
+        $errors = [];
+        if (!$city) { $errors[] = 'Write the city as "City, ST" — for example "Tampa, FL".'; }
+        if (!array_key_exists($niche, $this->oc_scan_model->niches())) { $errors[] = 'Pick a niche.'; }
+        if (!$paste['ok']) { $errors[] = 'Paste at least one public booking link (https://…).'; }
+        foreach ($paste['bad'] as $b) { $errors[] = $b['line'] . ' — ' . $b['why']; }
+
+        // Abuse ceiling: a tenant gets 20 scan requests an hour. A real market is a
+        // handful; a loop is not a consultant.
+        $recent = (int) $this->db->where('user_id', (int) $this->tenant_id)
+                                 ->where('created_at >', date('Y-m-d H:i:s', time() - 3600))
+                                 ->count_all_results('oc_scan_request');
+        if ($recent >= 20) { $errors = ['You have started 20 scans in the last hour. Try again shortly.']; }
+
+        if ($errors && (!$paste['ok'] || !$city || $recent >= 20 || !array_key_exists($niche, $this->oc_scan_model->niches()))) {
+            $this->session->set_flashdata('oc_scan_errors', array_slice($errors, 0, 12));
+            $this->session->set_flashdata('oc_scan_old', [
+                'city' => (string) $this->input->post('city', true), 'niche' => $niche,
+                'urls' => mb_substr((string) $this->input->post('urls', true), 0, 30000),
+            ]);
+            redirect('openchair/scan');
+            return;
+        }
+
+        $rid = $this->oc_scan_model->create($this->tenant_id, $this->user_id, $city, $niche, $paste['ok']);
+        if (!$rid) { show_error('Could not save the scan. Please try again.', 500); return; }
+        if ($paste['bad']) { $this->session->set_flashdata('oc_scan_skipped', $paste['bad']); }
+
+        $this->_nudge_service('/v1/discovery/run');
+        redirect('openchair/scan/' . $rid);
+    }
+
+    /** S3 — a scan's progress: each link, what it became, and its score. */
+    public function scan_status($id = null)
+    {
+        $this->load->model('openchair/oc_scan_model');
+        $req = $this->oc_scan_model->find($this->tenant_id, (int) $id);
+        if (!$req) { show_404(); return; }
+
+        $items = $this->oc_scan_model->items($req->id);
+        if ($this->input->get('format') === 'json') {
+            $out = [];
+            foreach ($items as $it) {
+                $out[] = [
+                    'candidate'   => (int) $it->candidate_id,
+                    'status'      => $it->cand_status,
+                    'platform'    => $it->detected_platform_key,
+                    'business_id' => $it->business_id ? (int) $it->business_id : null,
+                    'queue'       => $it->queue_status,
+                    'score'       => $it->business_id ? oc_chair_score_or_gap($it->latest_vacancy_bp, $it->latest_confidence) : null,
+                ];
+            }
+            $this->output->set_content_type('application/json')->set_output(json_encode(['ok' => true, 'items' => $out]));
+            return;
+        }
+
+        $ids = array_values(array_filter(array_map(function ($i) { return (int) $i->business_id; }, $items)));
+        $this->data['req']         = $req;
+        $this->data['items']       = $items;
+        $this->data['skipped']     = $this->session->flashdata('oc_scan_skipped') ?: [];
+        $this->data['watched_map'] = $this->oc_prospect_model->watched_map($this->tenant_id, $ids);
+        $this->_render('pages/scan_status', 'radar', 'Scan — ' . $req->city_label);
+    }
+
+    /**
+     * Ask openchair-service to run a job now rather than at its next tick.
+     *
+     * Best effort and short: the scheduled job picks the work up anyway, so a
+     * service that is down or slow costs a few minutes, never the request.
+     * The internal token is sent when configured (it is required in production).
+     *
+     * @param string $path
+     * @return bool
+     */
+    private function _nudge_service($path)
+    {
+        $base = rtrim((string) $this->config->item('oc_service_internal_base'), '/');
+        if ($base === '' || !function_exists('curl_init')) { return false; }
+        $ch = curl_init($base . $path);
+        $headers = ['content-type: application/json'];
+        $tok = (string) $this->config->item('oc_internal_token');
+        if ($tok !== '') { $headers[] = 'x-internal-token: ' . $tok; }
+        curl_setopt_array($ch, [
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => '{}',
+            CURLOPT_HTTPHEADER     => $headers,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CONNECTTIMEOUT_MS => 800,
+            CURLOPT_TIMEOUT_MS     => 3000,
+            CURLOPT_PROTOCOLS      => CURLPROTO_HTTP | CURLPROTO_HTTPS,
+            CURLOPT_FOLLOWLOCATION => false,
+        ]);
+        curl_exec($ch);
+        $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        return $code >= 200 && $code < 300;
+    }
+
     // ── Internals ────────────────────────────────────────────────────────────
+
+    /**
+     * A "back" target from a form, made safe to redirect to.
+     *
+     * Only an app-relative path is accepted. CI's redirect() follows an absolute
+     * URL anywhere, so passing a posted value straight through was an open
+     * redirect: a crafted form could bounce a logged-in consultant to a lookalike
+     * login page. Scheme, host, protocol-relative ("//evil") and backslash tricks
+     * are all refused in favour of the fallback.
+     *
+     * @param mixed  $back
+     * @param string $fallback
+     * @return string
+     */
+    private function _safe_back($back, $fallback)
+    {
+        $back = trim((string) $back);
+        if ($back === '' || strlen($back) > 300) { return $fallback; }
+        $back = ltrim($back, '/');
+        if (preg_match('#^[a-z][a-z0-9+.-]*:|^/|\\\\|[\\x00-\\x1f]#i', $back) || strpos($back, '\\') !== false) { return $fallback; }
+        if (!preg_match('#^(openchair|app)(/[A-Za-z0-9_\\-/]*)?(\\?[A-Za-z0-9_=&%.\\-]*)?(\\#[A-Za-z0-9_-]*)?$#', $back)) { return $fallback; }
+        return $back;
+    }
+
+    /**
+     * Refuse a request for a tier this account has not bought (R7).
+     *
+     * Plain 403, no upsell modal in the daily path — the anti-mugging rule
+     * (NAV-CONTRACT.md). The rail hides the same items from the same answer.
+     *
+     * @param string $gate
+     * @return void  exits on refusal
+     */
+    private function _gate($gate)
+    {
+        if ($this->oc_render_lib->can($gate, $this->user)) { return; }
+        $labels = ['core' => 'OpenChair', 'slammed' => 'the Slammed bucket', 'alerts' => 'nightly alerts',
+                   'deadzone' => 'the Dead-Zone Map', 'ledger' => 'client reports', 'kit' => 'the campaign kit'];
+        show_error('Your plan does not include ' . (isset($labels[$gate]) ? $labels[$gate] : 'this') . '.', 403, 'Not on your plan');
+        exit;
+    }
 
     /**
      * Render into the OpenChair shell, with the market context the chrome needs.
@@ -573,7 +744,9 @@ class Openchair extends App_Controller
         // Rail-foot quota meters. FE entitlements per the brief's ladder; the real
         // two-meter model (pulls vs monitored slots) arrives in Phase 8.
         $this->data['oc_quota'] = [
-            ['label' => 'Watched', 'used' => 0, 'cap' => 25],
+            ['label' => 'Watched', 'used' => (int) $this->db->where('user_id', (int) $this->tenant_id)
+                                                     ->where_not_in('stage', ['lost', 'archived'])
+                                                     ->count_all_results('oc_prospect'), 'cap' => 25],
             ['label' => 'Cities',  'used' => 1, 'cap' => 1],
         ];
 

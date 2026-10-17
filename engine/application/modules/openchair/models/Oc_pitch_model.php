@@ -41,7 +41,7 @@ class Oc_pitch_model extends CI_Model
      * @param array|null $grid  the availability grid to freeze
      * @return int pitch id
      */
-    public function create($user_id, $business, $kind, $format, array $artifact, $grid = null)
+    public function create($user_id, $business, $kind, $format, array $artifact, $grid = null, $actor_id = null)
     {
         $prospect = $this->db->select('id')->from('oc_prospect')
                              ->where('user_id', (int) $user_id)
@@ -57,6 +57,7 @@ class Oc_pitch_model extends CI_Model
 
         $this->db->insert('oc_pitch', [
             'user_id'     => (int) $user_id,
+            'created_by'  => $actor_id === null ? (int) $user_id : (int) $actor_id,
             'business_id' => (int) $business->id,
             'prospect_id' => $prospect ? (int) $prospect->id : null,
             'kind'        => $kind,

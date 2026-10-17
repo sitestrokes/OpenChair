@@ -335,8 +335,12 @@ if (file_exists($share_ctl)) {
     $sc = code_of($share_ctl);
     check('the public share controller does not extend the authenticated base', strpos($sc, 'extends App_Controller') === false);
     check('the public share controller accepts no POST', stripos($sc, "->post(") === false);
+    // The throttle may READ the address, but only to hash it into a short-lived
+    // cache key. It must never reach the database or the model.
     check('the public share controller stores no IP or user agent',
-          !preg_match('/ip_address\(|user_agent\(|REMOTE_ADDR|HTTP_USER_AGENT/', $sc));
+          !preg_match('/user_agent\(|REMOTE_ADDR|HTTP_USER_AGENT/', $sc)
+          && (!preg_match('/ip_address\(/', $sc) || preg_match("/hash\('sha256',[^;]*\\\$ip/", $sc))
+          && !preg_match('/(insert|update|record_open)\([^;]*\$ip/', $sc));
 }
 $share_model = $MODULE . '/models/Oc_share_model.php';
 if (file_exists($share_model)) {
@@ -352,6 +356,84 @@ if (file_exists($exp)) {
     check('the card export uses no screenshot library',
           !preg_match('/html2canvas|puppeteer|playwright|dom-to-image/i', file_get_contents($exp)));
 }
+
+// -- Radar build: tenancy, gating, redirects, CLI, headers (docs/70) --------
+echo "
+Radar build — tenancy, gating, safety
+";
+
+$ctl = code_of($MODULE . '/controllers/Openchair.php');
+
+// R6: per-agency rows are keyed by the TENANT. Passing the acting user's id to a
+// tenant model would split a team's pipeline per person again.
+$tenant_models = ['oc_prospect_model', 'oc_market_model', 'oc_alert_model', 'oc_scan_model'];
+$leaks = [];
+foreach ($tenant_models as $m) {
+    if (preg_match_all('/' . $m . '->\w+\(\s*\$this->user_id/', $ctl, $mm)) { $leaks = array_merge($leaks, $mm[0]); }
+}
+if (preg_match('/oc_share_model->(for_business|find_own)\(\s*\$this->user_id/', $ctl, $mm)) { $leaks[] = $mm[0]; }
+check('tenant models are called with the tenant id, not the acting user', empty($leaks), implode(' | ', $leaks));
+check('the team for assignment is the agency (owner + sub-users)',
+      strpos($ctl, "where('id', \$owner)->or_where('parent_user_id', \$owner)") !== false);
+
+// R7: gates are enforced by URL, not only hidden in the rail.
+$rl = code_of($ROOT . '/libraries/Oc_render_lib.php');
+check('one can() answers the rail and the controllers', strpos($rl, 'public function can(') !== false);
+check('an unknown gate is closed, not open', strpos($rl, "if (!isset(\$map[\$gate])) { return false; }") !== false);
+foreach (["function ledger(" => 'ledger', "function build_digest(" => 'alerts'] as $fn => $gate) {
+    $at = strpos($ctl, $fn);
+    check("$fn is gated on '$gate'", $at !== false && strpos(substr($ctl, $at, 400), "_gate('$gate')") !== false);
+}
+check('the Slammed bucket and variant are gated', substr_count($ctl, "_gate('slammed')") >= 2);
+check('the whole module is gated on core access', strpos($ctl, "_gate('core')") !== false);
+
+// §6: no posted value goes straight into redirect() (open redirect).
+check('no redirect() takes a raw posted value', !preg_match('/redirect\(\s*\$this->input->(post|get)\(/', $ctl));
+check('posted back-targets go through _safe_back()', strpos($ctl, 'function _safe_back(') !== false);
+
+// R5: the cron controller is CLI-only and refuses the web before any method runs.
+$cron = $MODULE . '/controllers/Cron.php';
+check('cron controller exists', file_exists($cron));
+if (file_exists($cron)) {
+    $cc = code_of($cron);
+    check('cron refuses non-CLI requests in its constructor', (bool) preg_match('/__construct\(\)\s*\{[^}]*is_cli\(\)/s', $cc));
+    check('cron does not extend the logged-in base', strpos($cc, 'extends App_Controller') === false);
+}
+
+// §6: security headers ship on every response.
+$cfg = file_get_contents($ROOT . '/config/config.php');
+check('hooks are enabled', (bool) preg_match("/\\\$config\['enable_hooks'\]\s*=\s*TRUE/", $cfg));
+$hooks = file_get_contents($ROOT . '/config/hooks.php');
+check('the security-headers hook is registered', strpos($hooks, 'Oc_security_headers') !== false);
+$hk = file_exists($ROOT . '/hooks/Oc_security_headers.php') ? file_get_contents($ROOT . '/hooks/Oc_security_headers.php') : '';
+foreach (['X-Frame-Options', 'X-Content-Type-Options', 'Referrer-Policy', "frame-ancestors 'self'"] as $h) {
+    check("header sent: $h", strpos($hk, $h) !== false);
+}
+check('a share page sends no Referer (the token is the credential)', strpos($hk, "'no-referrer'") !== false);
+
+// R1: what New scan accepts — behaviour, not just shape.
+if (!defined('BASEPATH')) { define('BASEPATH', __DIR__); }
+if (!class_exists('CI_Model')) { eval('class CI_Model {}'); }
+require_once $MODULE . '/models/Oc_scan_model.php';
+$sm = new Oc_scan_model();
+$cases = [
+    ['https://booksy.com/en-us/100001_x_tampa', true],
+    ['http://booksy.com/en-us/100001_x', false],
+    ['https://127.0.0.1/admin', false],
+    ['https://[::1]/x', false],
+    ['https://localhost/x', false],
+    ['https://user:pw@booksy.com/x', false],
+    ['javascript:alert(1)', false],
+    ['https://intranet/x', false],
+    ['https://' . str_repeat('a', 600) . '.com', false],
+];
+foreach ($cases as $c) {
+    $ok = $sm->url_problem($c[0]) === null;
+    check('New scan ' . ($c[1] ? 'accepts ' : 'refuses ') . substr($c[0], 0, 40), $ok === $c[1]);
+}
+$city = $sm->parse_city('tampa,  fl');
+check('city "tampa, fl" → us-fl-tampa', $city && $city['city_key'] === 'us-fl-tampa');
+check('a city without a state is refused, not guessed', $sm->parse_city('Tampa') === null);
 
 // -- CSRF: the shell has no JS prefilter, so forms carry the token. ---------
 echo "

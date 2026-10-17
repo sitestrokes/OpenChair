@@ -15,6 +15,12 @@
 SET @oc_fk := @@FOREIGN_KEY_CHECKS;
 SET FOREIGN_KEY_CHECKS = 0;
 
+-- oc_013 — scan requests --------------------------------------------------------
+DROP TABLE IF EXISTS `oc_scan_request_item`;
+DROP TABLE IF EXISTS `oc_scan_request`;
+
+-- oc_012 adds columns only (dropped with their tables below).
+
 -- oc_010 — share cards (its oc_prospect columns go with oc_prospect below) ----
 DROP TABLE IF EXISTS `oc_share_link`;
 

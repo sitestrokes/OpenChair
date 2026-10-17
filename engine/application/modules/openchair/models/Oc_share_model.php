@@ -23,14 +23,15 @@ class Oc_share_model extends CI_Model
     /**
      * Freeze a card and mint its link.
      *
-     * @param int    $user_id
+     * @param int    $user_id   the TENANT (agency) — see oc_012_team_tenancy.sql
+     * @param int    $actor_id  the team member who made it
      * @param object $b         oc_business row
      * @param string $kind
      * @param bool   $show_logo
      * @param array  $payload   Oc_visuals_lib::card() output
      * @return string|null the token
      */
-    public function create($user_id, $b, $kind, $show_logo, array $payload)
+    public function create($user_id, $actor_id, $b, $kind, $show_logo, array $payload)
     {
         if (!in_array($kind, self::KINDS, true)) { return null; }
 
@@ -41,6 +42,7 @@ class Oc_share_model extends CI_Model
         $ok = $this->db->insert('oc_share_link', [
             'token'       => $token,
             'user_id'     => (int) $user_id,
+            'created_by'  => (int) $actor_id,
             'business_id' => (int) $b->id,
             'kind'        => $kind,
             'show_logo'   => $show_logo ? 1 : 0,
@@ -64,7 +66,7 @@ class Oc_share_model extends CI_Model
         return $this->db->select('s.id, s.token, s.kind, s.created_at, s.expires_at, s.open_count, s.last_opened_at, s.revoked_at,'
                                . ' u.first_name, u.last_name', false)
                         ->from('oc_share_link s')
-                        ->join('users u', 'u.id = s.user_id', 'left')
+                        ->join('users u', 'u.id = COALESCE(s.created_by, s.user_id)', 'left', false)
                         ->where('s.user_id', (int) $user_id)
                         ->where('s.business_id', (int) $business_id)
                         ->order_by('s.created_at', 'DESC')

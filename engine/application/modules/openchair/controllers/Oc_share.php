@@ -36,7 +36,13 @@ class Oc_share extends MX_Controller
         $this->output->set_header('Referrer-Policy: no-referrer');
         $this->output->set_header('Cache-Control: private, no-store');
 
+        // Per-visitor throttle (docs/70 §6): 60 views a minute is a busy group
+        // chat; more is a scraper. Misses are tighter — 20 in 10 minutes — because
+        // a run of unknown tokens is someone guessing them.
+        if ($this->_throttled('view', 60, 60)) { $this->_gone(429, 'Too many requests.', 'Wait a minute and try again.'); return; }
+
         $row = preg_match('/^[a-f0-9]{32}$/', (string) $token) ? $this->oc_share_model->find_public($token) : null;
+        if (!$row && $this->_throttled('miss', 20, 600)) { $this->_gone(429, 'Too many requests.', 'Wait a few minutes and try again.'); return; }
         if (!$row) {
             $this->_gone(404, 'This link doesn\'t exist.', 'Check the link you were sent, or ask the person who sent it for a fresh one.');
             return;
@@ -70,6 +76,34 @@ class Oc_share extends MX_Controller
                 'note'           => 'Shared by ' . $agency . ' · link expires ' . date('M j, Y', strtotime($row->expires_at)),
             ],
         ]);
+    }
+
+    /**
+     * Fixed-window counter per visitor, in the file cache.
+     *
+     * The key is a salted hash of the IP and the window, so no address is ever
+     * written down and the entry expires with the window. Fails OPEN if the cache
+     * is unavailable: a broken cache must not take every shared card offline.
+     *
+     * @param string $bucket
+     * @param int    $limit
+     * @param int    $window seconds
+     * @return bool true when this request is over the limit
+     */
+    private function _throttled($bucket, $limit, $window)
+    {
+        try {
+            $this->load->driver('cache', ['adapter' => 'file']);
+            $ip   = (string) $this->input->ip_address();
+            $salt = (string) $this->config->item('encryption_key');
+            $slot = (int) floor(time() / $window);
+            $key  = 'ocrl_' . $bucket . '_' . hash('sha256', $salt . '|' . $ip . '|' . $slot);
+            $n    = (int) $this->cache->get($key) + 1;
+            $this->cache->save($key, $n, $window);
+            return $n > $limit;
+        } catch (Throwable $e) {
+            return false;
+        }
     }
 
     /**

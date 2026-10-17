@@ -42,9 +42,15 @@ $route['whitelabel']  = 'whitelabel';
 $route['api-config']  = 'config/index';
 $route['api-config/(:any)'] = 'config/$1';
 
+// ── CLI jobs (the controller refuses web requests) ───────────────────────────
+$route['cron']         = 'openchair/cron/index';
+$route['cron/(:any)']  = 'openchair/cron/$1';
+
 // ── OpenChair — the product. Specific first, catch-all last. ─────────────────
 $route['openchair']            = 'openchair/openchair/today';
 $route['openchair/scan']       = 'openchair/openchair/scan';
+$route['openchair/scan/submit']        = 'openchair/openchair/scan_submit';
+$route['openchair/scan/(:num)']        = 'openchair/openchair/scan_status/$1';
 $route['openchair/radar']      = 'openchair/openchair/radar';
 $route['openchair/prospects']  = 'openchair/openchair/prospects';
 $route['openchair/ledger']     = 'openchair/openchair/ledger';

@@ -71,6 +71,28 @@ $config['oc_chair_min_seen_pct']  = 70;
 // Share links preview in iMessage/WhatsApp and expire after this many days.
 $config['oc_share_ttl_days']      = 30;
 
+// ── Tier gates (docs/70-radar-build.md R7) ───────────────────────────────────
+// Which JVZoo access codes (users.access, comma-separated) unlock which gate.
+// STRUCTURE.md §9 #3 is still open — new OpenChair codes or the InstantClose map —
+// so enforcement is OFF and every gate is open until the founder sets the codes
+// and flips this to TRUE. The gates are enforced in the controllers as well as
+// hidden in the rail, so turning this on cannot leave a reachable URL ungated.
+// The defaults mirror the host engine's map (Access_control_lib) so that turning
+// it on with no edits behaves like the sister product.
+$config['oc_access_enforce'] = FALSE;
+$config['oc_access_codes'] = [
+    'core'     => ['1', '2', '3', '4', '7', '10', '71', '9', '94', '91', '92', '93'], // may use OpenChair at all
+    // README decision #2 recommends FE gets BOTH buckets; set to the OTO1 list to hold Slammed back.
+    'slammed'  => ['1', '2', '3', '4', '7', '10', '71', '9', '94', '91', '92', '93'],
+    'alerts'   => ['2', '9', '94', '91', '93'],   // OTO1: it runs nightly and alerts you
+    'deadzone' => ['2', '9', '94', '91', '93'],   // OTO1
+    'ledger'   => ['3', '9', '94', '91', '93'],   // OTO2: client reports, 8-week report card
+    'kit'      => ['4', '9', '94', '91', '93'],   // OTO3
+];
+// Roles that see everything for review and support: superadmin (user 1) always,
+// plus Admin, JV Admin, Beta and JV.
+$config['oc_access_full'] = ['5', '51', '92', '93'];
+
 // ── Anti-bot tier ceiling ────────────────────────────────────────────────────
 // Tier 3 (stealth + residential rotation) is out of scope by decision, not by
 // configuration — it is the largest legal exposure (DMCA §1201) and the largest

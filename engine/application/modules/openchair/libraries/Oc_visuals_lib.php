@@ -153,50 +153,71 @@ class Oc_visuals_lib
         $schedule = $this->schedule($b);
         $unseen_window = $this->unseen_window($conf, $schedule);
 
-        // ── Lay out every tile, then mark exactly E of the seen ones empty ──
-        $days = [];
-        $tiles = [];      // [day_i, hour, chair, weight] for every SEEN bookable tile
-        foreach (['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as $di => $key) {
-            $open = $schedule[$key];
-            $rows = [];
-            foreach (range(self::FIRST_HOUR, self::LAST_HOUR) as $h) {
-                $row = '';
-                for ($c = 0; $c < $chairs; $c++) {
-                    if ($open === null || $h < $open[0] || $h > $open[1]) { $row .= 'x'; continue; }
-                    if ($c >= $online) { $row .= 'u'; continue; }                       // walk-in chair
-                    if ($unseen_window && $unseen_window['day'] === $key
-                        && $h >= $unseen_window['from'] && $h <= $unseen_window['to']) { $row .= 'u'; continue; }
-                    $row .= 'b';
-                    $tiles[] = [$di, $h, $c, $this->weight($key, $h, $c, $online, $vac_bp)];
+        // Observed beats derived. A past week (vacancy override) has no snapshot
+        // of its own, so the 8-week report's before/after strips stay derived.
+        $observed = array_key_exists('vacancy_bp', $opts) ? null : $this->observed_week($b);
+        $source   = $observed ? 'observed' : 'derived';
+
+        if ($observed) {
+            $days     = $observed['days'];
+            $chairs   = $observed['chairs'];
+            $online   = $chairs;          // a snapshot holds online-bookable chairs only
+            $walkins  = 0;
+            $unseen_window = null;
+            $mon      = strtotime($days[0]['date']);
+            $bookable = 0; $empty = 0;
+            foreach ($days as $d) {
+                foreach ($d['rows'] as $row) {
+                    $empty    += substr_count($row, 'e');
+                    $bookable += substr_count($row, 'e') + substr_count($row, 'b');
                 }
-                $rows[] = $row;
             }
-            $days[] = [
-                'key'   => $key,
-                'label' => strtoupper($key),
-                'name'  => ucfirst(date('l', strtotime('+' . $di . ' days', $mon))),
-                'date'  => date('Y-m-d', strtotime('+' . $di . ' days', $mon)),
-                'shut'  => $open === null,
-                'rows'  => $rows,
-            ];
-        }
+        } else {
+            // ── Lay out every tile, then mark exactly E of the seen ones empty ──
+            $days = [];
+            $tiles = [];      // [day_i, hour, chair, weight] for every SEEN bookable tile
+            foreach (['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as $di => $key) {
+                $open = $schedule[$key];
+                $rows = [];
+                foreach (range(self::FIRST_HOUR, self::LAST_HOUR) as $h) {
+                    $row = '';
+                    for ($c = 0; $c < $chairs; $c++) {
+                        if ($open === null || $h < $open[0] || $h > $open[1]) { $row .= 'x'; continue; }
+                        if ($c >= $online) { $row .= 'u'; continue; }                       // walk-in chair
+                        if ($unseen_window && $unseen_window['day'] === $key
+                            && $h >= $unseen_window['from'] && $h <= $unseen_window['to']) { $row .= 'u'; continue; }
+                        $row .= 'b';
+                        $tiles[] = [$di, $h, $c, $this->weight($key, $h, $c, $online, $vac_bp)];
+                    }
+                    $rows[] = $row;
+                }
+                $days[] = [
+                    'key'   => $key,
+                    'label' => strtoupper($key),
+                    'name'  => ucfirst(date('l', strtotime('+' . $di . ' days', $mon))),
+                    'date'  => date('Y-m-d', strtotime('+' . $di . ' days', $mon)),
+                    'shut'  => $open === null,
+                    'rows'  => $rows,
+                ];
+            }
 
-        $bookable = count($tiles);
-        $empty    = ($vac_bp === null) ? 0 : (int) round(((int) $vac_bp / 10000) * $bookable);
-        $empty    = max(0, min($bookable, $empty));
+            $bookable = count($tiles);
+            $empty    = ($vac_bp === null) ? 0 : (int) round(((int) $vac_bp / 10000) * $bookable);
+            $empty    = max(0, min($bookable, $empty));
 
-        // Weighted sampling without replacement (Efraimidis–Spirakis): each tile
-        // gets key u^(1/w); the E largest keys are the empty ones. Deterministic
-        // because the PRNG is seeded by the business and the week.
-        $this->seed = (((int) $b->id) * 7919 + (int) date('W', $mon) * 31 + (int) round((int) $vac_bp / 7)) % 2147483647 ?: 1;
-        $keys = [];
-        foreach ($tiles as $i => $tile) {
-            $keys[$i] = pow($this->rnd(), 1 / max(0.05, $tile[3]));
-        }
-        arsort($keys);
-        foreach (array_slice(array_keys($keys), 0, $empty) as $i) {
-            list($di, $h, $c) = $tiles[$i];
-            $days[$di]['rows'][$h - self::FIRST_HOUR][$c] = 'e';
+            // Weighted sampling without replacement (Efraimidis–Spirakis): each tile
+            // gets key u^(1/w); the E largest keys are the empty ones. Deterministic
+            // because the PRNG is seeded by the business and the week.
+            $this->seed = (((int) $b->id) * 7919 + (int) date('W', $mon) * 31 + (int) round((int) $vac_bp / 7)) % 2147483647 ?: 1;
+            $keys = [];
+            foreach ($tiles as $i => $tile) {
+                $keys[$i] = pow($this->rnd(), 1 / max(0.05, $tile[3]));
+            }
+            arsort($keys);
+            foreach (array_slice(array_keys($keys), 0, $empty) as $i) {
+                list($di, $h, $c) = $tiles[$i];
+                $days[$di]['rows'][$h - self::FIRST_HOUR][$c] = 'e';
+            }
         }
 
         // ── Per-day totals ───────────────────────────────────────────────────
@@ -230,7 +251,7 @@ class Oc_visuals_lib
 
         return [
             'v'        => 1,
-            'source'   => 'derived',
+            'source'   => $source,
             'business' => [
                 'id'            => (int) $b->id,
                 'name'          => (string) $b->name,
@@ -548,6 +569,107 @@ class Oc_visuals_lib
             'campaign'     => $annot,
             'range_label'  => $first['label'] . ' → ' . $last['label'],
         ];
+    }
+
+    // ── Observed grid (docs/70-radar-build.md §3.3–3.4) ──────────────────────
+
+    /**
+     * The latest scan snapshot as Chair Week rows, or null when none is usable.
+     *
+     * A snapshot holds, per day and per chair (schema staff hash — never a name),
+     * the bookable envelope and the start minute of every OPEN slot. An hour cell
+     * is: empty if any open slot starts in it; booked if it lies inside the chair's
+     * envelope with no open start; shut outside the envelope, or when the chair
+     * has no unit that day. Chairs are ordered by oc_staff.label ("Chair 1"…),
+     * which the service assigns in first-seen order and never from a name.
+     *
+     * @param object $b
+     * @return array|null {chairs:int, days:array}
+     */
+    public function observed_week($b)
+    {
+        $CI = $this->CI;
+        if (!$CI->db->table_exists('oc_scan_snapshot')) { return null; }
+
+        $snap = $CI->db->select('grid_gz, grid_codec, captured_on')
+                       ->from('oc_scan_snapshot')
+                       ->where('business_id', (int) $b->id)
+                       ->order_by('captured_on', 'DESC')->order_by('id', 'DESC')
+                       ->limit(1)->get()->row();
+        if (!$snap || $snap->grid_codec !== 'gzip_json_v1' || $snap->grid_gz === null) { return null; }
+
+        $json = @gzdecode($snap->grid_gz);
+        $grid = $json === false ? null : json_decode($json, true);
+        if (!is_array($grid) || empty($grid['days']) || !is_array($grid['days'])) { return null; }
+
+        // Chair order: label order from oc_staff, unknown hashes after, stable.
+        $order = [];
+        foreach ($CI->db->select('staff_hash, label')->from('oc_staff')
+                        ->where('business_id', (int) $b->id)->get()->result() as $r) {
+            $order[(string) $r->staff_hash] = (string) $r->label;
+        }
+        $hashes = [];
+        foreach ($grid['days'] as $d) {
+            foreach ((array) ($d['units'] ?? []) as $u) {
+                $h = (string) ($u['staffHash'] ?? '');
+                if ($h !== '' && !isset($hashes[$h])) { $hashes[$h] = count($hashes); }
+            }
+        }
+        if (!$hashes) { return null; }
+        uksort($hashes, function ($x, $y) use ($order, $hashes) {
+            $lx = isset($order[$x]) ? $order[$x] : "\xff" . $hashes[$x];
+            $ly = isset($order[$y]) ? $order[$y] : "\xff" . $hashes[$y];
+            return strnatcmp($lx, $ly);
+        });
+        $col = array_flip(array_keys($hashes));
+        $chairs = count($col);
+
+        // Seven days from the first snapshot day.
+        $days_in = [];
+        foreach ($grid['days'] as $d) {
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) ($d['date'] ?? ''))) { $days_in[$d['date']] = $d; }
+        }
+        ksort($days_in);
+        $first = strtotime((string) array_key_first($days_in));
+
+        $days = [];
+        for ($i = 0; $i < 7; $i++) {
+            $t    = strtotime('+' . $i . ' days', $first);
+            $date = date('Y-m-d', $t);
+            $units = isset($days_in[$date]) ? (array) ($days_in[$date]['units'] ?? []) : [];
+            $rows = [];
+            foreach (range(self::FIRST_HOUR, self::LAST_HOUR) as $h) {
+                $row = str_repeat('x', $chairs);
+                foreach ($units as $u) {
+                    $h_ = (string) ($u['staffHash'] ?? '');
+                    if (!isset($col[$h_])) { continue; }
+                    $env = (array) ($u['envelope'] ?? []);
+                    $es = isset($env[0]) ? (int) $env[0] : 0;
+                    $ee = isset($env[1]) ? (int) $env[1] : 0;
+                    $hs = $h * 60; $he = $hs + 60;
+                    if ($ee <= $hs || $es >= $he) { continue; }          // outside the envelope: shut
+                    $open = false;
+                    foreach ((array) ($u['open'] ?? []) as $m) {
+                        $m = (int) $m;
+                        if ($m >= $hs && $m < $he) { $open = true; break; }
+                    }
+                    $row[$col[$h_]] = $open ? 'e' : 'b';
+                }
+                $rows[] = $row;
+            }
+            $all_shut = true;
+            foreach ($rows as $r) { if (strspn($r, 'x') !== strlen($r)) { $all_shut = false; break; } }
+            $key = strtolower(date('D', $t));
+            $days[] = [
+                'key'   => $key,
+                'label' => strtoupper($key),
+                'name'  => date('l', $t),
+                'date'  => $date,
+                'shut'  => $all_shut,
+                'rows'  => $rows,
+            ];
+        }
+        return ['chairs' => $chairs, 'days' => $days];
     }
 
     // ── Grid derivation ──────────────────────────────────────────────────────

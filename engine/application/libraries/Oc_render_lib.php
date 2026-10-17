@@ -110,8 +110,8 @@ class Oc_render_lib
         //   deadzone — the Dead-Zone Map                        (OTO1)
         //   ledger   — white-label Ledger reports               (OTO2)
         //   kit      — Fill-the-Chair campaign kit              (OTO3)
-        foreach (['oc_can_slammed', 'oc_can_deadzone', 'oc_can_ledger', 'oc_can_kit'] as $gate) {
-            if (!isset($data[$gate])) { $data[$gate] = true; }
+        foreach (['slammed', 'deadzone', 'ledger', 'kit', 'alerts'] as $gate) {
+            if (!isset($data['oc_can_' . $gate])) { $data['oc_can_' . $gate] = $this->can($gate, $data['user_row']); }
         }
 
         // Brand — App_Controller::_build_ic_brand() populates ic_brand on every
@@ -130,12 +130,17 @@ class Oc_render_lib
         if (!isset($data['oc_due_count']) || !isset($data['oc_pipeline_count'])) {
             $data['oc_due_count'] = 0;
             $data['oc_pipeline_count'] = 0;
-            if ($uid > 0 && $ci->db->table_exists('oc_prospect')) {
-                $data['oc_pipeline_count'] = (int) $ci->db->where('user_id', $uid)
+            // The pipeline belongs to the agency (oc_012_team_tenancy.sql).
+            $parent = isset($data['user_row']->parent_user_id) ? (int) $data['user_row']->parent_user_id : 0;
+            $tid = isset($data['oc_tenant_id']) ? (int) $data['oc_tenant_id']
+                 : (($parent > 0 && $parent !== $uid) ? $parent : $uid);
+            $uid_tenant = $tid;
+            if ($uid_tenant > 0 && $ci->db->table_exists('oc_prospect')) {
+                $data['oc_pipeline_count'] = (int) $ci->db->where('user_id', $uid_tenant)
                     ->where_not_in('stage', ['lost', 'archived'])
                     ->count_all_results('oc_prospect');
                 if ($ci->db->field_exists('next_due_on', 'oc_prospect')) {
-                    $data['oc_due_count'] = (int) $ci->db->where('user_id', $uid)
+                    $data['oc_due_count'] = (int) $ci->db->where('user_id', $uid_tenant)
                         ->where('next_due_on IS NOT NULL')
                         ->where('next_due_on <=', date('Y-m-d'))
                         ->where_not_in('stage', ['won', 'lost', 'archived'])
@@ -145,6 +150,36 @@ class Oc_render_lib
         }
 
         return $data;
+    }
+
+    /**
+     * May this user use a tier gate? (docs/70-radar-build.md R7)
+     *
+     * One answer for the rail AND the controllers, so an item that is hidden is
+     * also refused by URL. Enforcement is off until the founder sets the access
+     * codes (config oc_access_enforce), and then: superadmin and the full-access
+     * review roles pass; everyone else needs a code listed for the gate.
+     *
+     * @param string      $gate     core | slammed | alerts | deadzone | ledger | kit
+     * @param object|null $user_row
+     * @return bool
+     */
+    public function can($gate, $user_row = null)
+    {
+        $ci = $this->CI;
+        $ci->load->config('app_config');
+        if (!$ci->config->item('oc_access_enforce')) { return true; }
+
+        if ($user_row === null) { $user_row = $ci->ion_auth->user()->row(); }
+        if (!is_object($user_row)) { return false; }
+        if ((int) $user_row->id === 1) { return true; }
+
+        $codes = array_filter(array_map('trim', explode(',', (string) ($user_row->access ?? ''))), 'strlen');
+        if (array_intersect($codes, (array) $ci->config->item('oc_access_full'))) { return true; }
+
+        $map = (array) $ci->config->item('oc_access_codes');
+        if (!isset($map[$gate])) { return false; }          // an unknown gate is closed, not open
+        return (bool) array_intersect($codes, (array) $map[$gate]);
     }
 
     /**
