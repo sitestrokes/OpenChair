@@ -1,0 +1,67 @@
+/* Receipt card — PDF p.4. The card's own ground is the darker sand; the receipt
+   is a paper strip on it with torn (zigzag) top and bottom edges. Prefixed ocr-. */
+.occ--receipt{background:#E6D9CF;align-items:center;padding-top:42px}
+.ocr-paper{--ocr-zz:9px;position:relative;width:100%;max-width:540px;background:#FFFCF7;color:var(--occ-ink);
+  font-family:var(--occ-mono);font-size:14px;line-height:1.5;padding:40px 40px 34px;margin:var(--ocr-zz) auto;
+  box-shadow:0 18px 40px -30px rgba(60,35,20,.5)}
+.ocr-paper::before, .ocr-paper::after{content:"";position:absolute;left:0;right:0;height:var(--ocr-zz);
+  background:linear-gradient(-45deg,#FFFCF7 calc(var(--ocr-zz) / 1.42),transparent 0) 0 0/calc(var(--ocr-zz) * 2) 100% repeat-x,
+             linear-gradient(45deg,#FFFCF7 calc(var(--ocr-zz) / 1.42),transparent 0) 0 0/calc(var(--ocr-zz) * 2) 100% repeat-x}
+.ocr-paper::before{top:calc(var(--ocr-zz) * -1);transform:scaleY(-1)}
+.ocr-paper::after{bottom:calc(var(--ocr-zz) * -1)}
+
+.ocr-head{text-align:center}
+.ocr-head h1{font-family:var(--occ-display);font-weight:800;font-size:30px;letter-spacing:.06em;margin:0}
+.ocr-head h2{font-family:var(--occ-mono);font-weight:700;font-size:17px;letter-spacing:.14em;text-transform:uppercase;margin:24px 0 2px}
+.ocr-head p{margin:4px 0 0;font-size:12.5px;letter-spacing:.06em;color:var(--occ-ink-2)}
+.ocr-dash{border:0;border-top:1.5px dashed #A99A90;margin:18px 0}
+
+.ocr-lines{width:100%;border-collapse:collapse}
+.ocr-lines th{font-weight:400;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--occ-mute);text-align:left;padding:0 0 10px}
+.ocr-lines td{padding:7px 0;font-size:15px}
+.ocr-lines .n{text-align:right;white-space:nowrap}
+.ocr-lines th.n{text-align:right}
+.ocr-lines td.n{padding-left:12px}
+.ocr-lines td.m{color:var(--occ-red);font-weight:700;min-width:9.5em}
+.ocr-note td{padding:0 0 8px;font-size:11.5px;color:var(--occ-ink-2);letter-spacing:.02em}
+
+.ocr-totals{margin:0}
+.ocr-totals > div{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:6px 0}
+.ocr-totals dt{font-size:15px;text-transform:uppercase}
+.ocr-totals dd{margin:0;text-align:right;font-size:15px}
+.ocr-grand{padding:14px 0 10px !important}
+.ocr-grand dt{font-weight:700}
+.ocr-grand dd{font-family:var(--occ-display);font-weight:800;font-size:40px;letter-spacing:-.02em;color:var(--occ-red);line-height:1}
+.ocr-gap{font-family:var(--occ-mono);font-size:14px;color:var(--occ-mute);letter-spacing:.04em}
+
+.ocr-small{font-size:11.5px;line-height:1.55;color:var(--occ-ink-2);margin:0 0 6px;letter-spacing:.02em}
+.ocr-barcode{display:flex;gap:2px;height:42px;margin:20px 6% 6px}
+.ocr-barcode i{flex:1;display:block;background:#E8A08F}
+.ocr-barcode i.e{background:var(--occ-red)}
+.ocr-barcode i.b{background:var(--occ-ink)}
+.ocr-cap{text-align:center;font-size:9.5px;letter-spacing:.14em;color:var(--occ-mute);margin:6px 0 0}
+
+/* The footer sits under the paper, centred, like "Prepared for Fade Lab by …". */
+.occ--receipt .occ-foot{width:100%;max-width:540px;margin:auto auto 0;border-top:0;flex-direction:column;align-items:center;
+  text-align:center;gap:10px;padding-top:40px}
+.occ--receipt .occ-foot p{max-width:none;font-size:11.5px;color:var(--occ-ink-2)}
+.occ--receipt .occ-prepared{text-align:center;font-size:13px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:center}
+.occ--receipt .occ-prepared b{display:inline;font-size:14px;margin:0}
+.occ--receipt .occ-prepared img{margin:0;display:inline-block;max-height:24px}
+
+.occ-phone .ocr-paper{padding:28px 18px 24px;font-size:12px}
+.occ-phone .ocr-head h1{font-size:22px}
+.occ-phone .ocr-lines td{font-size:12.5px}
+.occ-phone .ocr-lines td.m{min-width:0}
+.occ-phone .ocr-grand dd{font-size:26px}
+.occ-phone .ocr-totals dt, .occ-phone .ocr-totals dd{font-size:12.5px}
+.occ-phone .ocr-barcode{margin:16px 0 6px;gap:1px}
+@media (max-width:640px){
+  .ocr-paper{padding:28px 18px 24px;font-size:12px}
+  .ocr-head h1{font-size:22px}
+  .ocr-lines td{font-size:12.5px}
+  .ocr-lines td.m{min-width:0}
+  .ocr-grand dd{font-size:26px}
+  .ocr-totals dt, .ocr-totals dd{font-size:12.5px}
+  .ocr-barcode{margin:16px 0 6px;gap:1px}
+}

@@ -129,6 +129,8 @@
 .occ-phone .ocg-count b{font-size:13px}
 .occ-phone .ocg-count small{display:none}
 .occ-phone .ocg-full{font-size:10px;padding:2px 6px}
+/* No room for the "EMPTY" row label beside a narrow first column at phone size. */
+.occ-phone .ocg-foot .ocg-corner{visibility:hidden}
 
 @media (max-width:640px){
   .occ{padding:26px 18px 22px;min-height:0}

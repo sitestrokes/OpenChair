@@ -1,0 +1,33 @@
+/* Chair Week card — PDF p.1 (Hungry) and p.2 (Slammed). Prefixed occw-. */
+.occw-hero{display:grid;grid-template-columns:auto minmax(0,1fr);gap:28px;align-items:start;margin-bottom:30px}
+.occw-score .occ-kicker{font-size:13px;margin-bottom:10px}
+.occw-lede{padding-top:12px}
+.occw-lede h2{font-family:var(--occ-display);font-weight:700;font-size:25px;line-height:1.25;letter-spacing:-.02em;margin:0;color:var(--occ-ink)}
+.occw-lede p{margin:10px 0 0;font-size:18px;color:var(--occ-ink-2);line-height:1.4}
+.occw-lede p b{font-weight:700;color:var(--occ-ink)}
+.occw-lede p b.occ-red{color:var(--occ-red)}
+.occw--slammed .occw-lede h2 .occ-red{color:var(--occ-red)}
+.occw-only{color:var(--occ-ink-2)}
+.occw-gapbox{border:1.5px dashed var(--occ-line);border-radius:14px;padding:60px 24px;text-align:center;
+  color:var(--occ-mute);font-size:15px;background:var(--occ-paper-2)}
+.occw--gap .occ-pill{background:var(--occ-mute)}
+
+.occ-phone .occw-hero, .occ.is-phone .occw-hero{grid-template-columns:1fr;gap:10px;margin-bottom:20px}
+.occ-phone .occw-lede, .occ.is-phone .occw-lede{padding-top:0}
+.occ-phone .occw-lede h2{font-size:18px}
+.occ-phone .occw-lede p{font-size:14.5px}
+.occ-phone .occ-head{flex-wrap:wrap}
+.occ-phone .occ-legend{font-size:12px;gap:6px 14px}
+@media (max-width:640px){
+  .occw-hero{grid-template-columns:1fr;gap:10px;margin-bottom:20px}
+  .occw-lede{padding-top:0}
+  .occw-lede h2{font-size:18px}
+  .occw-lede p{font-size:14.5px}
+  .occ-head{flex-wrap:wrap}
+  .occ-legend{font-size:12px;gap:6px 14px}
+}
+/* Slammed: the day counts are the small, booked-out numbers — ink, not alarm red (p.2). */
+.occw--slammed .ocg-count b{color:var(--occ-ink)}
+/* Phone: the "EMPTY" row label has no room beside the shut Monday's "shut". */
+.occ-phone .occ--week .ocg-foot .ocg-corner{visibility:hidden}
+@media (max-width:640px){ .occ--week .ocg-foot .ocg-corner{visibility:hidden} }
