@@ -1,0 +1,128 @@
+{
+  "_comment": "SYNTHETIC fixtures — see README.md. URL keys and bodies use {{Dn}} = today+n in the business timezone; the time-slot ranges assume a 14-day horizon.",
+  "https://us.booksy.com/api/us/2/customer_api/businesses/100001": {
+    "file": "booksy/100001-business.json",
+    "status": 200,
+    "contentType": "application/json"
+  },
+  "https://us.booksy.com/api/us/2/customer_api/businesses/100001/appointments/time_slots?start_date={{D0}}&end_date={{D13}}": {
+    "file": "booksy/100001-time-slots.json",
+    "status": 200,
+    "contentType": "application/json"
+  },
+  "https://us.booksy.com/api/us/2/customer_api/businesses/100002": {
+    "file": "booksy/100002-business.json",
+    "status": 200,
+    "contentType": "application/json"
+  },
+  "https://us.booksy.com/api/us/2/customer_api/businesses/100002/appointments/time_slots?start_date={{D0}}&end_date={{D13}}": {
+    "file": "booksy/100002-time-slots.json",
+    "status": 200,
+    "contentType": "application/json"
+  },
+  "https://us.booksy.com/api/us/2/customer_api/businesses/100003": {
+    "file": "booksy/100003-business.json",
+    "status": 200,
+    "contentType": "application/json"
+  },
+  "https://us.booksy.com/api/us/2/customer_api/businesses/100003/appointments/time_slots?start_date={{D0}}&end_date={{D13}}": {
+    "file": "booksy/100003-time-slots.json",
+    "status": 200,
+    "contentType": "application/json"
+  },
+  "https://us.booksy.com/api/us/2/customer_api/businesses/100090": {
+    "file": "booksy/100090-business.json",
+    "status": 403,
+    "contentType": "application/json"
+  },
+  "https://us.booksy.com/api/us/2/customer_api/businesses/100092": {
+    "file": "booksy/100092-captcha.html",
+    "status": 200,
+    "contentType": "text/html"
+  },
+  "https://us.booksy.com/api/us/2/customer_api/businesses/100093": {
+    "file": "booksy/100093-business.json",
+    "status": 200,
+    "contentType": "application/json"
+  },
+  "https://us.booksy.com/api/us/2/customer_api/businesses/100093/appointments/time_slots?start_date={{D0}}&end_date={{D13}}": {
+    "file": "booksy/100093-time-slots.json",
+    "status": 200,
+    "contentType": "application/json"
+  },
+  "https://us.booksy.com/api/us/2/customer_api/businesses/100094": {
+    "file": "booksy/100094-business.json",
+    "status": 200,
+    "contentType": "application/json"
+  },
+  "https://us.booksy.com/api/us/2/customer_api/businesses/100094/appointments/time_slots?start_date={{D0}}&end_date={{D13}}": {
+    "file": "booksy/100094-time-slots.json",
+    "status": 200,
+    "contentType": "application/json"
+  },
+  "https://us.booksy.com/api/us/2/customer_api/businesses/100095": {
+    "file": "booksy/100095-business.json",
+    "status": 200,
+    "contentType": "application/json"
+  },
+  "https://us.booksy.com/api/us/2/customer_api/businesses/100095/appointments/time_slots?start_date={{D0}}&end_date={{D13}}": {
+    "file": "booksy/100095-time-slots.json",
+    "status": 200,
+    "contentType": "application/json"
+  },
+  "https://book.squareup.com/appointments/sqhungry01/location/LT0001/services": {
+    "file": "square_appointments/sqhungry01-services.html",
+    "status": 200,
+    "contentType": "text/html"
+  },
+  "https://book.squareup.com/appointments/sqhungry01/location/LT0001/availability?start_date={{D0}}&end_date={{D13}}": {
+    "file": "square_appointments/sqhungry01-availability.json",
+    "status": 200,
+    "contentType": "application/json"
+  },
+  "https://book.squareup.com/appointments/sqslammed02/location/LT0002/services": {
+    "file": "square_appointments/sqslammed02-services.html",
+    "status": 200,
+    "contentType": "text/html"
+  },
+  "https://book.squareup.com/appointments/sqslammed02/location/LT0002/availability?start_date={{D0}}&end_date={{D13}}": {
+    "file": "square_appointments/sqslammed02-availability.json",
+    "status": 200,
+    "contentType": "application/json"
+  },
+  "https://book.squareup.com/appointments/sqsteady03/location/LT0003/services": {
+    "file": "square_appointments/sqsteady03-services.html",
+    "status": 200,
+    "contentType": "text/html"
+  },
+  "https://book.squareup.com/appointments/sqsteady03/location/LT0003/availability?start_date={{D0}}&end_date={{D13}}": {
+    "file": "square_appointments/sqsteady03-availability.json",
+    "status": 200,
+    "contentType": "application/json"
+  },
+  "https://book.squareup.com/appointments/sqblocked09/location/LT0009/services": {
+    "file": "square_appointments/sqblocked09-services.html",
+    "status": 403,
+    "contentType": "text/html"
+  },
+  "https://book.squareup.com/appointments/sqcaptcha08/location/LT0008/services": {
+    "file": "square_appointments/sqcaptcha08-services.html",
+    "status": 200,
+    "contentType": "text/html"
+  },
+  "https://book.squareup.com/appointments/sqstale07/location/LT0007/services": {
+    "file": "square_appointments/sqstale07-services.html",
+    "status": 200,
+    "contentType": "text/html"
+  },
+  "https://book.squareup.com/appointments/sqleak06/location/LT0006/services": {
+    "file": "square_appointments/sqleak06-services.html",
+    "status": 200,
+    "contentType": "text/html"
+  },
+  "https://book.squareup.com/appointments/sqleak06/location/LT0006/availability?start_date={{D0}}&end_date={{D13}}": {
+    "file": "square_appointments/sqleak06-availability.json",
+    "status": 200,
+    "contentType": "application/json"
+  }
+}

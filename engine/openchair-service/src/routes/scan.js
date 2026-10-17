@@ -13,40 +13,11 @@
  * broker on a different machine.
  */
 
-import { claim, complete, depth, reapStaleLocks } from '../scan/queue.js';
+import { claim, depth, reapStaleLocks } from '../scan/queue.js';
+import { completeScan } from '../scan/complete.js';
+import { PayloadError } from '../scan/payload.js';
+import { json, readJson } from '../lib/http.js';
 import { requireWorkerToken } from '../security/internalAuth.js';
-
-/**
- * @param {import('node:http').ServerResponse} res
- * @param {number} status
- * @param {unknown} payload
- */
-function json(res, status, payload) {
-  const body = JSON.stringify(payload);
-  res.writeHead(status, { 'content-type': 'application/json', 'content-length': Buffer.byteLength(body) });
-  res.end(body);
-}
-
-/**
- * @param {import('node:http').IncomingMessage} req
- * @returns {Promise<any>}
- */
-function readJson(req) {
-  return new Promise((resolve, reject) => {
-    let size = 0;
-    const chunks = [];
-    req.on('data', (c) => {
-      size += c.length;
-      if (size > 256 * 1024) { reject(new Error('payload too large')); req.destroy(); return; }
-      chunks.push(c);
-    });
-    req.on('end', () => {
-      try { resolve(chunks.length ? JSON.parse(Buffer.concat(chunks).toString('utf8')) : {}); }
-      catch (e) { reject(e); }
-    });
-    req.on('error', reject);
-  });
-}
 
 /**
  * @param {import('node:http').IncomingMessage} req
@@ -65,7 +36,9 @@ export default async function scanRoute(req, res, url) {
   }
 
   if (path === '/v1/scan/claim' && req.method === 'POST') {
-    const body = await readJson(req);
+    let body;
+    try { body = await readJson(req, 4 * 1024); }
+    catch (err) { return json(res, err.code === 'PAYLOAD_TOO_LARGE' ? 413 : 400, { ok: false, code: err.code ?? 'BAD_JSON', error: err.message }); }
     const workerId = String(body.workerId ?? '').slice(0, 64);
     if (!workerId) return json(res, 400, { ok: false, error: 'workerId is required' });
 
@@ -74,12 +47,21 @@ export default async function scanRoute(req, res, url) {
   }
 
   if (path === '/v1/scan/complete' && req.method === 'POST') {
-    const body = await readJson(req);
-    for (const f of ['queueId', 'businessId', 'platformId', 'observedOn', 'status']) {
-      if (body[f] === undefined) return json(res, 400, { ok: false, error: `${f} is required` });
+    let body;
+    try { body = await readJson(req); }
+    catch (err) { return json(res, err.code === 'PAYLOAD_TOO_LARGE' ? 413 : 400, { ok: false, code: err.code ?? 'BAD_JSON', error: err.message }); }
+
+    try {
+      const { scored } = await completeScan(body);
+      return json(res, 200, { ok: true, scored });
+    } catch (err) {
+      if (err instanceof PayloadError) {
+        // 409 for a claim the worker does not hold; 422 for a payload that is
+        // well-formed JSON but not the contract. Neither echoes the payload.
+        return json(res, err.code === 'QUEUE_MISMATCH' ? 409 : 422, { ok: false, code: err.code, error: err.message });
+      }
+      throw err;
     }
-    await complete(body);
-    return json(res, 200, { ok: true });
   }
 
   if (path === '/v1/scan/reap' && req.method === 'POST') {

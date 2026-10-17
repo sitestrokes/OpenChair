@@ -38,6 +38,26 @@ export const config = {
     token: str('OC_EGRESS_TOKEN', ''),
   },
 
+  /**
+   * Where adapter reads go (docs/70 §4). The default reads FIXTURE pages from
+   * disk and touches no network at all. 'broker' sends reads through the
+   * egress broker to the real platform — and refuses to start unless
+   * OC_ALLOW_LIVE=1 is ALSO set, and refuses each item whose platform rollout
+   * is not 'live'. Two switches, because the founder's decision is "no live
+   * crawl until the spike says go", and one forgotten env var must not undo it.
+   */
+  read: {
+    mode: str('OC_READ_MODE', 'fixture'),
+    allowLive: str('OC_ALLOW_LIVE', '0') === '1',
+    fixturesDir: str('OC_FIXTURES_DIR', fileURLToPath(new URL('../fixtures/', import.meta.url))),
+  },
+
+  /** Default look-ahead when the claimed platform row does not state one. */
+  horizonDays: int('OC_HORIZON_DAYS', 14),
+
+  /** 'production' makes a missing callback token a boot failure, not a warning. */
+  env: str('NODE_ENV', 'development'),
+
   /** Which platforms this worker instance handles; empty = all. */
   shard: str('OC_WORKER_SHARD', ''),
 

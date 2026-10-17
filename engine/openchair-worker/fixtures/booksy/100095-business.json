@@ -1,0 +1,68 @@
+{
+  "business": {
+    "id": 100095,
+    "name": "Short horizon",
+    "timezone": "America/New_York",
+    "staffers": [
+      {
+        "id": "st_59501",
+        "name": "Marcus Bell",
+        "position": "Barber",
+        "photo": "https://example.invalid/p/st_59501.jpg"
+      },
+      {
+        "id": "st_59502",
+        "name": "Andre Lopez",
+        "position": "Barber",
+        "photo": "https://example.invalid/p/st_59502.jpg"
+      }
+    ],
+    "service_categories": [
+      {
+        "name": "Haircuts",
+        "services": [
+          {
+            "id": 9001,
+            "name": "Skin Fade",
+            "variants": [
+              {
+                "duration": 45,
+                "price": 40
+              }
+            ]
+          },
+          {
+            "id": 9002,
+            "name": "Classic Cut",
+            "variants": [
+              {
+                "duration": 30,
+                "price": 32
+              }
+            ]
+          },
+          {
+            "id": 9003,
+            "name": "Beard Trim",
+            "variants": [
+              {
+                "duration": 20,
+                "price": 18
+              }
+            ]
+          },
+          {
+            "id": 9004,
+            "name": "Cut + Beard",
+            "variants": [
+              {
+                "duration": 60,
+                "price": 55
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

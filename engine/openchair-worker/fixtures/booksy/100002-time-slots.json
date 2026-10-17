@@ -1,0 +1,583 @@
+{
+  "slot_length": 30,
+  "start_date": "{{D0}}",
+  "end_date": "{{D13}}",
+  "working_hours": [
+    {
+      "date": "{{D0}}",
+      "staffer_id": "st_52001",
+      "start": "09:00",
+      "end": "19:00"
+    },
+    {
+      "date": "{{D0}}",
+      "staffer_id": "st_52002",
+      "start": "09:00",
+      "end": "19:00"
+    },
+    {
+      "date": "{{D0}}",
+      "staffer_id": "st_52003",
+      "start": "09:00",
+      "end": "19:00"
+    },
+    {
+      "date": "{{D0}}",
+      "staffer_id": "st_52004",
+      "start": "09:00",
+      "end": "19:00"
+    },
+    {
+      "date": "{{D1}}",
+      "staffer_id": "st_52001",
+      "start": "09:00",
+      "end": "19:00"
+    },
+    {
+      "date": "{{D1}}",
+      "staffer_id": "st_52002",
+      "start": "09:00",
+      "end": "19:00"
+    },
+    {
+      "date": "{{D1}}",
+      "staffer_id": "st_52003",
+      "start": "09:00",
+      "end": "19:00"
+    },
+    {
+      "date": "{{D1}}",
+      "staffer_id": "st_52004",
+      "start": "09:00",
+      "end": "19:00"
+    },
+    {
+      "date": "{{D2}}",
+      "staffer_id": "st_52001",
+      "start": "10:00",
+      "end": "16:00"
+    },
+    {
+      "date": "{{D2}}",
+      "staffer_id": "st_52002",
+      "start": "10:00",
+      "end": "16:00"
+    },
+    {
+      "date": "{{D2}}",
+      "staffer_id": "st_52003",
+      "start": "10:00",
+      "end": "16:00"
+    },
+    {
+      "date": "{{D2}}",
+      "staffer_id": "st_52004",
+      "start": "10:00",
+      "end": "16:00"
+    },
+    {
+      "date": "{{D4}}",
+      "staffer_id": "st_52001",
+      "start": "09:00",
+      "end": "19:00"
+    },
+    {
+      "date": "{{D4}}",
+      "staffer_id": "st_52002",
+      "start": "09:00",
+      "end": "19:00"
+    },
+    {
+      "date": "{{D4}}",
+      "staffer_id": "st_52003",
+      "start": "09:00",
+      "end": "19:00"
+    },
+    {
+      "date": "{{D4}}",
+      "staffer_id": "st_52004",
+      "start": "09:00",
+      "end": "19:00"
+    },
+    {
+      "date": "{{D5}}",
+      "staffer_id": "st_52001",
+      "start": "09:00",
+      "end": "19:00"
+    },
+    {
+      "date": "{{D5}}",
+      "staffer_id": "st_52002",
+      "start": "09:00",
+      "end": "19:00"
+    },
+    {
+      "date": "{{D5}}",
+      "staffer_id": "st_52003",
+      "start": "09:00",
+      "end": "19:00"
+    },
+    {
+      "date": "{{D5}}",
+      "staffer_id": "st_52004",
+      "start": "09:00",
+      "end": "19:00"
+    },
+    {
+      "date": "{{D6}}",
+      "staffer_id": "st_52001",
+      "start": "09:00",
+      "end": "19:00"
+    },
+    {
+      "date": "{{D6}}",
+      "staffer_id": "st_52002",
+      "start": "09:00",
+      "end": "19:00"
+    },
+    {
+      "date": "{{D6}}",
+      "staffer_id": "st_52003",
+      "start": "09:00",
+      "end": "19:00"
+    },
+    {
+      "date": "{{D6}}",
+      "staffer_id": "st_52004",
+      "start": "09:00",
+      "end": "19:00"
+    },
+    {
+      "date": "{{D7}}",
+      "staffer_id": "st_52001",
+      "start": "09:00",
+      "end": "19:00"
+    },
+    {
+      "date": "{{D7}}",
+      "staffer_id": "st_52002",
+      "start": "09:00",
+      "end": "19:00"
+    },
+    {
+      "date": "{{D7}}",
+      "staffer_id": "st_52003",
+      "start": "09:00",
+      "end": "19:00"
+    },
+    {
+      "date": "{{D7}}",
+      "staffer_id": "st_52004",
+      "start": "09:00",
+      "end": "19:00"
+    },
+    {
+      "date": "{{D8}}",
+      "staffer_id": "st_52001",
+      "start": "09:00",
+      "end": "19:00"
+    },
+    {
+      "date": "{{D8}}",
+      "staffer_id": "st_52002",
+      "start": "09:00",
+      "end": "19:00"
+    },
+    {
+      "date": "{{D8}}",
+      "staffer_id": "st_52003",
+      "start": "09:00",
+      "end": "19:00"
+    },
+    {
+      "date": "{{D8}}",
+      "staffer_id": "st_52004",
+      "start": "09:00",
+      "end": "19:00"
+    },
+    {
+      "date": "{{D9}}",
+      "staffer_id": "st_52001",
+      "start": "10:00",
+      "end": "16:00"
+    },
+    {
+      "date": "{{D9}}",
+      "staffer_id": "st_52002",
+      "start": "10:00",
+      "end": "16:00"
+    },
+    {
+      "date": "{{D9}}",
+      "staffer_id": "st_52003",
+      "start": "10:00",
+      "end": "16:00"
+    },
+    {
+      "date": "{{D9}}",
+      "staffer_id": "st_52004",
+      "start": "10:00",
+      "end": "16:00"
+    },
+    {
+      "date": "{{D11}}",
+      "staffer_id": "st_52001",
+      "start": "09:00",
+      "end": "19:00"
+    },
+    {
+      "date": "{{D11}}",
+      "staffer_id": "st_52002",
+      "start": "09:00",
+      "end": "19:00"
+    },
+    {
+      "date": "{{D11}}",
+      "staffer_id": "st_52003",
+      "start": "09:00",
+      "end": "19:00"
+    },
+    {
+      "date": "{{D11}}",
+      "staffer_id": "st_52004",
+      "start": "09:00",
+      "end": "19:00"
+    },
+    {
+      "date": "{{D12}}",
+      "staffer_id": "st_52001",
+      "start": "09:00",
+      "end": "19:00"
+    },
+    {
+      "date": "{{D12}}",
+      "staffer_id": "st_52002",
+      "start": "09:00",
+      "end": "19:00"
+    },
+    {
+      "date": "{{D12}}",
+      "staffer_id": "st_52003",
+      "start": "09:00",
+      "end": "19:00"
+    },
+    {
+      "date": "{{D12}}",
+      "staffer_id": "st_52004",
+      "start": "09:00",
+      "end": "19:00"
+    },
+    {
+      "date": "{{D13}}",
+      "staffer_id": "st_52001",
+      "start": "09:00",
+      "end": "19:00"
+    },
+    {
+      "date": "{{D13}}",
+      "staffer_id": "st_52002",
+      "start": "09:00",
+      "end": "19:00"
+    },
+    {
+      "date": "{{D13}}",
+      "staffer_id": "st_52003",
+      "start": "09:00",
+      "end": "19:00"
+    },
+    {
+      "date": "{{D13}}",
+      "staffer_id": "st_52004",
+      "start": "09:00",
+      "end": "19:00"
+    }
+  ],
+  "time_slots": [
+    {
+      "date": "{{D0}}",
+      "staffer_id": "st_52001",
+      "slots": []
+    },
+    {
+      "date": "{{D0}}",
+      "staffer_id": "st_52002",
+      "slots": []
+    },
+    {
+      "date": "{{D0}}",
+      "staffer_id": "st_52003",
+      "slots": []
+    },
+    {
+      "date": "{{D0}}",
+      "staffer_id": "st_52004",
+      "slots": []
+    },
+    {
+      "date": "{{D1}}",
+      "staffer_id": "st_52001",
+      "slots": []
+    },
+    {
+      "date": "{{D1}}",
+      "staffer_id": "st_52002",
+      "slots": []
+    },
+    {
+      "date": "{{D1}}",
+      "staffer_id": "st_52003",
+      "slots": []
+    },
+    {
+      "date": "{{D1}}",
+      "staffer_id": "st_52004",
+      "slots": []
+    },
+    {
+      "date": "{{D2}}",
+      "staffer_id": "st_52001",
+      "slots": []
+    },
+    {
+      "date": "{{D2}}",
+      "staffer_id": "st_52002",
+      "slots": []
+    },
+    {
+      "date": "{{D2}}",
+      "staffer_id": "st_52003",
+      "slots": []
+    },
+    {
+      "date": "{{D2}}",
+      "staffer_id": "st_52004",
+      "slots": []
+    },
+    {
+      "date": "{{D4}}",
+      "staffer_id": "st_52001",
+      "slots": []
+    },
+    {
+      "date": "{{D4}}",
+      "staffer_id": "st_52002",
+      "slots": []
+    },
+    {
+      "date": "{{D4}}",
+      "staffer_id": "st_52003",
+      "slots": []
+    },
+    {
+      "date": "{{D4}}",
+      "staffer_id": "st_52004",
+      "slots": []
+    },
+    {
+      "date": "{{D5}}",
+      "staffer_id": "st_52001",
+      "slots": []
+    },
+    {
+      "date": "{{D5}}",
+      "staffer_id": "st_52002",
+      "slots": []
+    },
+    {
+      "date": "{{D5}}",
+      "staffer_id": "st_52003",
+      "slots": []
+    },
+    {
+      "date": "{{D5}}",
+      "staffer_id": "st_52004",
+      "slots": []
+    },
+    {
+      "date": "{{D6}}",
+      "staffer_id": "st_52001",
+      "slots": []
+    },
+    {
+      "date": "{{D6}}",
+      "staffer_id": "st_52002",
+      "slots": []
+    },
+    {
+      "date": "{{D6}}",
+      "staffer_id": "st_52003",
+      "slots": []
+    },
+    {
+      "date": "{{D6}}",
+      "staffer_id": "st_52004",
+      "slots": []
+    },
+    {
+      "date": "{{D7}}",
+      "staffer_id": "st_52001",
+      "slots": []
+    },
+    {
+      "date": "{{D7}}",
+      "staffer_id": "st_52002",
+      "slots": []
+    },
+    {
+      "date": "{{D7}}",
+      "staffer_id": "st_52003",
+      "slots": []
+    },
+    {
+      "date": "{{D7}}",
+      "staffer_id": "st_52004",
+      "slots": []
+    },
+    {
+      "date": "{{D8}}",
+      "staffer_id": "st_52001",
+      "slots": []
+    },
+    {
+      "date": "{{D8}}",
+      "staffer_id": "st_52002",
+      "slots": []
+    },
+    {
+      "date": "{{D8}}",
+      "staffer_id": "st_52003",
+      "slots": []
+    },
+    {
+      "date": "{{D8}}",
+      "staffer_id": "st_52004",
+      "slots": []
+    },
+    {
+      "date": "{{D9}}",
+      "staffer_id": "st_52001",
+      "slots": [
+        "11:30",
+        "12:30",
+        "13:00",
+        "15:30"
+      ]
+    },
+    {
+      "date": "{{D9}}",
+      "staffer_id": "st_52002",
+      "slots": []
+    },
+    {
+      "date": "{{D9}}",
+      "staffer_id": "st_52003",
+      "slots": []
+    },
+    {
+      "date": "{{D9}}",
+      "staffer_id": "st_52004",
+      "slots": [
+        "13:30",
+        "14:00"
+      ]
+    },
+    {
+      "date": "{{D11}}",
+      "staffer_id": "st_52001",
+      "slots": [
+        "10:30",
+        "13:30",
+        "18:00"
+      ]
+    },
+    {
+      "date": "{{D11}}",
+      "staffer_id": "st_52002",
+      "slots": [
+        "15:30",
+        "18:30"
+      ]
+    },
+    {
+      "date": "{{D11}}",
+      "staffer_id": "st_52003",
+      "slots": [
+        "09:00"
+      ]
+    },
+    {
+      "date": "{{D11}}",
+      "staffer_id": "st_52004",
+      "slots": [
+        "10:30",
+        "15:30",
+        "17:00",
+        "18:00"
+      ]
+    },
+    {
+      "date": "{{D12}}",
+      "staffer_id": "st_52001",
+      "slots": [
+        "10:00",
+        "12:00",
+        "18:00"
+      ]
+    },
+    {
+      "date": "{{D12}}",
+      "staffer_id": "st_52002",
+      "slots": [
+        "11:00",
+        "12:30"
+      ]
+    },
+    {
+      "date": "{{D12}}",
+      "staffer_id": "st_52003",
+      "slots": [
+        "11:00",
+        "18:30"
+      ]
+    },
+    {
+      "date": "{{D12}}",
+      "staffer_id": "st_52004",
+      "slots": [
+        "14:00"
+      ]
+    },
+    {
+      "date": "{{D13}}",
+      "staffer_id": "st_52001",
+      "slots": [
+        "14:30",
+        "16:00",
+        "18:30"
+      ]
+    },
+    {
+      "date": "{{D13}}",
+      "staffer_id": "st_52002",
+      "slots": [
+        "16:30"
+      ]
+    },
+    {
+      "date": "{{D13}}",
+      "staffer_id": "st_52003",
+      "slots": [
+        "12:00",
+        "13:30"
+      ]
+    },
+    {
+      "date": "{{D13}}",
+      "staffer_id": "st_52004",
+      "slots": [
+        "12:30",
+        "15:30"
+      ]
+    }
+  ]
+}

@@ -10,7 +10,9 @@
   "main": "src/worker.js",
   "scripts": {
     "start": "node src/worker.js",
+    "once": "node src/worker.js --once",
     "check": "node --check src/worker.js",
+    "fixtures": "node fixtures/generate.mjs",
     "test": "node --test"
   },
   "dependencies": {

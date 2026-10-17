@@ -1,0 +1,17 @@
+{
+  "business": {
+    "id": 100094,
+    "timezone": "America/New_York",
+    "staffers": [
+      {
+        "id": "Marcus Bell",
+        "name": "Marcus Bell"
+      },
+      {
+        "id": "st_59402",
+        "name": "Andre Lopez"
+      }
+    ],
+    "service_categories": []
+  }
+}

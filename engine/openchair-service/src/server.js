@@ -23,7 +23,7 @@ import { ping } from './db.js';
 import { requireInternalToken } from './security/internalAuth.js';
 
 /** Routes that only the CI3 app or the worker fleet may call. */
-const INTERNAL_PREFIXES = ['/v1/scan', '/v1/market', '/v1/admin'];
+const INTERNAL_PREFIXES = ['/v1/scan', '/v1/market', '/v1/admin', '/v1/discovery', '/v1/jobs'];
 
 /** @param {string} pathname @returns {boolean} */
 function isInternalRoute(pathname) {
@@ -91,6 +91,18 @@ const server = createServer(async (req, res) => {
       return h(req, res, url);
     }
 
+    if (path.startsWith('/v1/discovery/')) {
+      const h = await loadHandler('./routes/discovery.js');
+      if (!h) return json(res, 503, { ok: false, error: 'discovery surface unavailable' });
+      return h(req, res, url);
+    }
+
+    if (path.startsWith('/v1/jobs/')) {
+      const h = await loadHandler('./routes/jobs.js');
+      if (!h) return json(res, 503, { ok: false, error: 'jobs surface unavailable' });
+      return h(req, res, url);
+    }
+
     return json(res, 404, { ok: false, error: 'not found' });
   } catch (err) {
     process.stderr.write(`[server] ${path}: ${err?.stack ?? err}\n`);
@@ -101,6 +113,11 @@ const server = createServer(async (req, res) => {
 // Bind to loopback. CI3 reaches this over a server-side hop; nothing about it is
 // browser-facing, so there is no reason for it to have a public socket.
 server.listen(config.port, '127.0.0.1', () => {
+  if (config.jobs.enabled) {
+    import('./jobs/scheduler.js').then((m) => m.startScheduler()).catch((err) => {
+      process.stderr.write(`[jobs] scheduler unavailable: ${err?.message}\n`);
+    });
+  }
   process.stdout.write(
     `openchair-service on 127.0.0.1:${config.port} (db ${config.db.database}) — no browser, no egress\n`,
   );

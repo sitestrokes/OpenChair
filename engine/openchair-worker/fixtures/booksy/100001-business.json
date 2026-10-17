@@ -1,0 +1,86 @@
+{
+  "business": {
+    "id": 100001,
+    "name": "Fade Lab (synthetic)",
+    "timezone": "America/New_York",
+    "staffers": [
+      {
+        "id": "st_51001",
+        "name": "Marcus Bell",
+        "position": "Barber",
+        "photo": "https://example.invalid/p/st_51001.jpg"
+      },
+      {
+        "id": "st_51002",
+        "name": "Andre Lopez",
+        "position": "Barber",
+        "photo": "https://example.invalid/p/st_51002.jpg"
+      },
+      {
+        "id": "st_51003",
+        "name": "Tasha Greene",
+        "position": "Barber",
+        "photo": "https://example.invalid/p/st_51003.jpg"
+      },
+      {
+        "id": "st_51004",
+        "name": "Devon Price",
+        "position": "Barber",
+        "photo": "https://example.invalid/p/st_51004.jpg"
+      },
+      {
+        "id": "st_51005",
+        "name": "Luis Ortega",
+        "position": "Barber",
+        "photo": "https://example.invalid/p/st_51005.jpg"
+      }
+    ],
+    "service_categories": [
+      {
+        "name": "Haircuts",
+        "services": [
+          {
+            "id": 9001,
+            "name": "Skin Fade",
+            "variants": [
+              {
+                "duration": 45,
+                "price": 40
+              }
+            ]
+          },
+          {
+            "id": 9002,
+            "name": "Classic Cut",
+            "variants": [
+              {
+                "duration": 30,
+                "price": 32
+              }
+            ]
+          },
+          {
+            "id": 9003,
+            "name": "Beard Trim",
+            "variants": [
+              {
+                "duration": 20,
+                "price": 18
+              }
+            ]
+          },
+          {
+            "id": 9004,
+            "name": "Cut + Beard",
+            "variants": [
+              {
+                "duration": 60,
+                "price": 55
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

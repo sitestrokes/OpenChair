@@ -1,0 +1,44 @@
+{
+  "_comment": "Booking URLs per case, for tests and for seeding oc_business in the end-to-end run. SYNTHETIC.",
+  "timezone": "America/New_York",
+  "horizonDays": 14,
+  "staffNames": [
+    "Marcus Bell",
+    "Andre Lopez",
+    "Tasha Greene",
+    "Devon Price",
+    "Luis Ortega",
+    "Kayla Moore",
+    "Jasmine Ortiz",
+    "Ray Chen",
+    "Nina Patel",
+    "Omar Haddad",
+    "Chris Varga",
+    "Imani Brooks",
+    "Sam Whitaker",
+    "Leo Marin"
+  ],
+  "urls": {
+    "booksy": {
+      "hungry": "https://booksy.com/en-us/100001_fade-lab_barber-shop_134763_tampa",
+      "slammed": "https://booksy.com/en-us/100002_bayshore-cuts_barber-shop_134763_tampa",
+      "steady": "https://booksy.com/en-us/100003_tampa-heights-trim_barber-shop_134763_tampa",
+      "blocked": "https://booksy.com/en-us/100090_blocked-shop_barber-shop_134763_tampa",
+      "notFound": "https://booksy.com/en-us/100091_gone-shop_barber-shop_134763_tampa",
+      "captcha": "https://booksy.com/en-us/100092_captcha-shop_barber-shop_134763_tampa",
+      "stale": "https://booksy.com/en-us/100093_stale-shop_barber-shop_134763_tampa",
+      "leak": "https://booksy.com/en-us/100094_leaky-shop_barber-shop_134763_tampa",
+      "partial": "https://booksy.com/en-us/100095_short-horizon_barber-shop_134763_tampa"
+    },
+    "square_appointments": {
+      "hungry": "https://book.squareup.com/appointments/sqhungry01/location/LT0001/services",
+      "slammed": "https://book.squareup.com/appointments/sqslammed02/location/LT0002/services",
+      "steady": "https://book.squareup.com/appointments/sqsteady03/location/LT0003/services",
+      "blocked": "https://book.squareup.com/appointments/sqblocked09/location/LT0009/services",
+      "captcha": "https://book.squareup.com/appointments/sqcaptcha08/location/LT0008/services",
+      "stale": "https://book.squareup.com/appointments/sqstale07/location/LT0007/services",
+      "leak": "https://book.squareup.com/appointments/sqleak06/location/LT0006/services",
+      "notFound": "https://book.squareup.com/appointments/sqgone05/location/LT0005/services"
+    }
+  }
+}

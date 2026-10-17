@@ -1,0 +1,322 @@
+{
+  "slot_minutes": 15,
+  "range": {
+    "start_date": "{{D0}}",
+    "end_date": "{{D13}}"
+  },
+  "business_hours": [
+    {
+      "date": "{{D0}}",
+      "team_member_id": "TMb1",
+      "opens": "09:00",
+      "closes": "19:00"
+    },
+    {
+      "date": "{{D0}}",
+      "team_member_id": "TMb2",
+      "opens": "09:00",
+      "closes": "19:00"
+    },
+    {
+      "date": "{{D0}}",
+      "team_member_id": "TMb3",
+      "opens": "09:00",
+      "closes": "19:00"
+    },
+    {
+      "date": "{{D1}}",
+      "team_member_id": "TMb1",
+      "opens": "09:00",
+      "closes": "19:00"
+    },
+    {
+      "date": "{{D1}}",
+      "team_member_id": "TMb2",
+      "opens": "09:00",
+      "closes": "19:00"
+    },
+    {
+      "date": "{{D1}}",
+      "team_member_id": "TMb3",
+      "opens": "09:00",
+      "closes": "19:00"
+    },
+    {
+      "date": "{{D2}}",
+      "team_member_id": "TMb1",
+      "opens": "10:00",
+      "closes": "16:00"
+    },
+    {
+      "date": "{{D2}}",
+      "team_member_id": "TMb2",
+      "opens": "10:00",
+      "closes": "16:00"
+    },
+    {
+      "date": "{{D2}}",
+      "team_member_id": "TMb3",
+      "opens": "10:00",
+      "closes": "16:00"
+    },
+    {
+      "date": "{{D4}}",
+      "team_member_id": "TMb1",
+      "opens": "09:00",
+      "closes": "19:00"
+    },
+    {
+      "date": "{{D4}}",
+      "team_member_id": "TMb2",
+      "opens": "09:00",
+      "closes": "19:00"
+    },
+    {
+      "date": "{{D4}}",
+      "team_member_id": "TMb3",
+      "opens": "09:00",
+      "closes": "19:00"
+    },
+    {
+      "date": "{{D5}}",
+      "team_member_id": "TMb1",
+      "opens": "09:00",
+      "closes": "19:00"
+    },
+    {
+      "date": "{{D5}}",
+      "team_member_id": "TMb2",
+      "opens": "09:00",
+      "closes": "19:00"
+    },
+    {
+      "date": "{{D5}}",
+      "team_member_id": "TMb3",
+      "opens": "09:00",
+      "closes": "19:00"
+    },
+    {
+      "date": "{{D6}}",
+      "team_member_id": "TMb1",
+      "opens": "09:00",
+      "closes": "19:00"
+    },
+    {
+      "date": "{{D6}}",
+      "team_member_id": "TMb2",
+      "opens": "09:00",
+      "closes": "19:00"
+    },
+    {
+      "date": "{{D6}}",
+      "team_member_id": "TMb3",
+      "opens": "09:00",
+      "closes": "19:00"
+    },
+    {
+      "date": "{{D7}}",
+      "team_member_id": "TMb1",
+      "opens": "09:00",
+      "closes": "19:00"
+    },
+    {
+      "date": "{{D7}}",
+      "team_member_id": "TMb2",
+      "opens": "09:00",
+      "closes": "19:00"
+    },
+    {
+      "date": "{{D7}}",
+      "team_member_id": "TMb3",
+      "opens": "09:00",
+      "closes": "19:00"
+    },
+    {
+      "date": "{{D8}}",
+      "team_member_id": "TMb1",
+      "opens": "09:00",
+      "closes": "19:00"
+    },
+    {
+      "date": "{{D8}}",
+      "team_member_id": "TMb2",
+      "opens": "09:00",
+      "closes": "19:00"
+    },
+    {
+      "date": "{{D8}}",
+      "team_member_id": "TMb3",
+      "opens": "09:00",
+      "closes": "19:00"
+    },
+    {
+      "date": "{{D9}}",
+      "team_member_id": "TMb1",
+      "opens": "10:00",
+      "closes": "16:00"
+    },
+    {
+      "date": "{{D9}}",
+      "team_member_id": "TMb2",
+      "opens": "10:00",
+      "closes": "16:00"
+    },
+    {
+      "date": "{{D9}}",
+      "team_member_id": "TMb3",
+      "opens": "10:00",
+      "closes": "16:00"
+    },
+    {
+      "date": "{{D11}}",
+      "team_member_id": "TMb1",
+      "opens": "09:00",
+      "closes": "19:00"
+    },
+    {
+      "date": "{{D11}}",
+      "team_member_id": "TMb2",
+      "opens": "09:00",
+      "closes": "19:00"
+    },
+    {
+      "date": "{{D11}}",
+      "team_member_id": "TMb3",
+      "opens": "09:00",
+      "closes": "19:00"
+    },
+    {
+      "date": "{{D12}}",
+      "team_member_id": "TMb1",
+      "opens": "09:00",
+      "closes": "19:00"
+    },
+    {
+      "date": "{{D12}}",
+      "team_member_id": "TMb2",
+      "opens": "09:00",
+      "closes": "19:00"
+    },
+    {
+      "date": "{{D12}}",
+      "team_member_id": "TMb3",
+      "opens": "09:00",
+      "closes": "19:00"
+    },
+    {
+      "date": "{{D13}}",
+      "team_member_id": "TMb1",
+      "opens": "09:00",
+      "closes": "19:00"
+    },
+    {
+      "date": "{{D13}}",
+      "team_member_id": "TMb2",
+      "opens": "09:00",
+      "closes": "19:00"
+    },
+    {
+      "date": "{{D13}}",
+      "team_member_id": "TMb3",
+      "opens": "09:00",
+      "closes": "19:00"
+    }
+  ],
+  "availabilities": [
+    {
+      "start_at": "{{D12}}T11:45:00-04:00",
+      "team_member_id": "TMb1",
+      "duration_minutes": 15
+    },
+    {
+      "start_at": "{{D12}}T09:15:00-04:00",
+      "team_member_id": "TMb2",
+      "duration_minutes": 15
+    },
+    {
+      "start_at": "{{D12}}T11:45:00-04:00",
+      "team_member_id": "TMb2",
+      "duration_minutes": 15
+    },
+    {
+      "start_at": "{{D12}}T15:00:00-04:00",
+      "team_member_id": "TMb2",
+      "duration_minutes": 15
+    },
+    {
+      "start_at": "{{D12}}T16:30:00-04:00",
+      "team_member_id": "TMb2",
+      "duration_minutes": 15
+    },
+    {
+      "start_at": "{{D12}}T16:45:00-04:00",
+      "team_member_id": "TMb2",
+      "duration_minutes": 15
+    },
+    {
+      "start_at": "{{D12}}T17:30:00-04:00",
+      "team_member_id": "TMb2",
+      "duration_minutes": 15
+    },
+    {
+      "start_at": "{{D13}}T09:00:00-04:00",
+      "team_member_id": "TMb2",
+      "duration_minutes": 15
+    },
+    {
+      "start_at": "{{D13}}T09:30:00-04:00",
+      "team_member_id": "TMb2",
+      "duration_minutes": 15
+    },
+    {
+      "start_at": "{{D13}}T11:15:00-04:00",
+      "team_member_id": "TMb2",
+      "duration_minutes": 15
+    },
+    {
+      "start_at": "{{D13}}T11:45:00-04:00",
+      "team_member_id": "TMb2",
+      "duration_minutes": 15
+    },
+    {
+      "start_at": "{{D13}}T14:45:00-04:00",
+      "team_member_id": "TMb2",
+      "duration_minutes": 15
+    },
+    {
+      "start_at": "{{D13}}T18:30:00-04:00",
+      "team_member_id": "TMb2",
+      "duration_minutes": 15
+    },
+    {
+      "start_at": "{{D13}}T09:00:00-04:00",
+      "team_member_id": "TMb3",
+      "duration_minutes": 15
+    },
+    {
+      "start_at": "{{D13}}T14:15:00-04:00",
+      "team_member_id": "TMb3",
+      "duration_minutes": 15
+    },
+    {
+      "start_at": "{{D13}}T15:00:00-04:00",
+      "team_member_id": "TMb3",
+      "duration_minutes": 15
+    },
+    {
+      "start_at": "{{D13}}T16:30:00-04:00",
+      "team_member_id": "TMb3",
+      "duration_minutes": 15
+    },
+    {
+      "start_at": "{{D13}}T17:30:00-04:00",
+      "team_member_id": "TMb3",
+      "duration_minutes": 15
+    },
+    {
+      "start_at": "{{D13}}T17:45:00-04:00",
+      "team_member_id": "TMb3",
+      "duration_minutes": 15
+    }
+  ]
+}

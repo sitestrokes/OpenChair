@@ -109,6 +109,10 @@ export async function claim(workerId, limit = 10) {
                  AND p.rollout IN ('live', 'shadow')
                  AND b.status = 'active'
                  AND b.suppressed_at IS NULL
+                 -- Seeded demo rows (oc_demo_tampa.sql) point at example.invalid.
+                 -- Reading them would only fail, and ten failures park a demo
+                 -- business as unreachable — so they are never claimed.
+                 AND b.platform_business_key NOT LIKE 'demo-%'
                ORDER BY q.priority ASC, q.due_at ASC
                LIMIT ${n}
             ) AS candidates

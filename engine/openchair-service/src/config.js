@@ -80,6 +80,65 @@ export const config = {
    * than assumed.
    */
   costBudgetMicros: int('OC_COST_BUDGET_MICROS', 20000),
+
+  /** Retention, in days (30-data-model.md §7). */
+  retention: {
+    /** oc_scan_snapshot.purge_after = captured_on + this. docs/70 §3.3. */
+    snapshotDays: int('OC_SNAPSHOT_RETENTION_DAYS', 14),
+    /** oc_staff.display_name is personal data; it is NULLed after this. */
+    staffNameDays: int('OC_STAFF_NAME_RETENTION_DAYS', 30),
+    /** Rows deleted per purge pass, so a backlog never holds a long lock. */
+    purgeBatch: int('OC_PURGE_BATCH', 5000),
+  },
+
+  discovery: {
+    /** Candidates processed per discovery pass. */
+    batch: int('OC_DISCOVERY_BATCH', 200),
+    /** A listing we could not place is re-probed after this many days. */
+    recheckDays: int('OC_DISCOVERY_RECHECK_DAYS', 90),
+  },
+
+  jobs: {
+    /** In-process scheduler: off unless OC_JOBS=1 (cron + run.js is the default). */
+    enabled: str('OC_JOBS', '0') === '1',
+    /** How often the light jobs (discover, enqueue-due, reap) run in-process. */
+    tickMinutes: int('OC_JOBS_TICK_MIN', 10),
+  },
+
+  /** production ⇒ tokens are mandatory (see assertProductionSecrets below). */
+  env: str('NODE_ENV', 'development'),
+  requireTokens: str('OC_REQUIRE_TOKENS', '0') === '1',
 };
+
+/**
+ * Fail closed in production.
+ *
+ * In development an empty token disables the gate, matching the host engine's
+ * BRIDGE_INTERNAL_TOKEN behaviour — convenient on a laptop, and fatal on a
+ * server: anyone who can reach :4100 could then report a fabricated scan for any
+ * business, and the Meter would publish it. So in production (or when
+ * OC_REQUIRE_TOKENS=1) a missing token is a refusal to start, not a warning
+ * somebody has to notice in a log. docs/70-radar-build.md §4, §6.
+ *
+ * Runs at import, so `node src/server.js` and every job exit non-zero before
+ * opening a socket or a database connection.
+ */
+export function assertProductionSecrets(cfg = config) {
+  const strict = cfg.env === 'production' || cfg.requireTokens;
+  if (!strict) return;
+  const missing = [];
+  if (!cfg.security.internalToken) missing.push('OC_INTERNAL_TOKEN');
+  if (!cfg.security.workerToken) missing.push('OC_WORKER_CALLBACK_TOKEN');
+  if (missing.length) {
+    throw new Error(`openchair-service refuses to start: ${missing.join(' and ')} must be set when NODE_ENV=production.`);
+  }
+  for (const [k, v] of [['OC_INTERNAL_TOKEN', cfg.security.internalToken], ['OC_WORKER_CALLBACK_TOKEN', cfg.security.workerToken]]) {
+    if (String(v).length < 24) {
+      throw new Error(`openchair-service refuses to start: ${k} is shorter than 24 characters.`);
+    }
+  }
+}
+
+assertProductionSecrets(config);
 
 export default config;
