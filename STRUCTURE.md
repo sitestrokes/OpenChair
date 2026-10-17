@@ -1,6 +1,8 @@
 # OpenChair — project structure
 
-**Status:** Phases 0 and 2–8 are built and green. **Phase 1 (the Radar spike) has not been run**,
+**Status:** Phases 0 and 2–8 are built and green, plus the **signature visuals**
+(Chair Score, five shareable cards, the redesigned business screen and share links —
+[docs/60-signature-visuals.md](docs/60-signature-visuals.md)). **Phase 1 (the Radar spike) has not been run**,
 and it gates everything that turns seeded data into observed data — see §8.
 
     197 automated checks, all passing
@@ -134,7 +136,14 @@ porting those modules makes that structural rather than a policy anyone can regr
 | `tests/` | Wording-lock assertion; the no-path-to-telephony assertion | [05-prd §8](docs/05-prd.md) | 6 |
 
 **Screens:** `firstrun` · `today` · `scan` · `scan_progress` · `radar` ★hero · `business` · `pitch` ·
-`onepager` · `prospects` · `ledger` · `coverage` · `adapters` · `billing`
+`onepager` · `prospects` · `ledger` · `coverage` · `adapters` · `billing` · `how_it_works`
+
+**Signature visuals** (docs/60): `libraries/Oc_visuals_lib.php` builds one card payload;
+`views/visuals/_chair_week · _chair_map · _receipt · _same_day · _progress` render it, through the
+shared `_grid` and `_card_foot`; `card_page.php` is the standalone page (`/openchair/card/{id}/{kind}`,
+`?size=phone`, `?print=1`, `?format=json`). `models/Oc_share_model.php` + public
+`controllers/Oc_share.php` serve frozen cards at `/c/{token}` (migration `oc_010_share_cards.sql`).
+CSS: `assets/css/oc-visuals.css` + `assets/css/visuals/*.css`; export: `assets/js/oc-card-export.js`.
 
 **Rail grouping** follows [ui/prototype.html](ui/prototype.html): **Prospect** (Today · Radar · Meter ·
 Pitch · Prospects) · **Retain** (Ledger) · **Operate** (Coverage). `Prospects` is added to the

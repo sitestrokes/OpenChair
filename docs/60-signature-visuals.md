@@ -1,7 +1,7 @@
 # 60 — Signature Visuals: goal and integration plan
 
 **Source:** `OpenChair_Signature_Visuals.pdf` (8 pages, supplied by the founder, Oct 2026).
-**Status:** plan approved for build in this change. Every page of the PDF maps to a shipped surface below.
+**Status:** built. Every page of the PDF maps to a shipped surface below; W0–W6 complete, integrity suite 68/68 green.
 
 ---
 
