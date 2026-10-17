@@ -593,3 +593,24 @@ if (!function_exists('oc_chair_glyph')) {
         }
     }
 }
+
+if (!function_exists('oc_second_number')) {
+    /**
+     * A list row's "second number" (PDF p.6): the unsold range for a Hungry or
+     * Steady shop, the wait for a Slammed one. A Slammed shop has no unsold
+     * money to show, and "$0–0 unsold" next to it reads as a broken figure.
+     *
+     * @param object $b a row with latest_* columns
+     * @return array{0:string, 1:string} [figure, caption]
+     */
+    function oc_second_number($b)
+    {
+        $band = oc_chair_band_for($b);
+        if ($band === 'slammed' && isset($b->latest_days_to_next) && $b->latest_days_to_next !== null) {
+            return [oc_next_available($b->latest_days_to_next), 'first opening, new client'];
+        }
+        $lo = isset($b->latest_empty_chair_cents) ? $b->latest_empty_chair_cents : null;
+        if ($lo === null || (int) $lo <= 0) { return ['—', 'no unsold time to price']; }
+        return [oc_range_short($lo, isset($b->latest_empty_chair_hi_cents) ? $b->latest_empty_chair_hi_cents : null), 'unsold this week'];
+    }
+}

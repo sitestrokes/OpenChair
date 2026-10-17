@@ -25,12 +25,12 @@ $back  = 'openchair/prospects' . ($f_stage !== 'all' ? '?stage=' . urlencode($f_
 
   <div class="pagehead">
     <div>
-      <h1>Prospects</h1>
+      <h1>My pipeline</h1>
       <p>Businesses you are watching, and where each one sits. Watching a business raises its scan
          priority and starts its Ledger trend &mdash; it never queues a second crawl.</p>
     </div>
     <div class="spacer"></div>
-    <a class="btn" href="<?= site_url('openchair/radar') ?>">Open Radar</a>
+    <a class="btn" href="<?= site_url('openchair/radar') ?>">Find businesses</a>
   </div>
 
   <?php if ($total === 0): ?>
@@ -39,10 +39,10 @@ $back  = 'openchair/prospects' . ($f_stage !== 'all' ? '?stage=' . urlencode($f_
       <div class="empty">
         <div class="e" aria-hidden="true">&#9634;</div>
         <h4>Nothing on the watchlist yet</h4>
-        <p>Open Radar, find the reddest pin in your market, and add it. From then on it appears in your
+        <p>Open Find businesses, find the reddest pin in your market, and add it. From then on it appears in your
            8am list, and eight weeks of its vacancy history become the report you show them once they
            are a client.</p>
-        <a class="btn btn-primary" href="<?= site_url('openchair/radar') ?>">Open Radar</a>
+        <a class="btn btn-primary" href="<?= site_url('openchair/radar') ?>">Find businesses</a>
       </div>
     </div>
 
@@ -100,7 +100,7 @@ $back  = 'openchair/prospects' . ($f_stage !== 'all' ? '?stage=' . urlencode($f_
               <?php if ($low): ?>
                 &mdash;<small>not enough data</small>
               <?php else: ?>
-                <?= html_escape(oc_range_short($p->latest_empty_chair_cents, $p->latest_empty_chair_hi_cents)) ?><small>unsold this week</small>
+                <?php $sn = oc_second_number($p); ?><?= html_escape($sn[0]) ?><small><?= html_escape($sn[1]) ?></small>
               <?php endif; ?>
             </span>
 

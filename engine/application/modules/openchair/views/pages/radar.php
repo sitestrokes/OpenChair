@@ -134,7 +134,7 @@ $qs = function ($over) use ($f_bucket, $f_sort) {
               <?php if ($low): ?>
                 &mdash;<small>not enough data</small>
               <?php else: ?>
-                <?= html_escape(oc_range_short($b->latest_empty_chair_cents, $b->latest_empty_chair_hi_cents)) ?><small>unsold this week</small>
+                <?php $sn = oc_second_number($b); ?><?= html_escape($sn[0]) ?><small><?= html_escape($sn[1]) ?></small>
               <?php endif; ?>
             </span>
           </a>
