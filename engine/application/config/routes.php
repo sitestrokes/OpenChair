@@ -58,6 +58,10 @@ $route['openchair/business/(:num)']  = 'openchair/openchair/business/$1';
 $route['openchair/pitch']            = 'openchair/openchair/pitch';
 $route['openchair/pitch/(:num)']     = 'openchair/openchair/pitch/$1';
 $route['openchair/onepager/(:num)']  = 'openchair/openchair/onepager/$1';
+// Signature visuals (docs/60-signature-visuals.md): a card on its own page.
+$route['openchair/card/(:num)/(:any)'] = 'openchair/openchair/card/$1/$2';
+$route['openchair/card/(:num)']        = 'openchair/openchair/card/$1/week';
+$route['openchair/how-it-works']       = 'openchair/openchair/how';
 // Watchlist + pipeline actions (POST). Before the catch-all.
 $route['openchair/watch']      = 'openchair/openchair/watch';
 $route['openchair/unwatch']    = 'openchair/openchair/unwatch';

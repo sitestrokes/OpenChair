@@ -337,3 +337,233 @@ if (!function_exists('oc_csrf')) {
              . '" value="' . $CI->security->get_csrf_hash() . '">';
     }
 }
+
+// ── Chair Score v1.0 (docs/60-signature-visuals.md §4.1) ─────────────────────
+//
+// The signature visuals replace the abstract Vacancy Score with the number an
+// owner is proud or ashamed of: out of every 100 chair-hours put online, how many
+// got booked. It is the SAME Meter observation, inverted — no new scoring math —
+// so every screen and every card that shows it goes through these functions and
+// a chip, a pin, a pill and a card can never disagree about one business.
+
+if (!function_exists('oc_chair_score')) {
+    /**
+     * Chair Score 0..100 from the Meter's vacancy, or null when there is none.
+     * Ungated — callers that PRINT it use oc_chair_score_or_gap().
+     *
+     * @param int|null $vacancy_bp 0..10000
+     * @return int|null
+     */
+    function oc_chair_score($vacancy_bp)
+    {
+        if ($vacancy_bp === null || $vacancy_bp === '') { return null; }
+        return max(0, min(100, 100 - (int) round(((int) $vacancy_bp) / 100)));
+    }
+}
+
+if (!function_exists('oc_chair_score_or_gap')) {
+    /**
+     * The Chair Score as printable text — or the honest gap below the confidence
+     * floor (rule 3). Mirrors oc_score_or_gap(): a string, so nobody can do
+     * arithmetic on "—" and print the result.
+     *
+     * @param int|null $vacancy_bp
+     * @param int|null $confidence
+     * @return string
+     */
+    function oc_chair_score_or_gap($vacancy_bp, $confidence)
+    {
+        if (oc_below_floor($confidence) || $vacancy_bp === null) { return '—'; }
+        return (string) oc_chair_score($vacancy_bp);
+    }
+}
+
+if (!function_exists('oc_chair_band')) {
+    /**
+     * The band for a Chair Score: hungry | steady | slammed, or null when there
+     * is nothing we would stand behind.
+     *
+     * Hungry < 50, Steady 50–84, Slammed 85+ (PDF p.6). Lead time overrides the
+     * score: ten days to a new client's first opening is Slammed whatever the
+     * grid says (35-scoring-model.md §4.2).
+     *
+     * @param int|null $score        0..100 (oc_chair_score)
+     * @param int|null $days_to_next first opening for a new client
+     * @param int|null $confidence   when given, below the floor ⇒ null
+     * @return string|null
+     */
+    function oc_chair_band($score, $days_to_next = null, $confidence = null)
+    {
+        if ($score === null) { return null; }
+        if (func_num_args() >= 3 && oc_below_floor($confidence)) { return null; }
+        $CI   = get_instance();
+        $low  = (int) ($CI->config->item('oc_chair_hungry_below') ?: 50);
+        $high = (int) ($CI->config->item('oc_chair_slammed_from') ?: 85);
+        $wait = (int) ($CI->config->item('oc_chair_wait_slammed_days') ?: 10);
+
+        if ($days_to_next !== null && (int) $days_to_next >= $wait) { return 'slammed'; }
+        if ((int) $score >= $high) { return 'slammed'; }
+        if ((int) $score <  $low)  { return 'hungry'; }
+        return 'steady';
+    }
+}
+
+if (!function_exists('oc_chair_band_for')) {
+    /**
+     * The band for a business row — the one call views make.
+     *
+     * @param object $b an oc_business row (latest_* columns)
+     * @return string|null
+     */
+    function oc_chair_band_for($b)
+    {
+        return oc_chair_band(
+            oc_chair_score($b->latest_vacancy_bp ?? null),
+            isset($b->latest_days_to_next) ? $b->latest_days_to_next : null,
+            isset($b->latest_confidence) ? $b->latest_confidence : null
+        );
+    }
+}
+
+if (!function_exists('oc_chair_band_label')) {
+    /**
+     * @param string|null $band
+     * @return string
+     */
+    function oc_chair_band_label($band)
+    {
+        switch ($band) {
+            case 'hungry':  return 'Hungry';
+            case 'steady':  return 'Steady';
+            case 'slammed': return 'Slammed';
+            default:        return 'Not enough data yet';
+        }
+    }
+}
+
+if (!function_exists('oc_chair_band_need')) {
+    /**
+     * What the band means to the owner, in their words (PDF p.1/p.2/p.6).
+     *
+     * @param string|null $band
+     * @return string
+     */
+    function oc_chair_band_need($band)
+    {
+        switch ($band) {
+            case 'hungry':  return 'needs customers';
+            case 'steady':  return 'uneven week';
+            case 'slammed': return 'needs more capacity';
+            default:        return 'still checking';
+        }
+    }
+}
+
+if (!function_exists('oc_chair_band_class')) {
+    /**
+     * CSS modifier for a band — reuses the shell's hot / mid / cool / low so the
+     * existing pills, pins and chips colour the same way. Every caller also
+     * prints the label (NFR-8, never meaning by colour alone).
+     *
+     * @param string|null $band
+     * @return string
+     */
+    function oc_chair_band_class($band)
+    {
+        switch ($band) {
+            case 'hungry':  return 'hot';
+            case 'steady':  return 'mid';
+            case 'slammed': return 'cool';
+            default:        return 'low';
+        }
+    }
+}
+
+if (!function_exists('oc_chair_margin')) {
+    /**
+     * The ± on a Chair Score. Widens as confidence falls, for the same reason the
+     * money is a range: a shaky read and a solid one must not look equally sure.
+     *
+     * @param int|null $confidence
+     * @return int
+     */
+    function oc_chair_margin($confidence)
+    {
+        $c = max(0, min(100, (int) $confidence));
+        return max(2, (int) round((100 - $c) / 2.5));
+    }
+}
+
+if (!function_exists('oc_method_version')) {
+    /** @return string e.g. "Chair Score v1.0" — printed on every card */
+    function oc_method_version()
+    {
+        $v = (string) get_instance()->config->item('oc_chair_method');
+        return 'Chair Score ' . ($v !== '' ? $v : 'v1.0');
+    }
+}
+
+if (!function_exists('oc_money_short')) {
+    /**
+     * Compact money for small tiles: "$2.9k". Used ONLY as one end of a range —
+     * see oc_range_short().
+     *
+     * @param int $cents
+     * @return string
+     */
+    function oc_money_short($cents)
+    {
+        $d = (int) round($cents / 100);
+        if ($d < 1000) { return '$' . $d; }
+        $k = $d / 1000;
+        return '$' . ($k >= 10 ? (string) (int) round($k) : rtrim(rtrim(number_format($k, 1), '0'), '.')) . 'k';
+    }
+}
+
+if (!function_exists('oc_range_short')) {
+    /**
+     * "$2.9k–4.1k" — a compact RANGE for tiles where the full one will not fit
+     * (rule 4 still holds: two ends, never one).
+     *
+     * @param int $lo_cents
+     * @param int $hi_cents
+     * @return string
+     */
+    function oc_range_short($lo_cents, $hi_cents)
+    {
+        return oc_money_short($lo_cents) . '–' . ltrim(oc_money_short($hi_cents), '$');
+    }
+}
+
+if (!function_exists('oc_range_tight')) {
+    /**
+     * "$2,890–4,125" — the receipt/card form: one currency sign, en dash, no
+     * spaces. Still two ends (rule 4).
+     *
+     * @param int $lo_cents
+     * @param int $hi_cents
+     * @return string
+     */
+    function oc_range_tight($lo_cents, $hi_cents)
+    {
+        return oc_money($lo_cents) . '–' . ltrim(oc_money($hi_cents), '$');
+    }
+}
+
+if (!function_exists('oc_checked_phrase')) {
+    /**
+     * "Checked Oct 15, 2026 (2 days ago)" — data age in the words a card prints
+     * (rule 6).
+     *
+     * @param string|null $ts
+     * @return string
+     */
+    function oc_checked_phrase($ts)
+    {
+        if (empty($ts) || !strtotime($ts)) { return 'Not checked yet'; }
+        $t    = strtotime($ts);
+        $days = (int) floor((time() - $t) / 86400);
+        $ago  = $days <= 0 ? 'today' : ($days === 1 ? '1 day ago' : $days . ' days ago');
+        return 'Checked ' . date('M j, Y', $t) . ' (' . $ago . ')';
+    }
+}

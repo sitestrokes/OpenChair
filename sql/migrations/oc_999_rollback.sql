@@ -15,6 +15,9 @@
 SET @oc_fk := @@FOREIGN_KEY_CHECKS;
 SET FOREIGN_KEY_CHECKS = 0;
 
+-- oc_010 — share cards (its oc_prospect columns go with oc_prospect below) ----
+DROP TABLE IF EXISTS `oc_share_link`;
+
 -- oc_006 — alerts / pitch / ledger (tenant surfaces) -------------------------
 DROP TABLE IF EXISTS `oc_ledger_report`;
 DROP TABLE IF EXISTS `oc_pitch`;

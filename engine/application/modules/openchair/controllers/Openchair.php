@@ -32,6 +32,7 @@ class Openchair extends App_Controller
         $this->load->model('openchair/oc_alert_model');
         $this->load->model('openchair/oc_ledger_model');
         $this->load->library('openchair/oc_pitch_lib');
+        $this->load->library('openchair/oc_visuals_lib');
         $this->load->helper('openchair/oc_format');
         $this->load->library('oc_render_lib');
     }
@@ -244,6 +245,69 @@ class Openchair extends App_Controller
         // and no topbar, so it prints as a page rather than as a screenshot of
         // a dashboard.
         $this->load->view('pages/onepager', $this->data);
+    }
+
+    /**
+     * A signature-visual card on its own page (docs/60-signature-visuals.md §3).
+     *
+     * /openchair/card/{id}/{kind} — kind: week | map | receipt | tuesday | progress.
+     * ?size=phone renders the 390px phone variant; ?print=1 opens the print
+     * dialog (the "Download one-pager (PDF)" action); ?format=json returns the
+     * payload, which is what a share link freezes.
+     *
+     * Read-only. Producing a card contacts nobody (rule 7).
+     */
+    public function card($id = null, $kind = 'week')
+    {
+        $b = $id ? $this->oc_business_model->find($id) : null;
+        if (!$b) { show_404(); return; }
+        if (!in_array($kind, Oc_visuals_lib::KINDS, true)) { show_404(); return; }
+
+        $card = $this->oc_visuals_lib->card($b, $kind, $this->_card_ctx($b, $this->input->get('logo') !== '0'));
+
+        if ($this->input->get('format') === 'json') {
+            $this->output->set_content_type('application/json')
+                         ->set_output(json_encode($card, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+            return;
+        }
+
+        $urls = [];
+        foreach (Oc_visuals_lib::KINDS as $k) { $urls[$k] = site_url('openchair/card/' . (int) $b->id . '/' . $k); }
+
+        $this->load->view('visuals/card_page', [
+            'card'      => $card,
+            'card_mode' => 'app',
+            'size'      => $this->input->get('size') === 'phone' ? 'phone' : 'print',
+            'card_urls' => $urls,
+            'back_url'  => site_url('openchair/business/' . (int) $b->id),
+        ]);
+    }
+
+    /** S-how — How the Chair Score works (PDF p.6). */
+    public function how()
+    {
+        $this->_render('pages/how_it_works', 'how', 'How it works');
+    }
+
+    /**
+     * Context every card needs from the tenant layer: the agency brand that goes
+     * in "Prepared by", the sample-data flag, and the campaign start date the
+     * 8-week report annotates. The business itself stays global.
+     *
+     * @param object $b
+     * @param bool   $show_logo
+     * @return array
+     */
+    private function _card_ctx($b, $show_logo = true)
+    {
+        $prospect = $this->oc_prospect_model->find($this->user_id, $b->id);
+        return [
+            'brand'          => isset($this->data['ic_brand']) ? $this->data['ic_brand'] : [],
+            'show_logo'      => $show_logo,
+            'is_demo'        => $this->oc_business_model->is_demo_market($b->city_key),
+            'campaign_start' => ($prospect && !empty($prospect->last_pitched_at))
+                ? substr($prospect->last_pitched_at, 0, 10) : null,
+        ];
     }
 
     /**

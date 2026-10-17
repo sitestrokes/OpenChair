@@ -1,0 +1,163 @@
+/* OpenChair signature visuals — docs/60-signature-visuals.md.
+   The cards are artifacts a consultant SENDS, so they always render in the PDF's
+   warm paper palette whatever theme the app is in. Every class is prefixed
+   (occ- card, ocg- grid) so this file can load inside the app shell without
+   touching a shell selector (integrity test: shell isolation). */
+
+.occ, .ocg {
+  --occ-paper:#FAF5F1; --occ-paper-2:#F4ECE6; --occ-line:#E7DBD3; --occ-rule:#1E1915;
+  --occ-ink:#1E1915; --occ-ink-2:#4A403A; --occ-mute:#8C7F76;
+  --occ-red:#C8391F; --occ-red-soft:#F3D9D2; --occ-red-tx:#B2321A;
+  --occ-green:#0E6B55; --occ-green-2:#13896C; --occ-green-soft:#D9ECE5;
+  --occ-black:#1E1915; --occ-amber:#9A6206;
+  --ocg-e:#C8391F; --ocg-b:#DED3CB; --ocg-x:#EFE6E0; --ocg-u-a:#E4D9D1; --ocg-u-b:#F6F0EB;
+  --occ-display:"Outfit","Manrope",system-ui,sans-serif;
+  --occ-body:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --occ-mono:"Space Mono",ui-monospace,Menlo,monospace;
+}
+
+/* ── Card frame ─────────────────────────────────────────────────────────── */
+.occ{background:var(--occ-paper);color:var(--occ-ink);font-family:var(--occ-body);
+  width:100%;max-width:790px;margin:0 auto;padding:48px 47px 40px;box-sizing:border-box;
+  display:flex;flex-direction:column;min-height:985px;-webkit-font-smoothing:antialiased;
+  font-size:15px;line-height:1.45}
+.occ *{box-sizing:border-box}
+.occ--dark{background:#1E1915;color:#F6EEE8;
+  --occ-ink:#F6EEE8; --occ-ink-2:#D9CCC3; --occ-mute:#A3958B; --occ-line:#3A302A; --occ-rule:#3A302A}
+.occ-body{flex:1}
+
+.occ-kicker{font-family:var(--occ-mono);font-size:13px;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--occ-ink-2);margin:0 0 6px}
+.occ-title{font-family:var(--occ-display);font-weight:800;font-size:38px;line-height:1.05;
+  letter-spacing:-.035em;margin:0}
+.occ-title--xl{font-size:44px}
+.occ-sub{color:var(--occ-ink-2);font-size:16px;margin:8px 0 0}
+.occ-head{display:flex;align-items:flex-start;gap:20px}
+.occ-head > :first-child{flex:1;min-width:0}
+.occ-rule{border:0;border-top:2px solid var(--occ-rule);margin:22px 0 22px}
+
+/* Band pill: label + need under it. Colour is never the only signal — the word is printed. */
+.occ-pill{display:inline-flex;align-items:center;justify-content:center;padding:9px 18px;border-radius:999px;
+  font-family:var(--occ-display);font-weight:800;font-size:17px;letter-spacing:.08em;text-transform:uppercase;
+  color:#fff;background:var(--occ-red)}
+.occ-pill.cool{background:var(--occ-black)}
+.occ-pill.mid{background:var(--occ-green)}
+.occ-pill.low{background:var(--occ-mute)}
+.occ-band{text-align:center;flex:none}
+.occ-band small{display:block;color:var(--occ-ink-2);font-size:13px;margin-top:6px}
+
+/* The big number */
+.occ-score{display:flex;align-items:flex-end;gap:2px;font-family:var(--occ-display);font-weight:800;line-height:.82;
+  letter-spacing:-.06em;font-size:118px;color:var(--occ-red)}
+.occ-score.cool, .occ-score.mid{color:var(--occ-ink)}
+.occ-score small{font-size:24px;letter-spacing:0;color:var(--occ-mute);font-weight:600;margin:0 0 6px 4px}
+.occ-score.is-gap{font-size:30px;line-height:1.1;letter-spacing:-.02em;color:var(--occ-mute)}
+.occ-red{color:var(--occ-red)}
+.occ-green{color:var(--occ-green)}
+
+/* Footer: method + data age on the left, "Prepared by" on the right (rules 5, 6). */
+.occ-foot{display:flex;align-items:flex-end;gap:28px;border-top:1px solid var(--occ-line);
+  padding-top:18px;margin-top:28px;font-size:12.5px;color:var(--occ-ink-2);line-height:1.5}
+.occ-foot p{margin:0;flex:1;max-width:520px}
+.occ-prepared{text-align:right;flex:none;font-size:11.5px;color:var(--occ-ink-2)}
+.occ-prepared b{display:block;font-family:var(--occ-display);font-weight:800;font-size:16px;color:var(--occ-ink);
+  letter-spacing:.01em;margin-top:2px}
+.occ-prepared img{display:block;max-height:34px;max-width:170px;margin:4px 0 0 auto}
+.occ-sample{display:inline-block;font-family:var(--occ-mono);font-size:10px;letter-spacing:.12em;
+  text-transform:uppercase;border:1px dashed var(--occ-mute);border-radius:99px;padding:2px 8px;margin-left:6px}
+
+/* Legend */
+.occ-legend{display:flex;flex-wrap:wrap;align-items:center;gap:8px 22px;margin-top:22px;font-size:14px;color:var(--occ-ink-2)}
+.occ-legend > span{display:inline-flex;align-items:center;gap:8px}
+.occ-key{width:12px;height:18px;border-radius:3px;display:inline-block}
+.occ-key.e{background:var(--ocg-e)}
+.occ-key.b{background:var(--ocg-b)}
+.occ-key.u{background:repeating-linear-gradient(135deg,var(--ocg-u-a) 0 2px,var(--ocg-u-b) 2px 4px)}
+
+/* Stat tiles (map, business screen) */
+.occ-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.occ-tile{background:#fff;border:1px solid var(--occ-line);border-radius:14px;padding:16px 18px}
+.occ-tile .occ-kicker{font-size:11px;margin-bottom:8px}
+.occ-tile b{display:block;font-family:var(--occ-display);font-weight:800;font-size:30px;letter-spacing:-.03em;line-height:1.05}
+.occ-tile small{display:block;color:var(--occ-ink-2);font-size:13px;margin-top:4px}
+
+/* ── The Chair Week grid ────────────────────────────────────────────────── */
+.ocg{--ocg-tile:22px;--ocg-gap:3px;--ocg-daygap:10px;--ocg-hourw:44px;font-family:var(--occ-mono);
+  color:var(--occ-mute,#8C7F76);font-size:12px;width:100%}
+.ocg--md{--ocg-tile:15px;--ocg-gap:2px;--ocg-daygap:8px;--ocg-hourw:30px;font-size:11px}
+.ocg--sm{--ocg-tile:9px;--ocg-gap:1.5px;--ocg-daygap:5px;--ocg-hourw:0px;font-size:9.5px}
+.ocg--nohours{--ocg-hourw:0px}
+.ocg-head, .ocg-row, .ocg-foot{display:grid;grid-template-columns:var(--ocg-hourw) var(--ocg-cols);
+  column-gap:var(--ocg-daygap);align-items:center}
+.ocg--nohours .ocg-head, .ocg--nohours .ocg-row, .ocg--nohours .ocg-foot{grid-template-columns:var(--ocg-cols)}
+.ocg-head{margin-bottom:8px}
+.ocg-dayname{text-align:center;font-weight:700;letter-spacing:.08em;color:var(--occ-ink-2,#4A403A);white-space:nowrap}
+.ocg-dayname.is-shut{color:var(--occ-mute,#8C7F76);opacity:.8}
+.ocg-dayname b{color:var(--occ-ink,#1E1915)}
+.ocg-row{margin-bottom:var(--ocg-gap)}
+.ocg-row:last-child{margin-bottom:0}
+.ocg-hour{text-align:right;padding-right:10px;color:var(--occ-mute,#8C7F76)}
+.ocg-day{display:grid;grid-template-columns:repeat(var(--ocg-chairs),minmax(0,1fr));gap:var(--ocg-gap);height:calc(var(--ocg-tile) * 1.45)}
+.ocg-t{display:block;border-radius:3px;background:var(--ocg-b);min-width:0}
+.ocg--sm .ocg-t{border-radius:1.5px}
+.ocg-e{background:var(--ocg-e)}
+.ocg-b{background:var(--ocg-b)}
+.ocg-u{background:repeating-linear-gradient(135deg,var(--ocg-u-a) 0 2px,var(--ocg-u-b) 2px 4px)}
+.ocg-x{background:var(--ocg-x)}
+.ocg-shut{grid-column:1 / -1;display:block;height:100%;border-radius:4px;background:var(--ocg-x)}
+.ocg-day.is-shut{grid-template-columns:1fr}
+.ocg-foot{margin-top:14px}
+.ocg-foot .ocg-corner{font-size:10.5px;letter-spacing:.08em;color:var(--occ-mute,#8C7F76);text-align:right;padding-right:10px}
+.ocg-count{text-align:center;white-space:nowrap}
+.ocg-count b{font-family:var(--occ-display);font-weight:800;font-size:17px;color:var(--occ-red,#C8391F);letter-spacing:-.02em}
+.ocg-count small{font-size:12px;color:var(--occ-mute,#8C7F76)}
+.ocg-count em{font-style:normal;font-size:10.5px;color:var(--occ-mute,#8C7F76)}
+.ocg-full{display:inline-block;background:var(--occ-black,#1E1915);color:#fff;font-family:var(--occ-display);
+  font-weight:800;font-size:14px;letter-spacing:.06em;padding:4px 16px;border-radius:6px}
+
+/* ── Phone size (390px) — the "Download image (phone size)" variant ───────── */
+.occ-phone .occ, .occ.is-phone{max-width:390px;padding:26px 20px 22px;min-height:0;font-size:13.5px}
+.occ-phone .occ-title, .occ.is-phone .occ-title{font-size:27px}
+.occ-phone .occ-score, .occ.is-phone .occ-score{font-size:76px}
+.occ-phone .occ-pill, .occ.is-phone .occ-pill{font-size:12.5px;padding:6px 12px}
+.occ-phone .occ-kicker, .occ.is-phone .occ-kicker{font-size:10.5px}
+.occ-phone .occ-foot, .occ.is-phone .occ-foot{flex-direction:column;align-items:stretch;gap:12px;font-size:11px}
+.occ-phone .occ-prepared, .occ.is-phone .occ-prepared{text-align:left}
+.occ-phone .occ-prepared img{margin-left:0}
+.occ-phone .occ-tiles{grid-template-columns:1fr}
+.occ-phone .ocg{--ocg-tile:10px;--ocg-gap:1.5px;--ocg-daygap:4px;--ocg-hourw:24px;font-size:9px}
+.occ-phone .ocg-count b{font-size:13px}
+.occ-phone .ocg-count small{display:none}
+.occ-phone .ocg-full{font-size:10px;padding:2px 6px}
+
+@media (max-width:640px){
+  .occ{padding:26px 18px 22px;min-height:0}
+  .occ-title{font-size:28px}
+  .occ-score{font-size:80px}
+  .occ-tiles{grid-template-columns:1fr}
+  .ocg{--ocg-tile:11px;--ocg-gap:1.5px;--ocg-daygap:4px;--ocg-hourw:26px;font-size:9px}
+  .ocg-count b{font-size:13px}
+  .ocg-count small{display:none}
+}
+
+/* ── The card page chrome (not part of the card) ────────────────────────── */
+.occ-page{margin:0;background:#E8DDD5;min-height:100vh;padding:24px 16px 48px;font-family:var(--occ-body,"Manrope",sans-serif)}
+.occ-page.occ-phone{background:#E8DDD5}
+.occ-bar{max-width:790px;margin:0 auto 16px;display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:13px;color:#4A403A}
+.occ-phone .occ-bar{max-width:390px}
+.occ-bar a, .occ-bar button{font:inherit;font-weight:600;color:#1E1915;background:#fff;border:1px solid #D9CBC1;
+  border-radius:999px;padding:7px 14px;text-decoration:none;cursor:pointer}
+.occ-bar a[aria-current="true"]{background:#1E1915;color:#fff;border-color:#1E1915}
+.occ-bar .spacer{flex:1}
+.occ-bar .back{background:none;border:none;padding:7px 0}
+.occ-shadow{box-shadow:0 30px 60px -40px rgba(60,35,20,.45);border-radius:4px;overflow:hidden;max-width:790px;margin:0 auto}
+.occ-phone .occ-shadow{max-width:390px;border-radius:18px}
+.occ-note{max-width:790px;margin:14px auto 0;font-size:12px;color:#6E625A;text-align:center}
+
+@media print{
+  @page{size:auto;margin:0}
+  .occ-page{background:#fff;padding:0}
+  .occ-bar, .occ-note{display:none !important}
+  .occ-shadow{box-shadow:none;border-radius:0}
+  .occ{min-height:100vh;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}

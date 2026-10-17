@@ -56,6 +56,21 @@ $config['oc_stale_after_hours'] = 36;
 // names the measure pulls this string rather than writing its own.
 $config['oc_unit_label'] = 'online-bookable open slots';
 
+// ── Chair Score v1.0 — the signature visuals (docs/60-signature-visuals.md) ──
+// The one number on every card: out of every 100 chair-hours a shop puts online,
+// how many got booked. Higher = busier. The method version is printed on every
+// card so a before/after only ever compares like with like.
+$config['oc_chair_method']        = 'v1.0';
+$config['oc_chair_hungry_below']  = 50;   // Hungry  · under 50 — needs customers
+$config['oc_chair_slammed_from']  = 85;   // Slammed · 85+      — needs capacity
+// Lead time overrides the score (35-scoring-model.md §4.2): a shop a new client
+// cannot get into for this many days is turning people away, whatever its score.
+$config['oc_chair_wait_slammed_days'] = 10;
+// "Not enough data yet" until this share of the week's hours has been seen.
+$config['oc_chair_min_seen_pct']  = 70;
+// Share links preview in iMessage/WhatsApp and expire after this many days.
+$config['oc_share_ttl_days']      = 30;
+
 // ── Anti-bot tier ceiling ────────────────────────────────────────────────────
 // Tier 3 (stealth + residential rotation) is out of scope by decision, not by
 // configuration — it is the largest legal exposure (DMCA §1201) and the largest
