@@ -95,7 +95,7 @@ $css_v = '?v=' . @filemtime(FCPATH . 'assets/css/visuals/business.css');
       <div class="ocb-chips">
         <span class="ocb-chip ocb-chip--<?= $cls ?>"><?= html_escape($s['score']['label']) ?><?= $band ? ' &middot; ' . html_escape($s['score']['need']) : '' ?></span>
         <span class="ocb-chip ocb-chip--line">Checked <?= html_escape($s['checked']['age']) ?></span>
-        <?php if ($watched): ?><span class="ocb-chip ocb-chip--watch"><span aria-hidden="true">&#9680;</span> Watching</span><?php endif; ?>
+        <?php if ($watched): ?><span class="ocb-chip ocb-chip--watch"><span class="ocb-half" aria-hidden="true"></span> Watching</span><?php endif; ?>
         <?php if ($is_demo): ?><span class="ocb-chip ocb-chip--line">Sample data</span><?php endif; ?>
       </div>
     </div>
@@ -128,7 +128,7 @@ $css_v = '?v=' . @filemtime(FCPATH . 'assets/css/visuals/business.css');
         elseif ($i < $at || ($i === 5 && $stage === 'won')) { $state = 'done'; }
         elseif ($i === $at && $watched) { $state = 'now'; }
         else { $state = 'todo'; }
-        $glyph = ['done' => '&#10003;', 'now' => '&#9680;', 'todo' => '&#9675;'][$state]; ?>
+        $glyph = ['done' => '&#10003;', 'now' => '<span class="ocb-half"></span>', 'todo' => '&#9675;'][$state]; ?>
         <li class="is-<?= $state ?>"<?= $state === 'now' ? ' aria-current="step"' : '' ?>><span aria-hidden="true"><?= $glyph ?></span> <?= $label ?></li>
       <?php endforeach; ?>
       <?php if ($stage === 'lost'): ?><li class="is-lost"><span aria-hidden="true">&#10005;</span> Lost</li><?php endif; ?>
