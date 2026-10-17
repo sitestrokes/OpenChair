@@ -92,14 +92,14 @@ export function toObservations(grid, baseDate) {
  * @param {number} H
  * @returns {number|null}
  */
-export function openMinutesInWindow(grid, baseDate, H) {
+export function openMinutesInWindow(grid, baseDate, H, field = 'open') {
   const byDay = grid?.byDay;
   if (!byDay || !Object.keys(byDay).length) return null;
   const base = new Date(`${baseDate}T00:00:00Z`).getTime();
   let sum = 0;
   for (const [day, cell] of Object.entries(byDay)) {
     const off = Math.round((new Date(`${day}T00:00:00Z`).getTime() - base) / 86400000);
-    if (off >= 1 && off <= H) sum += Number(cell?.open ?? 0);
+    if (off >= 1 && off <= H) sum += Number(cell?.[field] ?? 0);
   }
   return sum;
 }
@@ -164,7 +164,9 @@ export function score({ grid, business, context = {} }) {
   // grid's openMinutes spans the whole read horizon (14 days on Booksy), and
   // pricing that as "unsold this week" doubled the headline figure — the one
   // number an owner checks against their own week.
-  const windowOpen = openMinutesInWindow(grid, context.baseDate ?? new Date().toISOString().slice(0, 10), H);
+  const baseIso = context.baseDate ?? new Date().toISOString().slice(0, 10);
+  const windowOpen = openMinutesInWindow(grid, baseIso, H);
+  const windowEnvelope = openMinutesInWindow(grid, baseIso, H, 'envelope');
 
   const rev = emptyChairRevenue({
     openMinutes: windowOpen ?? grid.openMinutes,
@@ -193,8 +195,9 @@ export function score({ grid, business, context = {} }) {
     publishable: confidence >= config.confidenceFloor && !conf?.refuse,
     showDollars: rev?.showDollars === true,
     whyNoDollars: rev?.showDollars === true ? null : (rev?.why ?? null),
+    // The scoring window's minutes — what "this week" means on every screen.
     openMinutes: windowOpen ?? grid.openMinutes,
-    envelopeMinutes: grid.envelopeMinutes,
+    envelopeMinutes: windowEnvelope ?? grid.envelopeMinutes,
     // TWO figures, and they are not interchangeable (35-scoring-model.md §3.1):
     //
     //   unsold      openMinutes × price band. THE HEADLINE. A pure arithmetic
@@ -255,8 +258,11 @@ export async function persist({ businessId, observedOn, out, grid, scanRunId = n
   // Slots are minutes ÷ slot length — a display convenience. Minutes are the
   // unit of record; these columns exist because "38 open slots" is what a
   // consultant says out loud, not "1,140 chair-minutes".
-  const openSlots = Math.round((grid.openMinutes ?? 0) / slot);
-  const bookableSlots = Math.round((grid.envelopeMinutes ?? 0) / slot);
+  // The scoring window (out.*), not the whole read horizon: the pitch says
+  // "open slots this week", and a 14-day count there contradicted the Chair
+  // Week and the money beside it.
+  const openSlots = Math.round((out.openMinutes ?? grid.openMinutes ?? 0) / slot);
+  const bookableSlots = Math.round((out.envelopeMinutes ?? grid.envelopeMinutes ?? 0) / slot);
 
   await query(
     `INSERT INTO oc_vacancy_daily

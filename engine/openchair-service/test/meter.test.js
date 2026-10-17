@@ -227,3 +227,9 @@ describe('money covers the scoring window, not the read horizon', () => {
     assert.equal(openMinutesInWindow({ byDay: {} }, '2026-10-17', 7), null);
   });
 });
+
+test('envelope minutes in the window use the same days', async () => {
+  const { openMinutesInWindow } = await import('../src/meter/score.js');
+  const byDay = { '2026-10-17': { open: 50, envelope: 600 }, '2026-10-18': { open: 100, envelope: 600 }, '2026-10-26': { open: 100, envelope: 600 } };
+  assert.equal(openMinutesInWindow({ byDay }, '2026-10-17', 7, 'envelope'), 600);
+});
