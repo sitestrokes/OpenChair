@@ -3,6 +3,13 @@
     "id": 100003,
     "name": "Tampa Heights Trim (synthetic)",
     "timezone": "America/New_York",
+    "location": {
+      "address": "5710 N Florida Ave",
+      "coordinate": {
+        "latitude": 27.9868,
+        "longitude": -82.464
+      }
+    },
     "staffers": [
       {
         "id": "st_53001",

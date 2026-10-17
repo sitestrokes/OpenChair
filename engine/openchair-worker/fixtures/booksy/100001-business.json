@@ -3,6 +3,13 @@
     "id": 100001,
     "name": "Fade Lab (synthetic)",
     "timezone": "America/New_York",
+    "location": {
+      "address": "6302 N Florida Ave",
+      "coordinate": {
+        "latitude": 27.9921,
+        "longitude": -82.4594
+      }
+    },
     "staffers": [
       {
         "id": "st_51001",

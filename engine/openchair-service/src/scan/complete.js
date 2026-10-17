@@ -269,6 +269,19 @@ export async function ingest(businessId, observedOn, data) {
       [data.grid.staffCount || null, data.slotMinutes, avgPrice, avgPrice, businessId],
     );
 
+    // Location: a listing found by URL alone has none, so the Chair Map and the
+    // same-day card could not place it among its neighbours. The shop's own
+    // published point fills it in — never overwriting one already set (by a
+    // Places import, or by hand).
+    if (data.businessLocation) {
+      await conn.query(
+        `UPDATE oc_business
+            SET lat = ?, lng = ?, address_line = COALESCE(NULLIF(address_line, ''), ?)
+          WHERE id = ? AND (lat IS NULL OR lng IS NULL)`,
+        [data.businessLocation.lat, data.businessLocation.lng, data.businessLocation.address, businessId],
+      );
+    }
+
     // The shop's published name replaces a PLACEHOLDER only — the "Unnamed
     // business" discovery writes for a URL with no slug, or the title-cased slug
     // itself. A name a person typed (or an earlier read set) is never overwritten

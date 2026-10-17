@@ -3,6 +3,13 @@
     "id": 100002,
     "name": "Bayshore Cuts (synthetic)",
     "timezone": "America/New_York",
+    "location": {
+      "address": "6810 N Nebraska Ave",
+      "coordinate": {
+        "latitude": 27.9969,
+        "longitude": -82.4552
+      }
+    },
     "staffers": [
       {
         "id": "st_52001",

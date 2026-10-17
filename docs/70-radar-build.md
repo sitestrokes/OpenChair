@@ -83,9 +83,10 @@ The validator additionally refuses: `openStarts` outside the envelope, non-integ
   staff:    [ { staffHash, staffKey } ],
   services: [ { key, name, durationMin, priceCents } ],
   businessName: 'Fade Lab',   // the SHOP's public name (never a person's); replaces a discovery placeholder only (oc_014)
+  businessLocation: { lat, lng, address },  // the shop's published map point; fills lat/lng only when empty
 }
 ```
-`grid`, `snapshot`, `staff`, `services`, `businessName` are present only for `ok`/`partial`. Payload cap stays 256 KB.
+`grid`, `snapshot`, `staff`, `services`, `businessName`, `businessLocation` are present only for `ok`/`partial`. Payload cap stays 256 KB.
 
 ### 3.3 Snapshot blob (`oc_scan_snapshot.grid_gz`, codec `gzip_json_v1`)
 
@@ -174,6 +175,10 @@ lead-time override on both 9- and 12-day shops → CI3 Chair Week renders `sourc
 - The observed grid over-counted empty hours (any open slot ⇒ empty hour) and started on the read day — now
   minute-exact numbers, ≥50% tiles, days 1..7.
 - Square listings stayed "Unnamed business" — adapters now report the shop's public name (oc_014).
+- Pasted listings had no location, so the Chair Map and Same-day card had no neighbours — adapters now report the
+  shop's published map point and address, filled in only when empty.
+- Pitch slot counts covered the 14-day read while saying "this week" — now the Meter's 7-day window.
+- Slammed rows showed "$0–0 unsold" — lists now show each band's second number (the wait).
 - Open redirect through posted `back` targets — closed (`_safe_back`).
 
 ### Still the founder's call

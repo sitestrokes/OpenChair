@@ -152,6 +152,8 @@ export async function read(ctx) {
       services: services(state),
       // The SHOP's public name (merchant), never a team member's.
       businessName: shopName(state?.merchant?.name ?? state?.location?.name),
+      businessLocation: shopLocation(state?.location?.coordinates?.latitude,
+        state?.location?.coordinates?.longitude, state?.location?.address?.address_line_1),
     };
   } catch (err) {
     return {
@@ -230,6 +232,23 @@ function sha1(s) {
 function shopName(v) {
   const s = String(v ?? '').replace(/\s+/g, ' ').trim().slice(0, 120);
   return s.length >= 2 ? s : null;
+}
+
+/**
+ * The shop's public location — its street address and map point, which the
+ * booking page publishes so customers can find it. A business's address, not a
+ * person's. Null unless both coordinates are real numbers inside the globe.
+ *
+ * @param {unknown} lat
+ * @param {unknown} lng
+ * @param {unknown} address
+ * @returns {{lat:number, lng:number, address:string|null}|null}
+ */
+function shopLocation(lat, lng, address) {
+  const la = Number(lat), lo = Number(lng);
+  if (!Number.isFinite(la) || !Number.isFinite(lo) || Math.abs(la) > 90 || Math.abs(lo) > 180 || (la === 0 && lo === 0)) return null;
+  const a = String(address ?? '').replace(/\s+/g, ' ').trim().slice(0, 255);
+  return { lat: Math.round(la * 1e6) / 1e6, lng: Math.round(lo * 1e6) / 1e6, address: a || null };
 }
 
 export default { meta, read };

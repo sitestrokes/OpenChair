@@ -75,6 +75,7 @@ function booksyBusiness(id, staffIds, opts = {}) {
   return {
     business: {
       id: Number(id), name: opts.title, timezone: 'America/New_York',
+      ...(opts.geo ? { location: { address: opts.geo.address, coordinate: { latitude: opts.geo.lat, longitude: opts.geo.lng } } } : {}),
       staffers,
       service_categories: [{
         name: 'Haircuts',
@@ -128,11 +129,11 @@ const afternoon = (base, pm) => (_n, m) => (m >= 780 && m < 1020 ? pm : base);
 
 urls.booksy.hungry = addBooksy('100001', 'fade-lab', ['st_51001', 'st_51002', 'st_51003', 'st_51004', 'st_51005'],
   (n, m) => (n % 7 === 0 || n % 7 === 1 ? 0.78 : afternoon(0.5, 0.8)(n, m)),
-  { title: 'Fade Lab (synthetic)', leakName: true });
+  { title: 'Fade Lab (synthetic)', leakName: true, geo: { lat: 27.9921, lng: -82.4594, address: '6302 N Florida Ave' } });
 urls.booksy.slammed = addBooksy('100002', 'bayshore-cuts', ['st_52001', 'st_52002', 'st_52003', 'st_52004'],
-  () => 0.12, { title: 'Bayshore Cuts (synthetic)', firstOpenDay: 9 });
+  () => 0.12, { title: 'Bayshore Cuts (synthetic)', firstOpenDay: 9, geo: { lat: 27.9969, lng: -82.4552, address: '6810 N Nebraska Ave' } });
 urls.booksy.steady = addBooksy('100003', 'tampa-heights-trim', ['st_53001', 'st_53002', 'st_53003'],
-  afternoon(0.22, 0.42), { title: 'Tampa Heights Trim (synthetic)' });
+  afternoon(0.22, 0.42), { title: 'Tampa Heights Trim (synthetic)', geo: { lat: 27.9868, lng: -82.4640, address: '5710 N Florida Ave' } });
 
 // Negative cases.
 urls.booksy.blocked = addBooksy('100090', 'blocked-shop', ['st_59001'], () => 0.5,
@@ -168,10 +169,12 @@ urls.booksy.partial = addBooksy('100095', 'short-horizon', ['st_59501', 'st_5950
 // ── Square Appointments ──────────────────────────────────────────────────────
 const SQ = 'https://book.squareup.com/appointments';
 
-function squarePage(team, title) {
+function squarePage(team, title, geo = null) {
   const state = {
     merchant: { token: 'synthetic', timezone: 'America/New_York', name: title },
-    location: { id: 'synthetic' },
+    location: geo
+      ? { id: 'synthetic', address: { address_line_1: geo.address }, coordinates: { latitude: geo.lat, longitude: geo.lng } }
+      : { id: 'synthetic' },
     team_members: team.map((id) => ({ id, display_name: nextName(), avatar: null })),
     services: [
       { id: 'SV1', name: 'Signature Cut', duration_minutes: 45, price: { amount: 4500, currency: 'USD' } },
@@ -208,7 +211,7 @@ function addSquare(merchant, location, team, pOpen, opts = {}) {
   const root = `${SQ}/${merchant}/location/${location}`;
   const pageFile = `square_appointments/${merchant}-services.html`;
   const avFile = `square_appointments/${merchant}-availability.json`;
-  files[pageFile] = opts.pageBody ?? squarePage(team, opts.title);
+  files[pageFile] = opts.pageBody ?? squarePage(team, opts.title, opts.geo ?? null);
   index[`${root}/services`] = { file: pageFile, status: opts.pageStatus ?? 200, contentType: 'text/html' };
   if (opts.avBody !== null) {
     files[avFile] = opts.avBody ?? squareAvailability(team, pOpen, opts);
@@ -218,11 +221,11 @@ function addSquare(merchant, location, team, pOpen, opts = {}) {
 }
 
 urls.square_appointments.hungry = addSquare('sqhungry01', 'LT0001', ['TMa1', 'TMa2', 'TMa3', 'TMa4'],
-  afternoon(0.55, 0.85), { title: 'Ybor Clippers (synthetic)' });
+  afternoon(0.55, 0.85), { title: 'Ybor Clippers (synthetic)', geo: { lat: 27.9890, lng: -82.4530, address: '1401 E Osborne Ave' } });
 urls.square_appointments.slammed = addSquare('sqslammed02', 'LT0002', ['TMb1', 'TMb2', 'TMb3'],
-  () => 0.1, { title: 'Hyde Park Barber (synthetic)', firstOpenDay: 12 });
+  () => 0.1, { title: 'Hyde Park Barber (synthetic)', firstOpenDay: 12, geo: { lat: 27.9975, lng: -82.4660, address: '7020 N Florida Ave' } });
 urls.square_appointments.steady = addSquare('sqsteady03', 'LT0003', ['TMc1', 'TMc2', 'TMc3', 'TMc4', 'TMc5'],
-  afternoon(0.2, 0.4), { title: 'Riverside Fades (synthetic)' });
+  afternoon(0.2, 0.4), { title: 'Riverside Fades (synthetic)', geo: { lat: 27.9845, lng: -82.4505, address: '5502 N Nebraska Ave' } });
 
 urls.square_appointments.blocked = addSquare('sqblocked09', 'LT0009', ['TMz1'], () => 0.5,
   { title: 'Blocked', pageBody: 'Access denied', pageStatus: 403, avBody: null });

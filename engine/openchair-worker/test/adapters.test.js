@@ -122,3 +122,18 @@ describe('adapters have no network of their own', () => {
     });
   }
 });
+
+describe('the shop\'s public name and location', () => {
+  test('hungry fixtures report a name and an in-range map point for both platforms', async () => {
+    for (const key of ['booksy', 'square_appointments']) {
+      const r = await run(key, 'hungry');
+      assert.equal(r.status, 'ok', key);
+      assert.ok(r.businessName && r.businessName.length >= 2, `${key} name`);
+      assert.ok(r.businessLocation, `${key} location`);
+      assert.ok(Math.abs(r.businessLocation.lat - 27.99) < 0.05 && Math.abs(r.businessLocation.lng + 82.46) < 0.05,
+        `${key} point is in Tampa`);
+      // A business address, never a person: no staff name may ride along.
+      for (const n of catalog.staffNames) assert.ok(!JSON.stringify(r.businessLocation).includes(n), `${key} location carries no staff name`);
+    }
+  });
+});

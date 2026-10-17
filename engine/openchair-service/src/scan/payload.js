@@ -249,7 +249,20 @@ export function validateData(p) {
 
   // The shop's published name (a business, not a person); cleaned again where it is written.
   const businessName = typeof p.businessName === 'string' ? p.businessName.slice(0, 200) : null;
-  return { grid, snapshot, staff, services, businessName, capability: grid.capability, slotMinutes, horizonDays };
+  // The shop's published location (a business address, not a person's): two
+  // finite in-range numbers or nothing.
+  let businessLocation = null;
+  const bl = p.businessLocation;
+  if (bl && typeof bl === 'object') {
+    const lat = Number(bl.lat), lng = Number(bl.lng);
+    if (Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180 && !(lat === 0 && lng === 0)) {
+      businessLocation = {
+        lat, lng,
+        address: typeof bl.address === 'string' ? bl.address.replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, 255) || null : null,
+      };
+    }
+  }
+  return { grid, snapshot, staff, services, businessName, businessLocation, capability: grid.capability, slotMinutes, horizonDays };
 }
 
 export default { STATUSES, CAPABILITIES, CAPS, PayloadError, findNameKey, validateEnvelope, validateData };

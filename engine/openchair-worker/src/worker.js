@@ -144,11 +144,12 @@ export async function processItem(item, deps) {
         key: s.key, name: s.name, durationMin: s.durationMin ?? null, priceCents: s.priceCents,
       })),
       businessName: typeof result.businessName === 'string' ? result.businessName.slice(0, 120) : null,
+      businessLocation: result.businessLocation ?? null,
     });
 
     if (Buffer.byteLength(JSON.stringify(payload)) > PAYLOAD_LIMIT) {
       // Refuse rather than trim: a silently truncated grid is a wrong grid.
-      for (const k of ['grid', 'snapshot', 'staff', 'services', 'businessName']) delete payload[k];
+      for (const k of ['grid', 'snapshot', 'staff', 'services', 'businessName', 'businessLocation']) delete payload[k];
       Object.assign(payload, {
         status: 'error', errorCode: 'PAYLOAD_TOO_LARGE',
         error: `Completion payload exceeds ${PAYLOAD_LIMIT} bytes; the read is reported as failed rather than truncated.`,

@@ -311,3 +311,19 @@ describe('dead-zone cells', () => {
     assert.deepEqual(cells, [{ dow: 1, blockStartHour: 10, openMinutes: 60, envelopeMinutes: 120, nicheKey: '' }]);
   });
 });
+
+describe('businessLocation in the payload', () => {
+  test('only a finite, in-range point survives validation', async () => {
+    const { validateData } = await import('../src/scan/payload.js');
+    const base = {
+      status: 'ok', capability: 'C1_SLOT_GRID', slotMinutes: 30, horizonDays: 14,
+      grid: { openMinutes: 60, envelopeMinutes: 600, vacancyBp: 1000, staffCount: 1, dayCount: 1, daysToNext: 0,
+              byDay: { '2026-10-18': { open: 60, envelope: 600 } } },
+    };
+    const ok = validateData({ ...base, businessLocation: { lat: 27.99, lng: -82.46, address: '6302 N Florida Ave\n' } });
+    assert.deepEqual(ok.businessLocation, { lat: 27.99, lng: -82.46, address: '6302 N Florida Ave' });
+    for (const bad of [{ lat: 91, lng: 0 }, { lat: 'x', lng: 1 }, { lat: 0, lng: 0 }, { lat: 10 }, 'Tampa']) {
+      assert.equal(validateData({ ...base, businessLocation: bad }).businessLocation, null, JSON.stringify(bad));
+    }
+  });
+});
