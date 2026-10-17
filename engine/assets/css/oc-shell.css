@@ -588,3 +588,6 @@ label, h1, h2, h3, h4, h5, p, li, td, th, dt, dd, span, small, b, strong{
   .oc-newscan{margin:0;padding:8px 14px;white-space:nowrap;flex:none}
   .oc-sample{margin:0;flex:none;white-space:nowrap}
 }
+/* With more rail items than a short window can hold, flex children shrank to fit
+   and their text spilled below the panel. Keep their height; the rail scrolls. */
+.rail > *{flex-shrink:0}

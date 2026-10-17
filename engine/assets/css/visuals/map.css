@@ -25,3 +25,9 @@
   .ocm-headline{font-size:24px}
   .ocm-tiles .occ-tile b{font-size:22px}
 }
+/* SVG text scales down with the map at phone width; size it back up. */
+.occ-phone .ocm-label{font-size:19px;stroke-width:6px}
+.occ-phone .ocm-n{font-size:22px}
+.occ-phone .ocm-n--you{font-size:32px}
+.occ-phone .ocm-tag{font-size:14px}
+.occ-phone .ocm-ring{font-size:17px}
