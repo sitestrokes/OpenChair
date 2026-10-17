@@ -68,6 +68,8 @@ $route['openchair/unwatch']    = 'openchair/openchair/unwatch';
 $route['openchair/stage']      = 'openchair/openchair/stage';
 $route['openchair/notes']      = 'openchair/openchair/notes';
 $route['openchair/make-pitch'] = 'openchair/openchair/make_pitch';
+$route['openchair/share']      = 'openchair/openchair/share';
+$route['openchair/assign']     = 'openchair/openchair/assign';
 $route['openchair/build-digest'] = 'openchair/openchair/build_digest';
 $route['openchair/(:any)']           = 'openchair/openchair/$1';
 
@@ -80,3 +82,10 @@ foreach (array_keys($route) as $__oc_from) {
     }
 }
 if (isset($route['openchair'])) { $route['app'] = $route['openchair']; }
+
+// Public share links (docs/60-signature-visuals.md §4.5). No login: the token is
+// the key. Declared after the /app alias loop on purpose — this is not an
+// openchair/* route and must not be mirrored or swallowed by the catch-all.
+$route['c/([a-f0-9]{32})'] = 'openchair/oc_share/view/$1';
+$route['c/(:any)']         = 'openchair/oc_share/view/$1';
+

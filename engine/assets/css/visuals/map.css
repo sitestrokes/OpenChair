@@ -1,0 +1,27 @@
+/* Chair Map card (PDF p.3). Prefixed ocm- — loads only on the card page. */
+.ocm-headline{font-size:36px;margin-bottom:22px}
+.ocm-map{border:1px solid var(--occ-line);border-radius:18px;overflow:hidden;background:#EFE5DE}
+.ocm-map svg{display:block;width:100%;height:auto}
+.ocm-ring{font-family:var(--occ-mono);font-size:12px;letter-spacing:.12em;fill:#6E625A}
+.ocm-n{font-family:var(--occ-display);font-weight:800;font-size:17px;fill:#fff}
+.ocm-n--you{font-size:28px}
+.ocm-q{font-family:var(--occ-display);font-weight:700;font-size:15px;fill:#8C7F76}
+.ocm-label{font-family:var(--occ-body);font-weight:600;font-size:12px;fill:#4A403A;paint-order:stroke;stroke:#EFE5DE;stroke-width:4px}
+.ocm-tag{font-family:var(--occ-display);font-weight:800;font-size:13px;letter-spacing:.04em;fill:#fff}
+.ocm-tiles{margin-top:18px}
+.ocm-tiles .occ-tile b{font-size:30px}
+.ocm-gap{color:var(--occ-mute)}
+.ocm-legend{margin-top:18px}
+.ocm-dot{display:inline-block;width:14px;height:14px;border-radius:99px}
+.ocm-dot--full{background:#1E1915;box-shadow:0 0 0 2px #FAF5F1,0 0 0 3.5px #1E1915}
+.ocm-dot--unseen{border:1.5px dashed #8C7F76;background:transparent}
+
+.occ-phone .ocm-headline{font-size:24px;margin-bottom:14px}
+.occ-phone .ocm-map{border-radius:12px}
+.occ-phone .ocm-tiles .occ-tile{padding:11px 14px}
+.occ-phone .ocm-tiles .occ-tile b{font-size:22px}
+.occ-phone .ocm-legend{font-size:12px;gap:6px 14px}
+@media (max-width:640px){
+  .ocm-headline{font-size:24px}
+  .ocm-tiles .occ-tile b{font-size:22px}
+}

@@ -31,6 +31,7 @@ class Openchair extends App_Controller
         $this->load->model('openchair/oc_pitch_model');
         $this->load->model('openchair/oc_alert_model');
         $this->load->model('openchair/oc_ledger_model');
+        $this->load->model('openchair/oc_share_model');
         $this->load->library('openchair/oc_pitch_lib');
         $this->load->library('openchair/oc_visuals_lib');
         $this->load->helper('openchair/oc_format');
@@ -86,8 +87,12 @@ class Openchair extends App_Controller
     }
 
     /**
-     * S5 — Business Detail (the rail calls it "Meter").
+     * S5 — Business Detail (PDF p.8): the screen that makes the signature cards.
      * Bare /business falls back to the first business so the nav is never dead.
+     *
+     * Everything figure-shaped comes from Oc_visuals_lib::summary() — the same
+     * payload the cards and share links are built from — so the tiles here and
+     * the picture a consultant sends cannot disagree.
      */
     public function business($id = null)
     {
@@ -96,9 +101,128 @@ class Openchair extends App_Controller
 
         if (!$b) { show_404(); return; }
 
-        $this->data['b'] = $b;
-        $this->data['prospect'] = $this->oc_prospect_model->find($this->user_id, $b->id);
-        $this->_render('pages/business', 'business', $b->name);
+        $prospect = $this->oc_prospect_model->find($this->user_id, $b->id);
+        $watched  = $prospect && !in_array($prospect->stage, ['archived'], true);
+
+        $this->data['b']        = $b;
+        $this->data['prospect'] = $prospect;
+        $this->data['watched']  = $watched;
+        $this->data['summary']  = $this->oc_visuals_lib->summary($b);
+        $this->data['shares']   = $this->oc_share_model->for_business($this->user_id, $b->id, 5);
+        $this->data['is_demo']  = $this->oc_business_model->is_demo_market($b->city_key);
+        $this->data['team']     = $this->_team();
+        $this->data['assignee'] = $this->_user_label(
+            ($prospect && $prospect->assigned_user_id) ? (int) $prospect->assigned_user_id : (int) $this->user_id
+        );
+
+        // A link just made without JavaScript comes back as ?shared=<token>.
+        $shared = $this->input->get('shared', true);
+        $this->data['shared_link'] = $shared ? $this->oc_share_model->find_own($this->user_id, $shared) : null;
+        $this->data['share_error'] = $this->input->get('share_error', true);
+
+        $this->_render('pages/business', $watched ? 'prospects' : 'radar', $b->name);
+    }
+
+    /**
+     * Make a share link for one card (PDF p.8 "Copy share link").
+     *
+     * Freezes the card payload — the picture is fixed at the moment the link is
+     * made. Refused below the confidence floor (rule 3): a card with no number
+     * on it is not something to send. This is a SAVE, not a send: the consultant
+     * pastes the link; nothing here contacts the business (rule 7).
+     */
+    public function share()
+    {
+        $id   = (int) $this->input->post('business_id', true);
+        $kind = (string) $this->input->post('kind', true);
+        $logo = (string) $this->input->post('show_logo', true) === '1';
+        $back = 'openchair/business/' . $id;
+
+        $b = $this->oc_business_model->find($id);
+        if (!$b || !in_array($kind, Oc_visuals_lib::KINDS, true)) { show_error('Nothing to share.', 400); return; }
+
+        $card = $this->oc_visuals_lib->card($b, $kind, $this->_card_ctx($b, $logo));
+        if (!empty($card['gap'])) {
+            $msg = 'Not enough data yet to put a number on a card for this business.';
+            if ($this->input->is_ajax_request()) {
+                $this->output->set_content_type('application/json')->set_output(json_encode(['ok' => false, 'error' => $msg]));
+                return;
+            }
+            redirect($back . '?share_error=gap#share');
+            return;
+        }
+
+        $token = $this->oc_share_model->create($this->user_id, $b, $kind, $logo, $card);
+        if (!$token) { show_error('Could not make the link.', 500); return; }
+
+        if ($this->input->is_ajax_request()) {
+            $this->output->set_content_type('application/json')
+                         ->set_output(json_encode(['ok' => true, 'token' => $token, 'url' => site_url('c/' . $token)]));
+            return;
+        }
+        redirect($back . '?shared=' . $token . '#share');
+    }
+
+    /**
+     * Owner and due date for a prospect ("Assigned to Maya R." / "due Mon, Oct
+     * 20"). Assignees are limited to this account's own team.
+     */
+    public function assign()
+    {
+        $id  = (int) $this->input->post('business_id', true);
+        $uid = (int) $this->input->post('assigned_user_id', true);
+        $due = (string) $this->input->post('next_due_on', true);
+
+        $team = array_map('intval', array_keys($this->_team()));
+        $set  = [
+            'assigned_user_id' => in_array($uid, $team, true) ? $uid : null,
+            'next_due_on'      => preg_match('/^\d{4}-\d{2}-\d{2}$/', $due) && strtotime($due) ? $due : null,
+        ];
+        $this->db->where('user_id', (int) $this->user_id)
+                 ->where('business_id', $id)
+                 ->update('oc_prospect', $set);
+
+        $this->_after_action(['ok' => true] + $set);
+    }
+
+    /**
+     * This account's team: the user, their sub-users, and their agency parent.
+     *
+     * @return array id => label
+     */
+    private function _team()
+    {
+        $me = (int) $this->user_id;
+        $parent = (int) ($this->user->parent_user_id ?? 0);
+        $this->db->select('id, first_name, last_name, email')->from('users')
+                 ->group_start()->where('id', $me)->or_where('parent_user_id', $me);
+        if ($parent > 0) { $this->db->or_where('id', $parent); }
+        $rows = $this->db->group_end()->where('active', 1)->order_by('first_name', 'ASC')->get()->result();
+
+        $out = [];
+        foreach ($rows as $r) { $out[(int) $r->id] = $this->_name_of($r); }
+        return $out;
+    }
+
+    /**
+     * "Maya R." for a user id; "you" when the row is gone.
+     *
+     * @param int $id
+     * @return string
+     */
+    private function _user_label($id)
+    {
+        $r = $this->db->select('first_name, last_name, email')->from('users')->where('id', (int) $id)->limit(1)->get()->row();
+        return $r ? $this->_name_of($r) : 'you';
+    }
+
+    /** @return string first name + last initial, else the email's local part */
+    private function _name_of($r)
+    {
+        $first = trim((string) $r->first_name);
+        $last  = trim((string) $r->last_name);
+        if ($first !== '') { return $first . ($last !== '' ? ' ' . mb_substr($last, 0, 1) . '.' : ''); }
+        return strstr((string) $r->email, '@', true) ?: 'you';
     }
 
     /**

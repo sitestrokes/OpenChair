@@ -1,0 +1,37 @@
+/* 8-week report card (PDF p.7). Prefixed ocp-. */
+.ocp-arrow{margin:0 .12em;font-weight:700}
+.ocp-pill{flex:none;display:inline-block;padding:10px 18px;border-radius:999px;font-family:var(--occ-display);
+  font-weight:700;font-size:16px;background:var(--occ-paper-2);color:var(--occ-ink)}
+.ocp-pill--steady{background:var(--occ-green-soft);color:var(--occ-green)}
+.ocp-pill--hungry{background:var(--occ-red-soft);color:var(--occ-red-tx)}
+.ocp-pill--slammed{background:#E6DFD9;color:var(--occ-ink)}
+.ocp-lede{font-size:18px;max-width:560px;margin-top:12px;line-height:1.4}
+.ocp-lede s{color:var(--occ-mute)}
+.ocp-lede b{color:var(--occ-ink)}
+.ocp-wait{max-width:520px;font-size:17px}
+.ocp-chart{margin-top:26px;background:#fff;border:1px solid var(--occ-line);border-radius:18px;padding:18px 18px 8px}
+.ocp-chart svg{display:block;width:100%;height:auto}
+.ocp-axis{font-family:var(--occ-mono);font-size:11px;fill:#8C7F76}
+.ocp-note{font-family:var(--occ-body);font-size:12px;fill:#4A403A}
+.ocp-big{font-family:var(--occ-display);font-weight:800;font-size:19px}
+.ocp-weeks{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:26px}
+.ocp-week-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px}
+.ocp-week-head h2{font-family:var(--occ-display);font-weight:800;font-size:18px;letter-spacing:-.02em;margin:0}
+.ocp-week-head span{font-family:var(--occ-mono);font-weight:700;font-size:13px}
+.ocp-week .ocg--sm{--ocg-tile:8px}
+
+.occ-phone .ocp-pill{font-size:12px;padding:6px 11px}
+.occ-phone .ocp-lede{font-size:14.5px}
+.occ-phone .ocp-chart{padding:10px 8px 4px;border-radius:12px}
+.occ-phone .ocp-weeks{grid-template-columns:1fr;gap:18px}
+.occ-phone .ocp-week .ocg--sm, .occ-phone .ocg--sm{--ocg-tile:8px;--ocg-gap:1.5px;--ocg-daygap:5px;--ocg-hourw:0px}
+.occ-phone .occ-head{flex-direction:column;gap:10px}
+@media (max-width:640px){
+  .ocp-weeks{grid-template-columns:1fr}
+  .ocp-lede{font-size:15px}
+  .occ-head{flex-wrap:wrap}
+}
+/* SVG text scales with the chart; restore legibility at phone width. */
+.occ-phone .ocp-axis{font-size:20px}
+.occ-phone .ocp-note{font-size:21px}
+.occ-phone .ocp-big{font-size:30px}
