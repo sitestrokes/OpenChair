@@ -55,7 +55,13 @@ $brand_foot  = !empty($ic_brand['footer'])     ? $ic_brand['footer']     : '';
   <?php $this->load->view('oc_shell/_oc_rail'); ?>
 
   <div class="main">
-    <?php $this->load->view('oc_shell/_oc_topbar'); ?>
+    <?php
+    // Product screens have no topbar since the signature-visuals redesign (PDF
+    // p.8): "+ New scan" and the sample-data flag live in the rail. Account and
+    // agency pages keep the slim title bar so they still say where you are.
+    $oc_product_pages = ['today', 'radar', 'business', 'pitch', 'prospects', 'ledger', 'coverage', 'adapters', 'how', 'scan'];
+    if (!in_array($page, $oc_product_pages, true)) { $this->load->view('oc_shell/_oc_topbar'); }
+    ?>
 
     <main id="oc-main" tabindex="-1">
       <?php $this->load->view($content_view, $this->data); ?>

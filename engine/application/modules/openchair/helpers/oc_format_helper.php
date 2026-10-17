@@ -529,8 +529,16 @@ if (!function_exists('oc_range_short')) {
      * @param int $hi_cents
      * @return string
      */
-    function oc_range_short($lo_cents, $hi_cents)
+    function oc_range_short($lo_cents, $hi_cents = null)
     {
+        // A row scored before oc_008 has no stored high end. Take it from the
+        // same fallback oc_revenue_range() uses, never from a ratio in a view.
+        if ($hi_cents === null || (int) $hi_cents <= (int) $lo_cents) {
+            $CI = get_instance();
+            $lo = (float) $CI->config->item('oc_sellthrough_low') ?: 0.15;
+            $hi = (float) $CI->config->item('oc_sellthrough_high') ?: 0.35;
+            $hi_cents = (int) round(((int) $lo_cents) * ($hi / $lo));
+        }
         return oc_money_short($lo_cents) . '–' . ltrim(oc_money_short($hi_cents), '$');
     }
 }
@@ -565,5 +573,23 @@ if (!function_exists('oc_checked_phrase')) {
         $days = (int) floor((time() - $t) / 86400);
         $ago  = $days <= 0 ? 'today' : ($days === 1 ? '1 day ago' : $days . ' days ago');
         return 'Checked ' . date('M j, Y', $t) . ' (' . $ago . ')';
+    }
+}
+
+if (!function_exists('oc_chair_glyph')) {
+    /**
+     * The non-colour mark for a band (NFR-8) — same shapes as oc_bucket_glyph().
+     *
+     * @param string|null $band
+     * @return string
+     */
+    function oc_chair_glyph($band)
+    {
+        switch ($band) {
+            case 'hungry':  return '▲';
+            case 'slammed': return '●';
+            case 'steady':  return '■';
+            default:        return '○';
+        }
     }
 }

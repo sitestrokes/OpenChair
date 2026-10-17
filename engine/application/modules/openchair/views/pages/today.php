@@ -15,9 +15,10 @@ $stale = oc_is_stale($totals['last_scan']);
 
   <div class="pagehead">
     <div>
-      <h1>Today</h1>
-      <p>What your market looks like this morning. Two buckets, one scan &mdash; the red list needs
-         customers, the green list needs capacity.</p>
+      <h1>Home</h1>
+      <p>What your market looks like this morning. One scan, two pitches &mdash; Hungry shops need
+         customers, Slammed shops need capacity. Every number is a
+         <a href="<?= site_url('openchair/how-it-works') ?>">Chair Score</a>: higher = busier.</p>
     </div>
   </div>
 
@@ -96,9 +97,10 @@ $stale = oc_is_stale($totals['last_scan']);
       <div class="list">
         <?php foreach ($digest_items as $it):
           $cls = $it->bucket === 'hungry' ? 'hot' : 'cool';
+          // As sent: the digest row's own vacancy, shown as a Chair Score.
         ?>
           <a class="row" href="<?= site_url('openchair/business/' . (int) $it->business_id) ?>">
-            <span class="score <?= $cls ?>"><?= (int) round($it->vacancy_bp / 100) ?></span>
+            <span class="score <?= $cls ?>" title="Chair Score"><?= (int) oc_chair_score($it->vacancy_bp) ?></span>
             <span>
               <span class="row-name">
                 <?= html_escape($it->name) ?>
@@ -125,7 +127,7 @@ $stale = oc_is_stale($totals['last_scan']);
     <?php
     $cols = [
       ['title' => 'Hungry',  'sub' => 'sell them customers', 'rows' => $hungry,  'cls' => 'hot',
-       'empty' => 'No business in this market is showing high vacancy today.'],
+       'empty' => 'No business in this market has a Chair Score under 50 today.'],
       ['title' => 'Slammed', 'sub' => 'sell them capacity',  'rows' => $slammed, 'cls' => 'cool',
        'empty' => 'Nobody is booked far enough out to qualify today.'],
     ];
@@ -140,12 +142,12 @@ $stale = oc_is_stale($totals['last_scan']);
         <?php else: ?>
           <div class="list">
             <?php foreach ($col['rows'] as $b):
-              $cls  = oc_bucket_class($b->latest_bucket, $b->latest_confidence);
-              $score = oc_score_or_gap($b->latest_vacancy_bp, $b->latest_confidence);
+              $cls  = oc_chair_band_class(oc_chair_band_for($b));
+              $score = oc_chair_score_or_gap($b->latest_vacancy_bp, $b->latest_confidence);
               $low  = oc_below_floor($b->latest_confidence);
             ?>
               <a class="row" href="<?= site_url('openchair/business/' . (int) $b->id) ?>">
-                <span class="score <?= $cls ?>"><?= html_escape($score) ?></span>
+                <span class="score <?= $cls ?>" title="Chair Score"><?= html_escape($score) ?></span>
                 <span>
                   <span class="row-name"><?= html_escape($b->name) ?></span>
                   <span class="row-meta">
@@ -161,7 +163,7 @@ $stale = oc_is_stale($totals['last_scan']);
                   <?php if ($low): ?>
                     &mdash;<small>not enough data</small>
                   <?php else: ?>
-                    <?= html_escape(oc_money($b->latest_empty_chair_cents)) ?><small>unsold, low end</small>
+                    <?= html_escape(oc_range_short($b->latest_empty_chair_cents, $b->latest_empty_chair_hi_cents)) ?><small>unsold this week</small>
                   <?php endif; ?>
                 </span>
               </a>

@@ -125,6 +125,25 @@ class Oc_render_lib
         // a controller supplies and hides it when nothing is set.
         if (!isset($data['oc_quota'])) { $data['oc_quota'] = null; }
 
+        // Rail badges (PDF p.8): "Home · 3 due" and "My pipeline · 12". Tenant
+        // counts over oc_prospect only — two indexed COUNTs, scoped to this user.
+        if (!isset($data['oc_due_count']) || !isset($data['oc_pipeline_count'])) {
+            $data['oc_due_count'] = 0;
+            $data['oc_pipeline_count'] = 0;
+            if ($uid > 0 && $ci->db->table_exists('oc_prospect')) {
+                $data['oc_pipeline_count'] = (int) $ci->db->where('user_id', $uid)
+                    ->where_not_in('stage', ['lost', 'archived'])
+                    ->count_all_results('oc_prospect');
+                if ($ci->db->field_exists('next_due_on', 'oc_prospect')) {
+                    $data['oc_due_count'] = (int) $ci->db->where('user_id', $uid)
+                        ->where('next_due_on IS NOT NULL')
+                        ->where('next_due_on <=', date('Y-m-d'))
+                        ->where_not_in('stage', ['won', 'lost', 'archived'])
+                        ->count_all_results('oc_prospect');
+                }
+            }
+        }
+
         return $data;
     }
 

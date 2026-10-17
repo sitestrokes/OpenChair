@@ -20,6 +20,15 @@ defined('BASEPATH') OR exit('No direct script access allowed');
     </div>
   </div>
 
+  <!-- The front door. It used to live in the topbar; since the signature-visuals
+       redesign the rail's "+ New scan" opens this page, so the box lives here. -->
+  <form method="get" action="<?= site_url('openchair/scan') ?>" role="search" class="filters"
+        style="padding:0 0 16px;border:0;gap:10px">
+    <input class="input" type="text" name="q" value="<?= html_escape($q) ?>" autocomplete="off"
+           placeholder="barbershop, Tampa" aria-label="Niche and city" style="max-width:420px">
+    <button type="submit" class="btn btn-primary">Scan</button>
+  </form>
+
   <div class="panel">
     <div class="panel-head">
       <h2>Requested</h2>

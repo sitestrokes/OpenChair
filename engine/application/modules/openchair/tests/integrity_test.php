@@ -156,11 +156,14 @@ $ungated = [];
 foreach ([$VIEWS . '/radar.php', $VIEWS . '/today.php', $VIEWS . '/business.php'] as $f) {
     if (!file_exists($f)) { $ungated[] = basename($f) . ' (missing)'; continue; }
     $src = file_get_contents($f);
-    if (strpos($src, 'latest_vacancy_bp') !== false && strpos($src, 'oc_score_or_gap') === false) {
+    // oc_chair_score_or_gap() is the Chair Score's gate (higher = busier); the
+    // Vacancy Score's oc_score_or_gap() is still accepted where it survives.
+    if (strpos($src, 'latest_vacancy_bp') !== false && strpos($src, 'oc_score_or_gap') === false
+        && strpos($src, 'oc_chair_score_or_gap') === false) {
         $ungated[] = basename($f);
     }
 }
-check('every score-printing view uses oc_score_or_gap()', empty($ungated), implode(', ', $ungated));
+check('every score-printing view uses a gated score helper', empty($ungated), implode(', ', $ungated));
 
 // ── Rule 5 — the "what we could not see" block is first-class. ──────────────
 echo "\nRule 5 — visible disclosure\n";
@@ -257,6 +260,97 @@ if (file_exists($am)) {
     check('alert items store the numbers AS SENT', strpos($asrc, "'empty_chair_cents'") !== false);
     check('the digest excludes businesses below the confidence floor',
           strpos($acode, 'latest_confidence >=') !== false);
+}
+
+// -- Signature visuals: the cards are what leave the building. ---------------
+// docs/60-signature-visuals.md §5. A card is forwarded, screenshotted and read
+// by an owner who knows their own week; each rule below is one way a card could
+// embarrass the consultant who sent it.
+echo "
+Signature visuals
+";
+
+$VIS   = $MODULE . '/views/visuals';
+$CARDS = ['_chair_week.php', '_chair_map.php', '_receipt.php', '_same_day.php', '_progress.php'];
+$vlib  = $MODULE . '/libraries/Oc_visuals_lib.php';
+
+foreach ($CARDS as $c) {
+    check("card $c exists", file_exists($VIS . '/' . $c));
+}
+
+// Rule 6 (data age) and rule 5 (what we couldn't see) ride in the shared
+// footer, so every card must end with it rather than writing its own.
+$footless = [];
+foreach ($CARDS as $c) {
+    if (!file_exists($VIS . '/' . $c)) { continue; }
+    if (strpos(file_get_contents($VIS . '/' . $c), "visuals/_card_foot") === false) { $footless[] = $c; }
+}
+check('every card ends with the shared footer (data age, method, agency)', empty($footless), implode(', ', $footless));
+$foot = file_exists($VIS . '/_card_foot.php') ? file_get_contents($VIS . '/_card_foot.php') : '';
+check('the card footer prints the data age', strpos($foot, "['checked']['phrase']") !== false);
+
+// Rule 4 on the cards: money is a range from the helpers, never hand-formatted.
+$vis_money = [];
+foreach (php_files($VIS) as $f) {
+    if (preg_match('/[\'"]\$[\'"]\s*\.\s*number_format|number_format\([^)]*\)\s*\.\s*[\'"]\s*USD/i', file_get_contents($f))) {
+        $vis_money[] = basename($f);
+    }
+}
+check('no card formats currency by hand', empty($vis_money), implode(', ', $vis_money));
+
+// Rule 2 on the cards.
+$vis_shop = [];
+foreach (php_files($VIS) as $f) {
+    if (stripos(file_get_contents($f), 'empty shop') !== false) { $vis_shop[] = basename($f); }
+}
+check('no card says "empty shop"', empty($vis_shop), implode(', ', $vis_shop));
+
+// "Other shops are never named on a card" (PDF p.8). The street payload is
+// built in one place; it must carry a label ("Shop C"), never a shop's name.
+if (file_exists($vlib)) {
+    $vcode = code_of($vlib);
+    check('the street payload never carries another shop\'s name',
+          !preg_match('/\$s->name|\$nb->name|\$c->name/', $vcode));
+    check('the street payload labels neighbours "Shop A…"', strpos($vcode, "'Shop '") !== false);
+    // Rule 3 on the cards: below the floor the score is null, and so is the money.
+    check('a card below the confidence floor carries no score', strpos($vcode, "'value'      => \$gap ? null") !== false);
+    check('a card below the confidence floor carries no money', strpos($vcode, "'money' => \$gap ? null") !== false);
+    // Rule 4: the weekly range is the Meter's own band, not re-derived.
+    check('card money starts from the Meter\'s stored range', strpos($vcode, 'latest_empty_chair_hi_cents') !== false);
+}
+
+// The Chair Score has ONE definition. The SQL band and the PHP band read the
+// same config keys, so a chip count and a card pill cannot disagree.
+$bm = file_exists($gm) ? file_get_contents($gm) : '';
+foreach (['oc_chair_hungry_below', 'oc_chair_slammed_from', 'oc_chair_wait_slammed_days'] as $key) {
+    check("band rule '$key' is shared by SQL and PHP",
+          strpos($bm, $key) !== false && strpos($helper, $key) !== false);
+}
+
+// Rule 10: a share page is unlisted. Rule 7: it is read-only.
+$page_src = file_exists($VIS . '/card_page.php') ? file_get_contents($VIS . '/card_page.php') : '';
+check('a shared card is served noindex', stripos($page_src, 'noindex') !== false);
+$share_ctl = $MODULE . '/controllers/Oc_share.php';
+if (file_exists($share_ctl)) {
+    $sc = code_of($share_ctl);
+    check('the public share controller does not extend the authenticated base', strpos($sc, 'extends App_Controller') === false);
+    check('the public share controller accepts no POST', stripos($sc, "->post(") === false);
+    check('the public share controller stores no IP or user agent',
+          !preg_match('/ip_address\(|user_agent\(|REMOTE_ADDR|HTTP_USER_AGENT/', $sc));
+}
+$share_model = $MODULE . '/models/Oc_share_model.php';
+if (file_exists($share_model)) {
+    $smc = code_of($share_model);
+    check('share tokens come from a CSPRNG', strpos($smc, 'random_bytes') !== false);
+    check('a share link freezes its card', strpos($smc, 'payload') !== false);
+}
+
+// The image export renders OUR markup in the browser; it is not a capture of a
+// booking platform. Keep it library-free so that stays obvious.
+$exp = dirname($ROOT) . '/assets/js/oc-card-export.js';
+if (file_exists($exp)) {
+    check('the card export uses no screenshot library',
+          !preg_match('/html2canvas|puppeteer|playwright|dom-to-image/i', file_get_contents($exp)));
 }
 
 // -- CSRF: the shell has no JS prefilter, so forms carry the token. ---------

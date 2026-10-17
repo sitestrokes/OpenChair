@@ -33,12 +33,15 @@ foreach ($zones as $z) { $zmap[(int) $z->dow][(int) $z->block_start_hour] = $z; 
 
   <div class="pagehead">
     <div>
-      <h1>Ledger &mdash; <?= html_escape($b->name) ?></h1>
-      <p>Eight weeks of fill rate. The screen that wins the client is the screen that keeps them
-         &mdash; same data, eight weeks on.</p>
+      <h1>Client report &mdash; <?= html_escape($b->name) ?></h1>
+      <p>Eight weeks of Chair Score &mdash; the share of online chair-hours that got booked. The screen
+         that wins the client is the screen that keeps them &mdash; same data, eight weeks on.</p>
     </div>
     <div class="spacer"></div>
     <a class="btn" href="<?= site_url('openchair/business/' . (int) $b->id) ?>">Back to the data</a>
+    <?php if (count($usable) >= 2): ?>
+      <a class="btn btn-primary" href="<?= site_url('openchair/card/' . (int) $b->id . '/progress') ?>">8-week report card</a>
+    <?php endif; ?>
   </div>
 
   <?php if (count($watchlist) > 1): ?>
@@ -71,13 +74,13 @@ foreach ($zones as $z) { $zmap[(int) $z->dow][(int) $z->block_start_hour] = $z; 
 
     <div class="panel">
       <div class="panel-head">
-        <h2>Fill rate</h2>
+        <h2>Chair Score</h2>
         <span class="sub">higher is busier &middot; a gap means we did not see enough of that week</span>
       </div>
 
       <div class="trend">
         <svg viewBox="0 0 <?= $W ?> <?= $H ?>" style="width:100%;height:auto" role="img"
-             aria-label="Weekly fill rate for <?= html_escape($b->name) ?>">
+             aria-label="Weekly Chair Score for <?= html_escape($b->name) ?>">
           <?php for ($g = 0; $g <= 4; $g++): $gy = $PAD + $g * ($H - 2 * $PAD) / 4; ?>
             <line x1="<?= $PAD ?>" y1="<?= $gy ?>" x2="<?= $W - $PAD ?>" y2="<?= $gy ?>"
                   stroke="var(--line-soft)" stroke-width="1"/>
@@ -143,7 +146,7 @@ foreach ($zones as $z) { $zmap[(int) $z->dow][(int) $z->block_start_hour] = $z; 
         <?php if (!empty($lift['claimable'])): ?>
           <div class="cards">
             <div class="mini">
-              <h4>Their fill rate</h4>
+              <h4>Their Chair Score</h4>
               <div class="big" style="color:var(--accent)"><?= $lift['client_delta'] > 0 ? '+' : '' ?><?= $lift['client_delta'] ?> pts</div>
               <div class="stat-note">Before the work versus after.</div>
             </div>

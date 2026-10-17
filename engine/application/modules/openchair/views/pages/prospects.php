@@ -68,8 +68,9 @@ $back  = 'openchair/prospects' . ($f_stage !== 'all' ? '?stage=' . urlencode($f_
         <?php endif; ?>
 
         <?php foreach ($watched as $p):
-          $cls   = oc_bucket_class($p->latest_bucket, $p->latest_confidence);
-          $score = oc_score_or_gap($p->latest_vacancy_bp, $p->latest_confidence);
+          $band  = oc_chair_band_for($p);
+          $cls   = oc_chair_band_class($band);
+          $score = oc_chair_score_or_gap($p->latest_vacancy_bp, $p->latest_confidence);
           $low   = oc_below_floor($p->latest_confidence);
           // The bucket at add time versus now. Six weeks on, "you added this when
           // it was Hungry and it is Slammed now" is the whole retention story —
@@ -78,12 +79,12 @@ $back  = 'openchair/prospects' . ($f_stage !== 'all' ? '?stage=' . urlencode($f_
         ?>
           <div class="row" style="cursor:default;grid-template-columns:42px 1fr auto auto;gap:12px">
             <a class="score <?= $cls ?>" href="<?= site_url('openchair/business/' . (int) $p->business_id) ?>"
-               style="text-decoration:none"><?= html_escape($score) ?></a>
+               style="text-decoration:none" title="Chair Score"><?= html_escape($score) ?></a>
 
             <span>
               <span class="row-name">
                 <a href="<?= site_url('openchair/business/' . (int) $p->business_id) ?>"><?= html_escape($p->name) ?></a>
-                <span class="bucket <?= $cls ?>"><?= oc_bucket_glyph($p->latest_bucket) ?> <?= html_escape(oc_bucket_label($low ? null : $p->latest_bucket)) ?></span>
+                <span class="bucket <?= $cls ?>"><?= oc_chair_glyph($band) ?> <?= html_escape(oc_chair_band_label($band)) ?></span>
                 <?php if ($moved): ?>
                   <span class="chip" style="font-size:10px;padding:2px 8px">was <?= html_escape(oc_bucket_label($p->bucket_at_add)) ?></span>
                 <?php endif; ?>
@@ -99,7 +100,7 @@ $back  = 'openchair/prospects' . ($f_stage !== 'all' ? '?stage=' . urlencode($f_
               <?php if ($low): ?>
                 &mdash;<small>not enough data</small>
               <?php else: ?>
-                <?= html_escape(oc_money($p->latest_empty_chair_cents)) ?><small>unsold, low end</small>
+                <?= html_escape(oc_range_short($p->latest_empty_chair_cents, $p->latest_empty_chair_hi_cents)) ?><small>unsold this week</small>
               <?php endif; ?>
             </span>
 

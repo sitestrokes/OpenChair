@@ -398,6 +398,10 @@ a{text-decoration:none}
 a:hover,a:focus{text-decoration:none}
 .page a:not(.btn):not(.navbtn):not(.chip):not(.row){color:var(--accent-tx)}
 .page a:not(.btn):not(.navbtn):not(.chip):not(.row):hover{color:var(--accent);text-decoration:none}
+/* Whole-row links and the brand are <a>s too: they take the text colour, not the
+   browser's link blue/visited purple. */
+a.row, a.brand, a.row:visited, a.brand:visited{color:var(--tx)}
+.rowwrap a.row .row-name{color:var(--tx)}
 
 /* Accessibility: the skip link the shell renders. */
 .oc-skip-link{position:absolute;left:-9999px;top:0;z-index:100;
@@ -569,3 +573,18 @@ label, h1, h2, h3, h4, h5, p, li, td, th, dt, dd, span, small, b, strong{
 /* Account pages get the page title in the topbar instead of the scan box. */
 .topbar-title{font-family:var(--disp);font-weight:600;font-size:16px;letter-spacing:-.02em;
   color:var(--tx)}
+
+/* ── Rail: signature-visuals redesign (docs/60-signature-visuals.md §4.7) ── */
+.oc-newscan{display:flex;align-items:center;justify-content:center;margin:6px 4px 4px;padding:11px 14px;border-radius:var(--r1);
+  background:linear-gradient(155deg,#F0755E,#E75C43);color:#fff;font-weight:700;font-size:13.5px;text-decoration:none;
+  box-shadow:0 10px 22px -14px rgba(231,92,67,.9)}
+.oc-newscan:hover{filter:brightness(1.05)}
+.oc-sample{display:flex;align-items:center;gap:7px;justify-content:center;margin:6px 4px 0;font-size:11px;color:var(--tx3);
+  border:1px dashed var(--line);border-radius:99px;padding:4px 10px}
+.oc-badge{margin-left:auto;font-size:11px;font-weight:700;color:var(--tx3);font-variant-numeric:tabular-nums}
+.oc-badge.is-due{color:var(--accent-tx)}
+.oc-plan{font-size:11px;color:var(--tx3);line-height:1.45;margin-bottom:8px}
+@media (max-width:1080px){
+  .oc-newscan{margin:0;padding:8px 14px;white-space:nowrap;flex:none}
+  .oc-sample{margin:0;flex:none;white-space:nowrap}
+}
