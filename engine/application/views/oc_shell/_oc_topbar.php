@@ -31,19 +31,20 @@ $is_product = in_array(isset($page) ? (string) $page : '', $product_pages, true)
   <span class="spacer" style="flex:1"></span>
   <a class="btn btn-sm" href="<?= site_url('openchair') ?>">&larr; Back to OpenChair</a>
 <?php else: ?>
-  <form method="get" action="<?= site_url('openchair/scan') ?>" role="search"
+  <form method="get" action="<?= site_url('openchair/radar') ?>" role="search"
         style="display:contents">
     <div class="search">
       <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
         <circle cx="7" cy="7" r="5" stroke="var(--tx3)" stroke-width="1.5"/>
         <path d="M10.8 10.8 14 14" stroke="var(--tx3)" stroke-width="1.5" stroke-linecap="round"/>
       </svg>
-      <input type="text" name="q" value="<?= html_escape($q) ?>" autocomplete="off"
-             placeholder="barbershop, Tampa" aria-label="Niche and city">
+      <input type="search" name="q" value="<?= html_escape($q) ?>" autocomplete="off" required maxlength="120"
+             placeholder="barbershop, Tampa, FL — or a shop name" aria-label="Niche and city, or a shop name">
       <span class="kbd" aria-hidden="true">&#8629;</span>
     </div>
-    <button type="submit" class="btn btn-primary">Scan</button>
+    <button type="submit" class="btn btn-primary">Search</button>
   </form>
+  <a class="btn" href="<?= site_url('openchair/scan') ?>" title="Paste booking links to read">+ New scan</a>
 
   <?php if ($is_demo): ?>
     <span class="sample-flag" title="Seeded sample data — not a live scan">

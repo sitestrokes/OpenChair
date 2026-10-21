@@ -36,6 +36,18 @@ $route['settings']        = 'setting/settings';
 $route['setting']         = 'setting/index';
 $route['insert_setting']  = 'setting/insertSetting';
 $route['update_setting']  = 'setting/updateSetting';
+// The settings page posts to dashed URLs (setting/save-settings …), and
+// translate_uri_dashes is FALSE, so each needs its underscored method named.
+// Without these, saving or testing an API key 404s.
+$route['setting/save-settings']  = 'setting/save_settings';
+$route['setting/test-key']       = 'setting/test_key';
+$route['setting/remove-key']     = 'setting/remove_key';
+$route['setting/save-smtp']      = 'setting/save_smtp';
+$route['setting/save-esp']       = 'setting/save_esp';
+$route['setting/disconnect-esp'] = 'setting/disconnect_esp';
+$route['setting/toggle-dnc']     = 'setting/toggle_dnc';
+$route['setting/dnc-add']        = 'setting/dnc_add';
+$route['setting/dnc-remove']     = 'setting/dnc_remove';
 
 // ── White-label / API config ─────────────────────────────────────────────────
 $route['whitelabel']  = 'whitelabel';

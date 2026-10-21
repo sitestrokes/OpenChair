@@ -247,6 +247,24 @@ class Oc_visuals_lib
         $gap = oc_below_floor($conf) || $vac_bp === null || $seen_pct < $min_seen;
         $band = $gap ? null : oc_chair_band($score, $days_to_next);
 
+        // Say WHY there is no score for this shop, rather than one generic rule —
+        // "needs 70% of hours seen" under a footer reading "100% of hours seen"
+        // is exactly the contradiction that makes a number untrustworthy.
+        $floor = (int) $this->CI->config->item('oc_confidence_floor');
+        $gap_reason = null;
+        if ($vac_bp === null) {
+            $gap_reason = 'not read yet — the first nightly read fills this in';
+        } elseif (oc_below_floor($conf)) {
+            $gap_reason = 'too few reads so far: a score is published after 2+ earlier reads spread over a few weeks'
+                        . ' (confidence ' . (int) $conf . ' of the ' . $floor . ' needed)';
+        } elseif ($seen_pct < $min_seen) {
+            $gap_reason = 'only ' . $seen_pct . '% of online hours could be seen; ' . $min_seen . '% needed';
+        }
+
+        // Reads behind this week. Observed: the real count of good reads.
+        // Derived (sample data): the modelled count.
+        $checks = $observed ? $this->real_checks((int) $b->id, $mon, end($days)['date']) : $this->checks($schedule);
+
         return [
             'v'        => 1,
             'source'   => $source,
@@ -263,7 +281,13 @@ class Oc_visuals_lib
             'week' => [
                 'start'       => date('Y-m-d', $mon),
                 'label'       => date('M j', $mon),
-                'range_label' => date('M j', $mon) . '–' . date((date('n', $mon) === date('n', strtotime('+6 days', $mon)) ? 'j' : 'M j'), strtotime('+5 days', $mon)),
+                // First to last day actually in the grid. An observed week starts
+                // on the day after the read (Thu → Wed), so "+5 days" from the
+                // start cut the last day off the label.
+                'range_label' => (function () use ($days, $mon) {
+                    $end = strtotime(end($days)['date']);
+                    return date('M j', $mon) . '–' . date(date('n', $mon) === date('n', $end) ? 'j' : 'M j', $end);
+                })(),
             ],
             'score' => [
                 'value'      => $gap ? null : $score,
@@ -287,8 +311,9 @@ class Oc_visuals_lib
                 'booked'   => $bookable - $empty,
                 'unseen'   => $unseen_total,
                 'seen_pct' => $seen_pct,
-                'checks'   => $this->checks($schedule),
+                'checks'   => $checks,
             ],
+            'gap_reason' => $gap_reason,
             'money' => $gap ? null : $money,
             'wait'  => [
                 'days'      => $days_to_next === null ? null : (int) $days_to_next,
@@ -916,7 +941,26 @@ class Oc_visuals_lib
         ];
     }
 
-    /** How many reads fed this week: one per open day per check. */
+    /**
+     * Good reads (ok / partial) of this business behind an observed week: from
+     * 7 days before the week starts (a read describes the days AFTER it) to the
+     * week's last day.
+     *
+     * @param int    $business_id
+     * @param int    $week_start unix time of the first grid day
+     * @param string $week_end   Y-m-d of the last grid day
+     * @return int
+     */
+    private function real_checks($business_id, $week_start, $week_end)
+    {
+        return (int) $this->CI->db->where('business_id', (int) $business_id)
+                                  ->where_in('status', ['ok', 'partial'])
+                                  ->where('created_at >=', date('Y-m-d 00:00:00', $week_start - 7 * 86400))
+                                  ->where('created_at <=', date('Y-m-d 23:59:59', strtotime($week_end)))
+                                  ->count_all_results('oc_scan_run');
+    }
+
+    /** Sample data only: how many reads a modelled week represents. */
     private function checks(array $schedule)
     {
         $open = count(array_filter($schedule, function ($d) { return $d !== null; }));
@@ -929,7 +973,9 @@ class Oc_visuals_lib
         if ($walkins) {
             $notes[] = 'Chair ' . $chairs . ' takes walk-ins only, so it\'s left out of the score.';
         }
-        $notes[] = 'Phone bookings and walk-ins on the other ' . $online . ' chair' . ($online === 1 ? '' : 's') . '.';
+        // "the other" only when a walk-in chair was set aside above.
+        $notes[] = 'Phone bookings and walk-ins on ' . ($walkins ? 'the other ' : ($online === 1 ? 'this ' : 'these '))
+                 . $online . ' chair' . ($online === 1 ? '' : 's') . '.';
         if ($window) {
             $pct = ($bookable + $unseen) > 0 ? (int) round(100 * $unseen / ($bookable + $unseen)) : 0;
             $notes[] = ucfirst($window['day']) . ' ' . $this->clock($window['from'], false) . '–'

@@ -1030,7 +1030,16 @@ class Ion_auth_model extends CI_Model
 		if(isset($notify) && !empty($notify)){
 
 		}else{
-			$this->mailgun->sendMail($email,$additional_data["first_name"],$param, '', 'AILocalFunnel');
+			// The welcome email is best effort. Mailgun was never loaded here, so
+			// this call fatalled AFTER the users row was written: the account
+			// existed, the group row below was never added, and the Users form got
+			// an error page instead of its success message.
+			try {
+				if (!isset($this->mailgun)) { $this->load->library('mailgun'); }
+				$this->mailgun->sendMail($email, $additional_data["first_name"], $param, '', 'AILocalFunnel');
+			} catch (\Throwable $e) {
+				log_message('error', 'registerManually: welcome email not sent to ' . $email . ': ' . $e->getMessage());
+			}
 		}
 
 		

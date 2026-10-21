@@ -157,7 +157,7 @@ trait Ic_settings_trait
         $this->_json_headers();
         $uid  = (int) $this->user_id;
         $type = strtolower(trim((string) $this->input->post('type', true)));
-        if (!in_array($type, ['openai', 'gemini', 'twilio', 'elevenlabs'], true)) {
+        if (!in_array($type, ['openai', 'gemini', 'places', 'twilio', 'elevenlabs'], true)) {
             echo json_encode(['ok' => false, 'msg' => 'Unknown key type.']); return;
         }
 
@@ -175,11 +175,22 @@ trait Ic_settings_trait
             return;
         }
 
-        // openai / gemini / elevenlabs — read IC's encrypted serialize(['key'=>..]) row.
+        // openai / gemini / places / elevenlabs — read IC's encrypted serialize(['key'=>..]) row.
         $row = $this->db->where('user_id', $uid)->where('meta_type', $type)->get('settings')->row();
         $data = ($row && $row->meta_data !== '') ? $this->_read_key_meta($row->meta_data) : null;
         $key  = (is_array($data) && isset($data['key'])) ? (string) $data['key'] : '';
         if ($key === '') { echo json_encode(['ok' => false, 'msg' => 'No ' . $type . ' key saved.']); return; }
+
+        if ($type === 'places') {
+            // One real Text Search with the cheapest field mask: proves the key
+            // AND that the Places API (New) is enabled on its project.
+            $this->load->library('openchair/oc_places_lib');
+            $res = $this->oc_places_lib->text_search($key, 'barbershop in Tampa, FL', 1);
+            echo json_encode($res['ok']
+                ? ['ok' => true, 'msg' => 'Google Places key is valid.']
+                : ['ok' => false, 'msg' => 'Google Places check failed: ' . $res['error']]);
+            return;
+        }
 
         $ch = curl_init();
         if ($type === 'openai') {
@@ -228,6 +239,7 @@ trait Ic_settings_trait
         $this->data['page_title']  = 'Settings';
         $this->data['openai_set']  = $this->_has_key($uid, 'openai');
         $this->data['gemini_set']  = $this->_has_key($uid, 'gemini');
+        $this->data['places_set']  = $this->_has_key($uid, 'places');
         $this->data['twilio_set']  = $this->_has_key($uid, 'twilio');
         $this->data['eleven_set']  = $this->_has_key($uid, 'elevenlabs');
         $this->data['bridge_base'] = $this->_ic_settings_bridge_base();
@@ -238,6 +250,7 @@ trait Ic_settings_trait
         // not the secret — the auth token is what's masked under 'twilio').
         $this->data['openai_mask'] = $this->_masked_key($uid, 'openai');
         $this->data['gemini_mask'] = $this->_masked_key($uid, 'gemini');
+        $this->data['places_mask'] = $this->_masked_key($uid, 'places');
         $this->data['eleven_mask'] = $this->_masked_key($uid, 'elevenlabs');
         $this->data['twilio_mask'] = $this->_masked_key($uid, 'twilio');          // auth token
         $this->data['twilio_sid_mask'] = $this->_masked_key($uid, 'twilio', 'sid'); // account SID
@@ -360,7 +373,7 @@ trait Ic_settings_trait
         $uid = (int) $this->user_id;
         $this->load->library('encryption');
 
-        $allowed = ['openai', 'gemini', 'twilio', 'elevenlabs'];
+        $allowed = ['openai', 'gemini', 'places', 'twilio', 'elevenlabs'];
         $type    = strtolower(trim((string) $this->input->post('meta_type', true)));
         $value   = (string) $this->input->post('value', true);
 
@@ -410,6 +423,25 @@ trait Ic_settings_trait
             'type'  => $type,
             'isSet' => $value !== '',
             'msg'   => 'Saved.',
+        ]);
+    }
+
+    /**
+     * Delete one of this user's saved API keys (the row itself, not an emptied
+     * value), so the card goes back to "not connected" and nothing stays at rest.
+     */
+    public function remove_key()
+    {
+        $this->_json_headers();
+        $type = strtolower(trim((string) $this->input->post('meta_type', true)));
+        if (!in_array($type, ['openai', 'gemini', 'places', 'twilio', 'elevenlabs'], true)) {
+            echo json_encode(['ok' => false, 'msg' => 'Unknown key type.']); return;
+        }
+        $this->db->where('user_id', (int) $this->user_id)->where('meta_type', $type)->delete('settings');
+        $removed = $this->db->affected_rows() > 0;
+        echo json_encode([
+            'ok'  => true,
+            'msg' => $removed ? 'Key removed.' : 'No key was saved.',
         ]);
     }
 

@@ -114,6 +114,15 @@ function oc_rail_icon($key)
   </a>
 
   <a class="oc-newscan" href="<?= site_url('openchair/scan') ?>"<?= $page === 'scan' ? ' aria-current="page"' : '' ?>>+ New scan</a>
+  <?php // The search box: "niche, city" sets the market, anything else searches names (Openchair::radar). ?>
+  <form class="oc-railsearch" method="get" action="<?= site_url('openchair/radar') ?>" role="search">
+    <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M10.8 10.8 14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    <input type="search" name="q" required maxlength="120" autocomplete="off"
+           data-city-ac="query" data-src="<?= site_url('openchair/cities') ?>"
+           value="<?= html_escape(($page === 'radar' && isset($q) && $q !== '') ? $q : '') ?>"
+           placeholder="<?= html_escape(isset($oc_query) && $oc_query !== '' ? $oc_query : 'barbershop, Tampa, FL') ?>"
+           aria-label="Search: niche and city, or a shop name" title="Type a niche and a city (dentist, Miami, FL) or a shop name, then Enter">
+  </form>
   <?php if ($is_demo): ?>
     <span class="oc-sample" title="Seeded sample data — not a live scan"><span class="dot" aria-hidden="true"></span> Sample data</span>
   <?php endif; ?>

@@ -74,9 +74,30 @@ class Openchair extends App_Controller
         $this->_render('pages/today', 'today', 'Home');
     }
 
-    /** S4 — Radar. The hero: map + ranked list. */
+    /**
+     * S4 — Radar / search results. The topbar search lands here.
+     *
+     * "barbershop, Tampa, FL" sets the active market (kept in the session, so
+     * Today, Business and the rail follow it) and lists it as cards: the shops
+     * OpenChair tracks, with their Chair Score, then the ones Google lists there
+     * that are not tracked yet. A query that is not "niche, city" is treated as
+     * a shop name.
+     */
     public function radar()
     {
+        $q = trim((string) $this->input->get('q', true));
+        $search = null;
+        if ($q !== '') {
+            $search = $this->_resolve_query($q);
+            if ($search['city_key'] && $search['niche_key']) {
+                $this->session->set_userdata('oc_market', [
+                    'city_key' => $search['city_key'], 'city_label' => $search['city_label'],
+                    'niche_key' => $search['niche_key'],
+                ]);
+            }
+        }
+        $name_mode = $search && !($search['city_key'] && $search['niche_key']);
+
         $city  = $this->_city();
         $niche = $this->_niche();
 
@@ -88,15 +109,52 @@ class Openchair extends App_Controller
             $opts['bucket'] = $bucket;
         }
 
-        $this->data['businesses'] = $this->oc_business_model->market($city, $niche, $opts);
-        $this->data['counts']     = $this->oc_business_model->bucket_counts($city, $niche);
+        // Google: look the market up (or reuse last week's lookup) and hand the
+        // new candidates to the service's discovery job. Only on an explicit
+        // search or refresh — paging the filters must not bill the key again.
+        $this->load->library('openchair/oc_places_lib');
+        $places = ['status' => 'skipped', 'added' => 0, 'error' => ''];
+        $refresh = $this->input->get('refresh') === '1';
+        if (!$name_mode && ($q !== '' || $refresh)) {
+            $places = $this->oc_places_lib->discover(
+                $this->tenant_id, $city, $this->_market_city_label($city),
+                $niche, $this->_niche_label($niche), $refresh
+            );
+            if ($places['status'] === 'fetched') { $this->_nudge_service('/v1/discovery/run'); }
+        }
+        $has_key = $this->oc_places_lib->key_for($this->tenant_id) !== '';
+
+        if ($name_mode) {
+            $businesses = $this->oc_business_model->search_by_name($search['text'], $search['city_key']);
+            $google     = $this->oc_business_model->google_candidates($search['city_key'], null, $search['text']);
+            $counts     = ['hungry' => 0, 'neutral' => 0, 'slammed' => 0];
+            foreach ($businesses as $b) {
+                $band = oc_chair_band_for($b);
+                $k = $band === 'steady' ? 'neutral' : $band;
+                if (isset($counts[$k])) { $counts[$k]++; }
+            }
+        } else {
+            $businesses = $this->oc_business_model->market($city, $niche, $opts);
+            $google     = $this->oc_business_model->google_candidates($city, $niche);
+            $counts     = $this->oc_business_model->bucket_counts($city, $niche);
+        }
+
+        $this->data['q']          = $q;
+        $this->data['search']     = $search;
+        $this->data['name_mode']  = $name_mode;
+        $this->data['businesses'] = $businesses;
+        $this->data['google']     = $google;
+        $this->data['places']     = $places;
+        $this->data['has_key']    = $has_key;
+        $this->data['counts']     = $counts;
         $this->data['totals']     = $this->oc_business_model->market_totals($city, $niche);
+        $this->data['market_label'] = $this->_niche_label($niche) . ' · ' . $this->_market_city_label($city);
         $this->data['f_bucket']   = $bucket;
         $this->data['f_sort']     = $opts['sort'];
         // One query for the whole list rather than one per row.
         $this->data['watched_map'] = $this->oc_prospect_model->watched_map(
             $this->tenant_id,
-            array_map(function ($b) { return (int) $b->id; }, $this->data['businesses'])
+            array_map(function ($b) { return (int) $b->id; }, $businesses)
         );
 
         $this->_render('pages/radar', 'radar', 'Find businesses');
@@ -648,6 +706,126 @@ class Openchair extends App_Controller
     }
 
     /**
+     * GET openchair/cities?q=tam — city suggestions for the search box and the
+     * New scan city field, as {places:[{short:"Tampa, FL", label, city, state, known}]}.
+     *
+     * Markets we already hold come first (instant, no outside call). The rest is
+     * OpenStreetMap's Nominatim, as the reference app does: US settlements only,
+     * since every city_key here is us-<st>-<city>. Nominatim's policy is one call
+     * a second with an identifying User-Agent, so answers are cached for a week
+     * and each session is held to one outside call a second. Suggestions are
+     * optional — any failure returns an empty list and typing still works.
+     */
+    public function cities()
+    {
+        $this->output->set_content_type('application/json');
+        $q = trim(preg_replace('/\s+/', ' ', (string) $this->input->get('q', true)));
+        $q = mb_substr($q, 0, 80);
+        if (mb_strlen($q) < 2 || !preg_match("/^[\\p{L} .,'-]+$/u", $q)) {
+            $this->output->set_output(json_encode(['places' => []]));
+            return;
+        }
+
+        // "Tampa, F" → match "Tampa" against city names; a 2-letter tail narrows the state.
+        $parts  = array_map('trim', explode(',', $q));
+        $city_q = strtolower($parts[0]);
+        $st_q   = isset($parts[1]) ? strtolower(substr($parts[1], 0, 2)) : '';
+
+        $out = []; $seen = [];
+        foreach (array_unique($this->oc_business_model->known_city_keys()) as $key) {
+            if (!preg_match('/^us-([a-z]{2})-([a-z0-9_]+)$/', $key, $m)) { continue; }
+            $name = ucwords(str_replace('_', ' ', $m[2]));
+            if (strpos(strtolower($name), $city_q) !== 0) { continue; }
+            if ($st_q !== '' && strpos($m[1], $st_q) !== 0) { continue; }
+            $short = $name . ', ' . strtoupper($m[1]);
+            $seen[strtolower($short)] = true;
+            $out[] = ['short' => $short, 'label' => $short . ' · market you have data for', 'city' => $name,
+                      'state' => strtoupper($m[1]), 'known' => true];
+        }
+
+        // Big US cities, matched as you type (Nominatim only matches whole words).
+        $this->config->load('oc_us_cities', true);
+        foreach ((array) $this->config->item('oc_us_cities', 'oc_us_cities') as $row) {
+            list($name, $st) = explode('|', $row);
+            if (strpos(strtolower($name), $city_q) !== 0) { continue; }
+            if ($st_q !== '' && strpos(strtolower($st), $st_q) !== 0) { continue; }
+            $short = $name . ', ' . $st;
+            if (isset($seen[strtolower($short)])) { continue; }
+            $seen[strtolower($short)] = true;
+            $out[] = ['short' => $short, 'label' => $short . ', United States', 'city' => $name, 'state' => $st, 'known' => false];
+            if (count($out) >= 8) { break; }
+        }
+
+        // Only go outside when the offline answers did not fill the list.
+        $osm = count($out) >= 8 ? [] : $this->_osm_cities($q);
+        foreach ((array) $osm as $p) {
+            if ($st_q !== '' && strpos(strtolower($p['state']), $st_q) !== 0) { continue; }
+            if (isset($seen[strtolower($p['short'])])) { continue; }
+            $seen[strtolower($p['short'])] = true;
+            $out[] = $p;
+        }
+
+        // null = held back by the one-a-second rule; the browser asks again shortly.
+        $this->output->set_output(json_encode(['places' => array_slice($out, 0, 8), 'throttled' => $osm === null]));
+    }
+
+    /**
+     * Nominatim lookup for US settlements, cached and rate-held.
+     *
+     * @param string $q
+     * @return array|null  null when held back by the rate rule
+     */
+    private function _osm_cities($q)
+    {
+        $this->load->driver('cache', ['adapter' => 'file', 'backup' => 'dummy']);
+        $key = 'oc_osm_' . md5(strtolower($q));
+        $hit = $this->cache->get($key);
+        if (is_array($hit)) { return $hit; }
+
+        $now = microtime(true);
+        if ($now - (float) $this->session->userdata('oc_osm_at') < 1.0) { return null; }
+        $this->session->set_userdata('oc_osm_at', $now);
+
+        if (!function_exists('curl_init')) { return []; }
+        $url = 'https://nominatim.openstreetmap.org/search?' . http_build_query([
+            'q' => $q, 'format' => 'jsonv2', 'addressdetails' => 1, 'limit' => 6,
+            'featuretype' => 'settlement', 'countrycodes' => 'us',
+        ]);
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true, CURLOPT_CONNECTTIMEOUT => 4, CURLOPT_TIMEOUT => 6,
+            CURLOPT_PROTOCOLS => CURLPROTO_HTTPS, CURLOPT_FOLLOWLOCATION => false,
+            CURLOPT_HTTPHEADER => [
+                'User-Agent: OpenChair/1.0 (+' . rtrim(base_url(), '/') . ')',
+                'Accept: application/json',
+            ],
+        ]);
+        $body = curl_exec($ch);
+        $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        if ($body === false || $code !== 200) { return []; }
+
+        // Nominatim is a geocoder, not a prefix search: "tam" also returns peaks,
+        // airports and big cities that merely mention it. Keep real settlements
+        // whose name starts with what was typed.
+        $typed = strtolower(trim(explode(',', $q)[0]));
+        $out = [];
+        foreach ((array) json_decode((string) $body, true) as $row) {
+            if (!in_array((string) ($row['addresstype'] ?? ''), ['city', 'town', 'village', 'hamlet', 'municipality'], true)) { continue; }
+            $a    = isset($row['address']) && is_array($row['address']) ? $row['address'] : [];
+            $city = (string) ($row['name'] ?? $a['city'] ?? $a['town'] ?? $a['village'] ?? '');
+            if ($city === '' || strpos(strtolower($city), $typed) !== 0) { continue; }
+            if (!preg_match('/^US-([A-Z]{2})$/', (string) ($a['ISO3166-2-lvl4'] ?? ''), $m)) { continue; }
+            // parse_city() accepts letters, spaces, . ' - only; skip names it would refuse.
+            if (!preg_match("/^[A-Za-z][A-Za-z .'-]{1,60}$/", $city)) { continue; }
+            $out[] = ['short' => $city . ', ' . $m[1], 'label' => (string) ($row['display_name'] ?? $city),
+                      'city' => $city, 'state' => $m[1], 'known' => false];
+        }
+        $this->cache->save($key, $out, 7 * 86400);
+        return $out;
+    }
+
+    /**
      * Ask openchair-service to run a job now rather than at its next tick.
      *
      * Best effort and short: the scheduled job picks the work up anyway, so a
@@ -739,7 +917,7 @@ class Openchair extends App_Controller
         // The shell's sample-data flag. A seeded number must never be mistakable
         // for an observed one (rule 6 — provenance is always visible).
         $this->data['oc_is_demo'] = $this->oc_business_model->is_demo_market($city);
-        $this->data['oc_query']   = $this->_niche() . ', ' . $this->_city_label($city);
+        $this->data['oc_query']   = strtolower($this->_niche_label($this->_niche())) . ', ' . $this->_market_city_label($city);
 
         // Rail-foot quota meters. FE entitlements per the brief's ladder; the real
         // two-meter model (pulls vs monitored slots) arrives in Phase 8.
@@ -756,16 +934,148 @@ class Openchair extends App_Controller
         ]);
     }
 
-    /** @return string the active market's city key */
+    /** @return string the active market's city key — the last search, else the demo market */
     private function _city()
     {
-        return self::DEMO_CITY;
+        $m = $this->session->userdata('oc_market');
+        return (is_array($m) && !empty($m['city_key'])) ? (string) $m['city_key'] : self::DEMO_CITY;
     }
 
     /** @return string the active market's niche key */
     private function _niche()
     {
-        return self::DEMO_NICHE;
+        $m = $this->session->userdata('oc_market');
+        return (is_array($m) && !empty($m['niche_key'])) ? (string) $m['niche_key'] : self::DEMO_NICHE;
+    }
+
+    /** @return array<string,string> enabled niches, key => label */
+    private function _niches()
+    {
+        static $cache = null;
+        if ($cache === null) {
+            $cache = [];
+            foreach ($this->db->select('niche_key, label')->where('enabled', 1)->order_by('id')->get('oc_niche')->result() as $n) {
+                $cache[(string) $n->niche_key] = (string) $n->label;
+            }
+        }
+        return $cache;
+    }
+
+    /** 'barbershop' → 'Barbershop' */
+    private function _niche_label($niche_key)
+    {
+        $n = $this->_niches();
+        return isset($n[$niche_key]) ? $n[$niche_key] : ucwords(str_replace('_', ' ', (string) $niche_key));
+    }
+
+    /** 'us-fl-tampa' → 'Tampa, FL' */
+    private function _market_city_label($city_key)
+    {
+        $m = $this->session->userdata('oc_market');
+        if (is_array($m) && isset($m['city_key'], $m['city_label']) && $m['city_key'] === $city_key) {
+            return (string) $m['city_label'];
+        }
+        $parts = explode('-', (string) $city_key);
+        if (count($parts) >= 3) {
+            return ucwords(str_replace('_', ' ', implode(' ', array_slice($parts, 2)))) . ', ' . strtoupper($parts[1]);
+        }
+        return $this->_city_label($city_key);
+    }
+
+    /**
+     * What was typed in the search bar → a market, or a name search.
+     *
+     * Accepts "barbershop, Tampa, FL", "barbershop, Tampa", "barbers in tampa fl",
+     * "Tampa FL dentist". The niche is matched against oc_niche (plus everyday
+     * words: "barber", "dentist", "nails"…); the rest is the city. A city with no
+     * state resolves only when we already know exactly one city of that name —
+     * guessing a state would silently split a market.
+     *
+     * @param string $q
+     * @return array{text:string, niche_key:?string, city_key:?string, city_label:?string, problem:?string}
+     */
+    private function _resolve_query($q)
+    {
+        $out = ['text' => $q, 'niche_key' => null, 'city_key' => null, 'city_label' => null, 'problem' => null];
+        $norm = strtolower(trim(preg_replace('/\s+/', ' ', $q)));
+
+        $synonyms = [
+            'barbershop' => ['barbershop', 'barber shop', 'barbers', 'barber'],
+            'hair_salon' => ['hair salon', 'hairdresser', 'hair stylist', 'salon'],
+            'nail_salon' => ['nail salon', 'nails', 'nail', 'manicure'],
+            'lash_brow'  => ['lash', 'brow', 'eyelash'],
+            'med_spa'    => ['med spa', 'medspa', 'medical spa', 'botox'],
+            'massage'    => ['massage'],
+            'tattoo'     => ['tattoo'],
+            'dental'     => ['dental', 'dentist', 'dentists'],
+            'chiropractic' => ['chiropractic', 'chiropractor', 'chiropractors'],
+            'physio'     => ['physiotherapy', 'physical therapy', 'physio', 'physical therapist'],
+            'yoga_studio'    => ['yoga'],
+            'pilates_studio' => ['pilates'],
+            'gym_pt'     => ['personal trainer', 'personal training', 'gym', 'fitness'],
+            'restaurant' => ['restaurant', 'restaurants'],
+            'hvac'       => ['hvac', 'air conditioning', 'heating'],
+            'plumbing'   => ['plumbing', 'plumber', 'plumbers'],
+        ];
+        $niches = $this->_niches();
+        foreach ($niches as $k => $label) {
+            $synonyms[$k] = array_merge([strtolower($label), str_replace('_', ' ', $k)], isset($synonyms[$k]) ? $synonyms[$k] : []);
+        }
+        // Longest phrase first, so "hair salon" wins over "salon".
+        $phrases = [];
+        foreach ($synonyms as $k => $list) {
+            if (!isset($niches[$k])) { continue; }
+            foreach ($list as $w) { $phrases[$w] = $k; }
+        }
+        uksort($phrases, function ($a, $b) { return strlen($b) - strlen($a); });
+
+        $rest = $norm;
+        foreach ($phrases as $w => $k) {
+            if (preg_match('/(^|[\s,])' . preg_quote($w, '/') . '(?=$|[\s,])/', $norm)) {
+                $out['niche_key'] = $k;
+                $rest = preg_replace('/(^|[\s,])' . preg_quote($w, '/') . '(?=$|[\s,])/', ' ', $norm, 1);
+                break;
+            }
+        }
+
+        // What is left is the city: strip filler and punctuation.
+        $rest = trim(preg_replace('/\b(in|near|around)\b/', ' ', $rest));
+        $rest = trim(preg_replace('/\s*,\s*/', ', ', $rest), " ,");
+        $rest = preg_replace('/\s+/', ' ', $rest);
+        if ($rest === '') {
+            if ($out['niche_key']) { $out['problem'] = 'Add a city, for example "' . $niches[$out['niche_key']] . ', Tampa, FL".'; }
+            return $out;
+        }
+
+        $city = null; $region = null;
+        if (preg_match('/^([a-z][a-z .\'-]{1,60}?)[ ,]+([a-z]{2})$/', $rest, $m)) {
+            $city = trim($m[1], " ,"); $region = $m[2];
+        } elseif (preg_match('/^[a-z][a-z .\'-]{1,60}$/', $rest)) {
+            $city = trim($rest);
+        }
+        if ($city === null) { return $out; }
+        $slug = trim(preg_replace('/[^a-z0-9]+/', '_', $city), '_');
+
+        if ($region === null) {
+            $hits = array_values(array_unique(array_filter($this->oc_business_model->known_city_keys(), function ($k) use ($slug) {
+                return (bool) preg_match('/^[a-z]{2}-[a-z]{2,3}-' . preg_quote($slug, '/') . '$/', $k);
+            })));
+            if (count($hits) === 1) {
+                $region = explode('-', $hits[0])[1];
+            } elseif (!$out['niche_key']) {
+                return $out;   // a single word that is not a known city — search it as a name
+            } else {
+                $out['problem'] = 'Which ' . ucwords($city) . '? Add the state, for example "' . ucwords($city) . ', FL".';
+                return $out;
+            }
+        }
+
+        $out['city_key']   = 'us-' . strtolower($region) . '-' . $slug;
+        $out['city_label'] = ucwords($city) . ', ' . strtoupper($region);
+        // A city typed with no niche keeps the current niche, so "Orlando, FL"
+        // means "this niche, in Orlando".
+        if (!$out['niche_key']) { $out['niche_key'] = $this->_niche(); }
+        return $out;
     }
 
     /**

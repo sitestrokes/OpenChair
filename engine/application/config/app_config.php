@@ -80,6 +80,18 @@ $config['oc_share_ttl_days']      = 30;
 // The defaults mirror the host engine's map (Access_control_lib) so that turning
 // it on with no edits behaves like the sister product.
 $config['oc_access_enforce'] = FALSE;
+
+// Access levels a user can be given on Team & roles → New user (users.access).
+// The form, Users::_build_access() and the per-creator allow-list all read this.
+//   1  FE      — OpenChair itself: find businesses, pipeline, pitches, cards.
+//   51 Agency  — FE plus running a team: add team members (they share this
+//                agency's pipeline, oc_012), Brand & white-label, every feature
+//                gate (oc_access_full). Only the superadmin can grant it; an
+//                agency can only add FE members to its own team.
+$config['access_specifier'] = [
+    1  => 'FE — find businesses, pipeline, pitches',
+    51 => 'Agency — FE + team members & white-label',
+];
 $config['oc_access_codes'] = [
     'core'     => ['1', '2', '3', '4', '7', '10', '71', '9', '94', '91', '92', '93'], // may use OpenChair at all
     // README decision #2 recommends FE gets BOTH buckets; set to the OTO1 list to hold Slammed back.

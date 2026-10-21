@@ -65,6 +65,74 @@ class Oc_business_model extends CI_Model
     }
 
     /**
+     * Search by shop name (and optionally within one market) — the search bar's
+     * answer when what was typed is a name, not "niche, city".
+     *
+     * @param string      $text
+     * @param string|null $city_key
+     * @param int         $limit
+     * @return array
+     */
+    public function search_by_name($text, $city_key = null, $limit = 60)
+    {
+        $this->db->select('b.*, p.platform_key, p.name AS platform_name')
+                 ->from('oc_business b')
+                 ->join('oc_platform p', 'p.id = b.platform_id', 'left')
+                 ->where('b.status', 'active')
+                 ->where('b.suppressed_at IS NULL')
+                 ->group_start()
+                     ->like('b.name', (string) $text)
+                     ->or_like('b.address_line', (string) $text)
+                 ->group_end();
+        if ($city_key) { $this->db->where('b.city_key', $city_key); }
+        return $this->db->order_by('b.latest_vacancy_bp', 'DESC')->limit((int) $limit)->get()->result();
+    }
+
+    /**
+     * Every city key we hold anything for — so "barbershop, Tampa" (no state)
+     * can be resolved to us-fl-tampa when that is the only Tampa we know.
+     *
+     * @return string[]
+     */
+    public function known_city_keys()
+    {
+        $rows = $this->db->query(
+            "SELECT city_key FROM oc_business WHERE city_key <> ''
+             UNION SELECT city_key FROM oc_discovery_candidate WHERE city_key <> ''"
+        )->result();
+        return array_map(function ($r) { return (string) $r->city_key; }, $rows);
+    }
+
+    /**
+     * Shops Google lists in a market that OpenChair does not track yet — no
+     * business row, so no Chair Score. Shown as their own cards, honestly
+     * labelled, rather than dropped (FR-2.3: say what we cannot see).
+     *
+     * @param string|null $city_key
+     * @param string|null $niche_key
+     * @param string|null $text       optional name filter
+     * @param int         $limit
+     * @return array
+     */
+    public function google_candidates($city_key, $niche_key, $text = null, $limit = 60)
+    {
+        $this->db->select('c.*')
+                 ->from('oc_discovery_candidate c')
+                 ->where('c.source', 'places')
+                 ->where('c.business_id IS NULL')
+                 // Hide owner opt-outs only. A shop "rejected" because Google lists
+                 // no website is still a real shop — it just cannot be checked.
+                 ->where("NOT (c.status = 'rejected' AND COALESCE(c.detect_evidence, '') = 'do-not-scan register')", null, false);
+        if ($city_key)  { $this->db->where('c.city_key', $city_key); }
+        if ($niche_key) { $this->db->where('c.niche_key', $niche_key); }
+        if ($text !== null && $text !== '') {
+            $this->db->group_start()->like('c.name', $text)->or_like('c.address_line', $text)->group_end();
+        }
+        return $this->db->order_by('c.review_count', 'DESC')->order_by('c.name', 'ASC')
+                        ->limit((int) $limit)->get()->result();
+    }
+
+    /**
      * One business, with its platform.
      *
      * @param int $id

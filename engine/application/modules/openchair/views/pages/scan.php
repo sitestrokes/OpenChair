@@ -58,7 +58,9 @@ if ($old_city === '' && $q !== '' && strpos($q, ',') !== false) {
         <label style="display:grid;gap:6px">
           <span class="stat-label">City</span>
           <input class="input" type="text" name="city" value="<?= html_escape($old_city) ?>" required
-                 placeholder="Tampa, FL" autocomplete="off" maxlength="80" pattern="[A-Za-z][A-Za-z .'\-]{1,60},\s*[A-Za-z]{2}">
+                 placeholder="Start typing a city — Tampa, FL" autocomplete="off" maxlength="80" pattern="[A-Za-z][A-Za-z .'\-]{1,60},\s*[A-Za-z]{2}"
+                 title="City, then the 2-letter state — pick one from the list" spellcheck="false"
+                 data-city-ac="city" data-src="<?= site_url('openchair/cities') ?>">
         </label>
         <label style="display:grid;gap:6px">
           <span class="stat-label">Public booking links &middot; one per line, up to 50</span>

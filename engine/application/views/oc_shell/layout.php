@@ -47,6 +47,31 @@ $brand_foot  = !empty($ic_brand['footer'])     ? $ic_brand['footer']     : '';
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap">
 <link rel="stylesheet" href="<?= base_url('assets/css/oc-shell.css') ?>">
 <?= isset($page_head) ? $page_head : '' ?>
+<script>
+// icToast(msg, isError) — the success/failure message every ported page calls
+// (Users, Settings, White-label, Profile, API config). It lived in the host
+// engine's layout and was never brought over, so those pages threw on save and
+// showed nothing. Defined in <head> so a page can call it at any time.
+window.icToast = function (msg, isErr) {
+  var box = document.getElementById('oc-toasts');
+  if (!box) {
+    box = document.createElement('div');
+    box.id = 'oc-toasts';
+    box.setAttribute('aria-live', 'polite');
+    document.body.appendChild(box);
+  }
+  var t = document.createElement('div');
+  t.className = 'oc-toast' + (isErr ? ' is-err' : '');
+  t.setAttribute('role', isErr ? 'alert' : 'status');
+  // Server messages can carry <p> from validation_errors(); show them as text.
+  var tmp = document.createElement('div');
+  tmp.innerHTML = String(msg == null ? '' : msg);
+  t.textContent = (isErr ? '⚠  ' : '✓  ') + (tmp.textContent || '').replace(/\s+/g, ' ').trim();
+  box.appendChild(t);
+  setTimeout(function () { t.classList.add('is-out'); }, isErr ? 6000 : 3500);
+  setTimeout(function () { if (t.parentNode) { t.parentNode.removeChild(t); } }, isErr ? 6400 : 3900);
+};
+</script>
 </head>
 <body>
 <a href="#oc-main" class="oc-skip-link">Skip to main content</a>
@@ -97,5 +122,6 @@ $brand_foot  = !empty($ic_brand['footer'])     ? $ic_brand['footer']     : '';
 })();
 </script>
 <?= isset($page_script) ? $page_script : '' ?>
+<script src="<?= base_url('assets/js/oc-city-ac.js') ?>?v=1" defer></script>
 </body>
 </html>

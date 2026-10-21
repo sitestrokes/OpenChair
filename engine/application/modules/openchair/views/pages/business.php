@@ -161,7 +161,7 @@ $css_v = '?v=' . @filemtime(FCPATH . 'assets/css/visuals/business.css');
           <div class="ocb-k">Chair score</div>
           <?php if ($gap): ?>
             <div class="ocb-v ocb-v--gap">Not enough data yet</div>
-            <div class="ocb-n">needs 5+ days checked and 70% of hours seen</div>
+            <div class="ocb-n"><?= html_escape($s['gap_reason'] ?: 'needs 5+ days checked and 70% of hours seen') ?></div>
           <?php else: ?>
             <div class="ocb-v ocb-v--<?= $cls ?>"><?= (int) $s['score']['value'] ?> <small>/100</small></div>
             <div class="ocb-n">&plusmn;<?= (int) $s['score']['margin'] ?> &middot; <?= html_escape($s['score']['confidence']) ?> confidence</div>
@@ -223,6 +223,10 @@ $css_v = '?v=' . @filemtime(FCPATH . 'assets/css/visuals/business.css');
             'grid'      => $s['grid'],
             'grid_opts' => ['size' => 'md', 'counts' => 'head', 'skip_shut' => true],
         ]); ?>
+        <p class="ocb-fine">Each tile is one chair for one hour, red when half or more of it was open to book.
+          The number beside each day is that day&rsquo;s empty chair-hours, counted to the minute &mdash; so it
+          can be lower than the red tiles.<?php if ($s['source'] === 'observed'): ?> Read from the shop&rsquo;s
+          public booking page<?= $b->last_good_scan_at ? ' ' . html_escape(oc_data_age($b->last_good_scan_at)) : '' ?>.<?php endif; ?></p>
         <?php if ($s['source'] === 'derived'): ?>
           <p class="ocb-fine">Grid is illustrative until Radar runs: the number of empty chair-hours matches the
             measured score, the placement is derived. Redrawn by us &mdash; never a screenshot of their booking page.</p>
@@ -247,9 +251,9 @@ $css_v = '?v=' . @filemtime(FCPATH . 'assets/css/visuals/business.css');
       <h2 id="ocb-share-h">Share card</h2>
 
       <?php if ($gap): ?>
-        <p class="ocb-note">Not enough data yet to put a number on a card for this business. We need 5+ days
-          checked and 70% of its hours seen &mdash; until then there is nothing here we would stand behind
-          in their shop.</p>
+        <p class="ocb-note">Not enough data yet to put a number on a card for this business &mdash;
+          <?= html_escape($s['gap_reason'] ?: 'we need 5+ days checked and 70% of its hours seen') ?>.
+          Until then there is nothing here we would stand behind in their shop.</p>
       <?php else: ?>
       <form method="post" action="<?= site_url('openchair/share') ?>" class="ocb-share-form" data-ocb-share>
         <?= oc_csrf() ?>
@@ -310,7 +314,7 @@ $css_v = '?v=' . @filemtime(FCPATH . 'assets/css/visuals/business.css');
                 ? 'Link opened ' . (int) $sh->open_count . ' time' . ((int) $sh->open_count === 1 ? '' : 's') . ' &middot; last ' . html_escape(oc_data_age($sh->last_opened_at))
                 : 'Not opened yet' ?></li>
           <?php endforeach; ?>
-          <li class="ocb-mono"><?= html_escape($s['score']['method']) ?> &middot; <?= (int) $s['totals']['checks'] ?> checks &middot; <?= (int) $s['totals']['seen_pct'] ?>% of hours seen</li>
+          <li class="ocb-mono"><?= html_escape($s['score']['method']) ?> &middot; <?= (int) $s['totals']['checks'] ?> <?= (int) $s['totals']['checks'] === 1 ? 'read' : 'reads' ?> &middot; <?= (int) $s['totals']['seen_pct'] ?>% of hours seen</li>
         </ul>
       </div>
     </aside>

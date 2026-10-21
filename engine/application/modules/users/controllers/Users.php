@@ -230,6 +230,35 @@ class Users extends App_Controller{
 
 
 
+	/** The superadmin is user 1 (access '1,51'), or an account holding code 5. */
+	private function _is_superadmin()
+	{
+		$access = array_map('trim', explode(',', (string) ($this->user->access ?? '')));
+		return (int) $this->user_id === 1 || in_array('5', $access, true);
+	}
+
+	/**
+	 * The access codes this operator may hand out: the superadmin grants FE and
+	 * Agency; an agency adds FE members to its own team and nothing more, so a
+	 * crafted POST cannot mint another agency.
+	 *
+	 * @param mixed $posted raw $_POST['access']
+	 * @return string[]
+	 */
+	private function _grantable($posted)
+	{
+		$posted  = is_array($posted) ? array_map('strval', $posted) : array();
+		$allowed = $this->_is_superadmin() ? array('1', '51') : array('1');
+		return array_values(array_intersect($posted, $allowed));
+	}
+
+	/** Answer the add/edit form: {responseCode, displayMessage}. */
+	private function _form_reply($ok, $message)
+	{
+		$this->output->set_content_type('application/json');
+		die(json_encode(array('responseCode' => $ok ? 1 : 0, 'displayMessage' => $message)));
+	}
+
 	/*
 
 		creates a new user account
@@ -237,139 +266,46 @@ class Users extends App_Controller{
 	*/
 
 	public function create() {
-	
-		$this->form_validation->set_rules('firstname', 'First name', 'required');
-		$this->form_validation->set_rules('lastname', 'Last name', 'required');
-		$this->form_validation->set_rules('email', 'Email', 'required|valid_email');
-		$this->form_validation->set_rules('password', 'Password', 'required');
-		// $this->form_validation->set_rules('access[]', 'Access', 'required');
-	
+
+		$this->form_validation->set_rules('firstname', 'First name', 'trim|required|max_length[50]');
+		$this->form_validation->set_rules('lastname', 'Last name', 'trim|required|max_length[50]');
+		$this->form_validation->set_rules('email', 'Email', 'trim|required|valid_email');
+		$this->form_validation->set_rules('password', 'Password', 'required|min_length[8]');
+
 		if ($this->form_validation->run() == FALSE) {
-			
-			//all did not go well
-			$return = array();
-			
-			$temp = array();
-			$temp['header'] = $this->lang->line('users_create_error1_heading');
-			$temp['content'] = $this->lang->line('users_create_error1_message').validation_errors();
-			
-			$return['responseCode'] = 0;
-			$return['displayMessage'] = validation_errors();
-			$return['responseHTML'] = $this->load->view('partials/error', array('data'=>$temp), true);
-			
-			die( json_encode( $return ) );
-		
-		} else {
-
-			$creatorAccess = explode(',', $this->user->access);
-			$isSuperAdmin  = in_array('5', $creatorAccess);
-			$isJvAdmin     = in_array('51', $creatorAccess) && !$isSuperAdmin;
-
-			if ($isJvAdmin && !empty($_POST['access']) && is_array($_POST['access'])) {
-				$allowed = ['1', '93'];
-				$_POST['access'] = array_values(array_intersect($_POST['access'], $allowed));
-			}
-
-			// print_r($_POST['access']);exit;
-			$access      = $this->_build_access($_POST['access']);
-			$product_ids = '';
-			// echo $access;exit;
-			// if(empty($access)){$access = '1';}
-			//make sure the email address is allowed
-			if( $this->ion_auth->email_check($_POST['email']) ) {
-			
-				//all did not go well
-				$return = array();
-				
-				$temp = array();
-				$temp['header'] = $this->lang->line('users_create_error1_heading');
-				$temp['content'] = $this->lang->line('users_create_error2_message');
-				
-				$return['responseCode'] = 0;
-				$return['displayMessage'] = "The email address you're trying to use is already used by different account. Please choose a different email address.";
-				$return['responseHTML'] = $this->load->view('partials/error', array('data'=>$temp), true);
-				
-				die( json_encode( $return ) );
-			
-			}
-			$user = $this->ion_auth->user()->row();
-			$userID = $user->id;
-			
-			$userAccess = explode(",", $this->user->access);
-
-			// print_r($userAccess);exit;
-			//create the account
-
-			if( $userID != 1){
-
-				$temp = $_POST;
-				unset($temp['password']);
-
-				if(in_array('9', $_POST['access']) || in_array('91', $_POST['access']) || in_array('92', $_POST['access']) || in_array('94', $_POST['access']) ){
-					$subject = 'Try to create bundle account';
-				}else{
-					$subject = 'New User Account Created';
-				}
-
-				$message = 'One Account has been created By '.$this->user->first_name.' '.$this->user->last_name.'.<br> Email : '.$this->user->email.'<br> User Details : '.json_encode($temp);
-				$param = array('message' => $message,'subject' => $subject);
-
-				$adminNotifyList = [
-					'pintub@onlightenmedia.com' => 'Pintu',
-					'nakul@onlightenmedia.com'  => 'Nakul',
-				];
-				foreach ($adminNotifyList as $notifyEmail => $notifyName) {
-					$this->mailgun->sendMail($notifyEmail, $notifyName, $param);
-				}
-
-				if(in_array('9', $_POST['access']) || in_array('91', $_POST['access']) || in_array('92', $_POST['access']) || in_array('94', $_POST['access']) ){
-					exit;
-				}
-			}
-
-			
-			// New accounts created here are regular MEMBERS (group '2'), NOT admins.
-			// (This form previously assigned group '1' = admin to every account it
-			// created, which is why non-admin/JV users saw the Admin menu and could
-			// reach Manage Users / White-label. Admin is granted explicitly via the
-			// edit form's "isAdmin" checkbox — add_to_group(1,...) below.)
-			//email activation?
-			if( isset($_POST['notify']) && $_POST['notify'] == 'yes' ) {
-
-				$id = $this->ion_auth->registerManually($_POST['email'], $_POST['password'], $_POST['email'], array('first_name'=>$_POST['firstname'], 'last_name'=>$_POST['lastname']), array('2'), true, $access);
-
-			} else {
-
-				$id = $this->ion_auth->registerManually($_POST['email'], $_POST['password'], $_POST['email'], array('first_name'=>$_POST['firstname'], 'last_name'=>$_POST['lastname'],'product_id' => $product_ids), array('2'), false, $access);
-
-			}
-
-			if (!empty($id) && in_array('93', $_POST['access'])) {
-				$this->copyAdminSettingsToUser($id);
-			}
-
-			
-
-			
-			//all good then
-			$return = array();
-			
-			//include users in the return as well
-			//$return['users'] = $this->load->view('partials/users', array('users'=>$this->Usermodel->getUsersPlusSites()), true);
-			
-			$temp = array();
-			$temp['header'] = $this->lang->line('users_create_success_heading');
-			$temp['content'] = $this->lang->line('users_create_success_message');
-			
-			$return['responseCode'] = 1;
-			$return['displayMessage'] = 'The new account was created successfully!';
-			$return['responseHTML'] = $this->load->view('partials/success', array('data'=>$temp), true);
-			
-			die( json_encode( $return ) );
-		
-		
-	
+			$this->_form_reply(false, strip_tags(validation_errors(' ', ' ')));
 		}
+
+		$granted = $this->_grantable($this->input->post('access'));
+		if (!in_array('1', $granted, true)) {
+			$this->_form_reply(false, 'Tick FE access — every account needs it to use OpenChair.');
+		}
+		$access = $this->_build_access($granted);
+
+		$email = (string) $this->input->post('email', true);
+		if ($this->ion_auth->email_check($email)) {
+			$this->_form_reply(false, 'That email address is already used by another account. Please choose a different one.');
+		}
+
+		// New accounts are regular members (group 2). parent_user_id is set to the
+		// creator by registerManually(), which is what makes them this agency's team.
+		$notify = $this->input->post('notify') === 'yes';
+		$id = $this->ion_auth->registerManually(
+			$email, (string) $this->input->post('password'), $email,
+			// users.product_id is NOT NULL; registerManually() writes NULL unless given one.
+			array('first_name' => (string) $this->input->post('firstname', true),
+			      'last_name'  => (string) $this->input->post('lastname', true),
+			      'product_id' => ''),
+			array('2'), $notify, $access
+		);
+
+		if (empty($id)) {
+			$why = trim(strip_tags((string) $this->ion_auth->errors()));
+			$this->_form_reply(false, 'The account could not be created' . ($why !== '' ? ': ' . $why : '.'));
+		}
+
+		$level = in_array('51', $granted, true) ? 'Agency' : 'FE';
+		$this->_form_reply(true, 'User created: ' . $email . ' (' . $level . ' access).');
 	}
 
 
@@ -380,115 +316,52 @@ class Users extends App_Controller{
 	*/
 	
 	public function update() {
-	
-		$this->form_validation->set_rules('userID', 'User ID', 'required');
-		$this->form_validation->set_rules('email', 'Email', 'required|valid_email');
-		// $this->form_validation->set_rules('password', 'Password', 'required');
-		$this->form_validation->set_rules('access[]', 'Access', 'required');
+
+		$this->form_validation->set_rules('userID', 'User ID', 'required|is_natural_no_zero');
+		$this->form_validation->set_rules('firstname', 'First name', 'trim|required|max_length[50]');
+		$this->form_validation->set_rules('lastname', 'Last name', 'trim|required|max_length[50]');
+		$this->form_validation->set_rules('password', 'Password', 'min_length[8]');
 
 		if ($this->form_validation->run() == FALSE) {
-			
-			//all did not go well
-			$return = array();
-			
-			$temp = array();
-			$temp['header'] = $this->lang->line('users_update_error1_heading');
-			$temp['content'] = $this->lang->line('users_update_error1_message').validation_errors();
-			
-			$return['responseCode'] = 0;
-			$return['displayMessage'] = validation_errors();
-			$return['responseHTML'] = $this->load->view('partials/error', array('data'=>$temp), true);
-			
-			die( json_encode( $return ) );
-		
-		} else {
-			
-			// print_r($_POST['access']);exit;
-			$access = $this->_build_access($_POST['access']);
-			// echo $access;exit;
-			//make sure the email address is allowed
-			
-			$user = $this->ion_auth->user($_POST['userID'])->row();
-			
-			if( $_POST['email'] != $user->email && $this->ion_auth->email_check($_POST['email']) ) {
-			
-			//if( $_POST['email'] === $user->username || $_POST['email'] === $user->email || $this->ion_auth->identity_check($_POST['email']) === FALSE ) {
-			
-				//all did not go well
-				$return = array();
-				
-				$temp = array();
-				$temp['header'] = $this->lang->line('users_update_error2_heading');
-				$temp['content'] = $this->lang->line('users_update_error2_message');
-				
-				$return['responseCode'] = 0;
-				$return['displayMessage'] = "The email address you're trying to use is already used by different account. Please choose a different email address";
-				$return['responseHTML'] = $this->load->view('partials/error', array('data'=>$temp), true);
-				
-				die( json_encode( $return ) );
-			
-			}
-
-
-			if( $this->user_id != 1){
-
-				$temp = $_POST;
-				unset($temp['password']);
-
-				$email = 'pintub@onlightenmedia.com';
-				$name = 'Pintu';
-				$subject = 'User Account Updated';
-				$message = 'One Account details have been updated By '.$this->user->first_name.' '.$this->user->last_name.'.<br> Email : '.$this->user->email.'<br> User Details : '.json_encode($temp);
-
-				$param = array('message' => $message,'subject' => $subject);
-				$this->mailgun->sendMail($email, $name, $param);
-
-				if(in_array('9', $_POST['access']) || in_array('91', $_POST['access']) || in_array('92', $_POST['access']) || in_array('94', $_POST['access']) ){
-					exit;
-				}
-			}
-
-			
-
-
-
-			//update the account details
-			$this->ion_auth_model->update($_POST['userID'], array('email'=>$_POST['email'], 'password'=>$_POST['password'], 'access'=>$access,'first_name'=>$_POST['firstname'],'last_name'=>$_POST['lastname']));
-
-			//admin?
-			
-			if( isset($_POST['isAdmin']) && $_POST['isAdmin'] == 'yes' ) {
-			
-				$this->ion_auth->add_to_group(1, $_POST['userID']);
-			
-			} else {
-			
-				$this->ion_auth->remove_from_group(1, $_POST['userID']);
-				
-			}
-
-
-
-			
-
-
-
-			
-			//all good then
-			$return = array();
-						
-			$temp = array();
-			$temp['header'] = $this->lang->line('users_update_success_heading');
-			$temp['content'] = $this->lang->line('users_update_success_message');
-			
-			$return['responseCode'] = 1;
-			$return['displayMessage'] = "The account was updated successfully!";
-			$return['responseHTML'] = $this->load->view('partials/success', array('data'=>$temp), true);
-			
-			die( json_encode( $return ) );
-		
+			$this->_form_reply(false, strip_tags(validation_errors(' ', ' ')));
 		}
-		
+
+		// Only the superadmin, or the agency that created this account, may edit it.
+		// Without this check any agency could rewrite any account — the superadmin's
+		// included — by changing the posted userID.
+		$target_id = (int) $this->input->post('userID');
+		$target    = $this->ion_auth->user($target_id)->row();
+		if (!$target) {
+			$this->_form_reply(false, 'That user no longer exists.');
+		}
+		if ($target_id === 1 && (int) $this->user_id !== 1) {
+			$this->_form_reply(false, 'The superadmin account can only be edited by itself.');
+		}
+		if (!$this->_is_superadmin() && (int) $target->parent_user_id !== (int) $this->user_id) {
+			$this->_form_reply(false, 'You can only edit members of your own team.');
+		}
+
+		$granted = $this->_grantable($this->input->post('access'));
+		if (!in_array('1', $granted, true)) {
+			$this->_form_reply(false, 'Tick FE access — every account needs it to use OpenChair.');
+		}
+		$access = $this->_build_access($granted);
+
+		// The email is read-only on the form and Ion Auth's update() ignores it, so
+		// it is not taken from the POST. A blank password keeps the current one.
+		$ok = $this->ion_auth_model->update($target_id, array(
+			'password'   => (string) $this->input->post('password'),
+			'access'     => $access,
+			'first_name' => (string) $this->input->post('firstname', true),
+			'last_name'  => (string) $this->input->post('lastname', true),
+		));
+		if (!$ok) {
+			$why = trim(strip_tags((string) $this->ion_auth->errors()));
+			$this->_form_reply(false, 'The account could not be updated' . ($why !== '' ? ': ' . $why : '.'));
+		}
+
+		$level = in_array('51', $granted, true) ? 'Agency' : 'FE';
+		$this->_form_reply(true, 'User updated: ' . $target->email . ' (' . $level . ' access).');
 	}
 
 	/*

@@ -93,6 +93,7 @@ $overview = [
   $rows = [
     ['openai',     'OpenAI',     'brain', 'Powers your live in-page browser voice and builds your Bridges (reads the offer + writes the page/voice), on your own OpenAI account. Add OpenAI OR Gemini below — at least one is required.', !empty($openai_set), 'sk-...',             'build', ($openai_mask ?? '')],
     ['gemini',     'Google Gemini', 'sparkle', 'Alternative AI brain for the browser voice + building Bridges. If OpenAI is unset or out of quota, the builder falls back to your Gemini key. Add OpenAI OR Gemini — at least one is required.', !empty($gemini_set), 'AIza...',          'build', ($gemini_mask ?? '')],
+    ['places',     'Google Places', 'sparkle', 'Powers the search bar: type a niche and a city ("barbershop, Tampa, FL") and OpenChair lists the real businesses Google knows there, as cards. Needs the Places API (New) enabled on the key\'s Google Cloud project. Results are saved, so a repeat search does not bill again for a week.', !empty($places_set), 'AIza...', 'optional', ($places_mask ?? '')],
     ['twilio',     'Twilio',     'phone', 'Needed for the phone + SMS lanes — you are the caller/sender of record on your own number.',                       !empty($twilio_set), 'Auth token',         'required', ($twilio_mask ?? '')],
     ['elevenlabs', 'ElevenLabs', 'mic', 'Optional. A premium voice for the AI phone calls.',                                                               !empty($eleven_set), 'ElevenLabs API key', 'optional', ($eleven_mask ?? '')],
   ];
@@ -107,7 +108,9 @@ $overview = [
       <div class="c-ic"><?= ic_svg($icon, 22) ?></div>
       <div class="c-body">
         <div class="c-title"><b><?= html_escape($label) ?></b>
-          <span class="chip <?= $chip_cls ?>" id="chip_<?= $type ?>"><?= html_escape($chip_txt) ?></span>
+          <span class="chip <?= $chip_cls ?>" id="chip_<?= $type ?>"
+                data-unset-class="<?= $kind === 'optional' ? 'mute' : 'amber' ?>"
+                data-unset-text="<?= html_escape($kind === 'build' ? 'Needed for voice + build' : ($kind === 'required' ? 'Needed for phone/SMS' : 'Optional')) ?>"><?= html_escape($chip_txt) ?></span>
         </div>
         <div class="c-desc"><?= html_escape($desc) ?></div>
         <div style="display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap">
@@ -121,9 +124,11 @@ $overview = [
                  style="max-width:340px;flex:1;min-width:220px">
           <button class="btn pri sm" onclick="icSaveKey('<?= $type ?>')">Save</button>
           <button class="btn gho sm" onclick="icTestKey('<?= $type ?>')" id="btnTest_<?= $type ?>">Test</button>
+          <button class="btn gho sm" onclick="icRemoveKey('<?= $type ?>', '<?= html_escape($label) ?>')" id="btnRemove_<?= $type ?>"
+                  style="color:var(--coral);<?= $is_set ? '' : 'display:none' ?>" title="Delete the saved <?= html_escape($label) ?> key">Remove</button>
         </div>
         <?php if ($is_set && $mask !== ''): ?>
-          <div style="font-size:12px;margin-top:8px;color:var(--mute)">
+          <div id="savedKey_<?= $type ?>" style="font-size:12px;margin-top:8px;color:var(--mute)">
             Saved key:
             <?php if ($type === 'twilio'): ?>
               SID <code style="color:var(--txt2)"><?= html_escape($sid_mask !== '' ? $sid_mask : '—') ?></code>
@@ -336,6 +341,7 @@ function icSaveKey(type){
       inp.placeholder = '•••••••• (saved — paste to replace)';
       if (sidInp){ sidInp.value = ''; sidInp.placeholder = '•••••••• (saved — paste to replace)'; }
       if (d.isSet){ chip.className = 'chip green right'; chip.textContent = 'Connected'; }
+      var rm = document.getElementById('btnRemove_' + type); if (rm) { rm.style.display = ''; }
       icToast(type.toUpperCase() + ' key saved');
     } else {
       icToast((d && d.msg) ? d.msg : 'Could not save', true);
@@ -357,6 +363,26 @@ function icGetJson(url){
   return fetch(url, { credentials:'same-origin' }).then(function(r){ return r.json(); }).catch(function(){ return { ok:false }; });
 }
 function icSetMsg(id, text, isErr){ var el = document.getElementById(id); if(el){ el.textContent = text; el.style.color = isErr ? 'var(--coral)' : 'var(--green,#3ddc97)'; } }
+
+// ── Remove a saved key (asks first; the row is deleted server-side). ──
+function icRemoveKey(type, label){
+  if (!window.confirm('Remove the saved ' + label + ' key? Features that use it stop working until a new key is saved.')) { return; }
+  var btn = document.getElementById('btnRemove_' + type); if (btn) btn.disabled = true;
+  icPost('<?= site_url('setting/remove-key') ?>', { meta_type: type }).then(function(d){
+    if (d && d.ok){
+      var chip = document.getElementById('chip_' + type);
+      if (chip){ chip.className = 'chip ' + (chip.getAttribute('data-unset-class') || 'mute'); chip.textContent = chip.getAttribute('data-unset-text') || 'Optional'; }
+      var saved = document.getElementById('savedKey_' + type); if (saved) { saved.remove(); }
+      var inp = document.getElementById('key_' + type); if (inp) { inp.value = ''; inp.placeholder = 'Paste a new key'; }
+      var sid = (type === 'twilio') ? document.getElementById('sid_twilio') : null; if (sid) { sid.value = ''; sid.placeholder = 'Account SID (AC…)'; }
+      icSetMsg('testResult_' + type, '', false);
+      if (btn) { btn.style.display = 'none'; }
+      icToast(label + ' key removed.');
+    } else {
+      icToast((d && d.msg) ? d.msg : 'Could not remove the key.', true);
+    }
+  }).finally(function(){ if (btn) btn.disabled = false; });
+}
 
 // ── SET-6: per-key live Test ──
 function icTestKey(type){

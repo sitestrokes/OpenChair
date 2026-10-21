@@ -17,7 +17,9 @@ $oto3pid = '';
 if(!empty($product_access[4])){
     $oto3pid = '4';
 }
-$isAdmin = in_array(5, $mainAccess);
+// The superadmin is user 1 (its access is '1,51', not '5'); treating it as a
+// JV Admin hid the Agency level from the one account allowed to grant it.
+$isAdmin = in_array(5, $mainAccess) || (int) $user_row->id === 1;
 $isJvAdmin = in_array(51, $mainAccess) && !$isAdmin;
 $showAccess = ($isAdmin||$isJvAdmin||in_array(9,$mainAccess)||in_array(94,$mainAccess)||in_array(91,$mainAccess)||in_array(7,$mainAccess)||in_array(71,$mainAccess)||in_array(72,$mainAccess));
 ?>
@@ -100,7 +102,10 @@ $showAccess = ($isAdmin||$isJvAdmin||in_array(9,$mainAccess)||in_array(94,$mainA
 
         <?php if($showAccess): ?>
         <div class="cardhead" style="margin:28px 0 4px"><h3>Access levels</h3></div>
-        <div style="font-size:12.5px;color:var(--mute);margin-bottom:18px">Tick every product this user should be able to access.</div>
+        <div style="font-size:12.5px;color:var(--mute);margin-bottom:18px">
+          <?= $isAdmin
+              ? 'FE is required. Add Agency for an account that runs its own team (its members share its pipeline).'
+              : 'Team members get FE access and share your agency\'s pipeline, share links and digests.' ?></div>
         <?php
         // One chip renderer + label overrides (some codes show custom text).
         $lbl_override = []; // all funnel codes are labelled in access_specifier
@@ -114,14 +119,12 @@ $showAccess = ($isAdmin||$isJvAdmin||in_array(9,$mainAccess)||in_array(94,$mainA
                . '<span class="lbl">' . html_escape($text) . '</span></label>';
         };
         // Access groups (only rendered when the operator can grant them).
+        // Codes come from config access_specifier. An agency can only add FE
+        // members to its own team; only the superadmin can create an agency.
         $groups = [];
         $groups[] = ['Front-end', [1]];
         if ($isAdmin) {
-            $groups[] = ['Upgrades', [2, 3, 4, 7, 10, 6]];   // OTO1-5 + First-Commission Kit
-            $groups[] = ['Packages', [9, 91, 94]];           // Bundle, FastPass, Bundle Lifetime
-            $groups[] = ['Admin / JV', [92, 93, 51]];        // Beta, JV, JV Admin
-        } elseif ($isJvAdmin) {
-            $groups[] = ['JV access', [93]];
+            $groups[] = ['Agency', [51]];
         }
         foreach ($groups as $g):
             list($gtitle, $codes) = $g;
